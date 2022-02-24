@@ -12,6 +12,7 @@
 
 namespace Contao;
 
+use Kigkonsult\Icalcreator\Util\DateTimeFactory;
 use Kigkonsult\Icalcreator\Vcalendar;
 use Kigkonsult\Icalcreator\Vevent;
 
@@ -134,10 +135,10 @@ class CalendarExport extends \Backend
         }
 
         $ical = new Vcalendar();
-        $ical->setProperty('method', 'PUBLISH');
-        $ical->setProperty("x-wr-calname", $title);
-        $ical->setProperty("X-WR-CALDESC", $description);
-        $ical->setProperty("X-WR-TIMEZONE", $GLOBALS['TL_CONFIG']['timeZone']);
+        $ical->setMethod('PUBLISH');
+        $ical->setXprop("x-wr-calname", $title);
+        $ical->setXprop("X-WR-CALDESC", $description);
+        $ical->setXprop("X-WR-TIMEZONE", $GLOBALS['TL_CONFIG']['timeZone']);
         $time = time();
 
         foreach ($arrCalendars as $id) {
@@ -166,42 +167,26 @@ class CalendarExport extends \Backend
                 $vevent = new Vevent();
 
                 if ($objEvents->addTime) {
-                    $vevent->setProperty('dtstart', array(
-                        'year'  => date('Y', $objEvents->startTime),
-                        'month' => date('m', $objEvents->startTime),
-                        'day'   => date('d', $objEvents->startTime),
-                        'hour'  => date('H', $objEvents->startTime),
-                        'min'   => date('i', $objEvents->startTime),
-                        'sec'   => 0
-                    ));
-                    $vevent->setProperty('dtend', array(
-                        'year'  => date('Y', $objEvents->endTime),
-                        'month' => date('m', $objEvents->endTime),
-                        'day'   => date('d', $objEvents->endTime),
-                        'hour'  => date('H', $objEvents->endTime),
-                        'min'   => date('i', $objEvents->endTime),
-                        'sec'   => 0
-                    ));
+                    $vevent->setDtstart(date(DateTimeFactory::$YmdTHis, $objEvents->startTime), [ Vcalendar::VALUE => Vcalendar::DATE_TIME ]);
+                    $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $objEvents->endTime), [ Vcalendar::VALUE => Vcalendar::DATE_TIME ]);
                 } else {
-                    $vevent->setProperty('dtstart', date('Ymd', $objEvents->startDate), array('VALUE' => 'DATE'));
+                    $vevent->setDtstart(date(DateTimeFactory::$Ymd, $objEvents->startDate), [ Vcalendar::VALUE => Vcalendar::DATE ]);
                     if (!strlen($objEvents->endDate) || $objEvents->endDate == 0) {
-                        $vevent->setProperty('dtend', date('Ymd', $objEvents->startDate + 24 * 60 * 60),
-                            array('VALUE' => 'DATE'));
+                        $vevent->setDtend(date(DateTimeFactory::$Ymd, $objEvents->startDate + 24 * 60 * 60),
+                                          [ Vcalendar::VALUE => Vcalendar::DATE ]);
                     } else {
-                        $vevent->setProperty('dtend', date('Ymd', $objEvents->endDate + 24 * 60 * 60),
-                            array('VALUE' => 'DATE'));
+                        $vevent->setDtend(date(DateTimeFactory::$Ymd, $objEvents->endDate + 24 * 60 * 60),
+                                          [ Vcalendar::VALUE => Vcalendar::DATE ]);
                     }
                 }
 
-                $vevent->setProperty('summary',
-                    html_entity_decode((strlen($title_prefix) ? $title_prefix . " " : "") . $objEvents->title,
+                $vevent->setSummary(html_entity_decode((strlen($title_prefix) ? $title_prefix . " " : "") . $objEvents->title,
                         ENT_QUOTES, 'UTF-8'));
-                $vevent->setProperty('description', html_entity_decode(strip_tags(preg_replace('/<br \\/>/', "\n",
+                $vevent->setDescription(html_entity_decode(strip_tags(preg_replace('/<br \\/>/', "\n",
                     $this->replaceInsertTags($objEvents->teaser))), ENT_QUOTES, 'UTF-8'));
 
                 if ($objEvents->cep_location) {
-                    $vevent->setProperty('location',
-                        trim(html_entity_decode($objEvents->cep_location, ENT_QUOTES, 'UTF-8')));
+                    $vevent->setDescription(trim(html_entity_decode($objEvents->cep_location, ENT_QUOTES, 'UTF-8')));
                 }
 
                 if ($objEvents->cep_participants) {
@@ -263,7 +248,7 @@ class CalendarExport extends \Backend
                         $rrule['INTERVAL'] = $arg;
                     }
 
-                    $vevent->setProperty('rrule', $rrule);
+                    $vevent->setRrule($rrule);
                 }
 
                 /*
@@ -274,16 +259,16 @@ class CalendarExport extends \Backend
                     foreach ($arrSkipDates as $skipDate) {
                         $exTStamp = strtotime($skipDate);
                         $exdate = array(
-                            array(
-                                date('Y', $exTStamp),
-                                date('m', $exTStamp),
-                                date('d', $exTStamp),
-                                date('H', $objEvents->startTime),
-                                date('i', $objEvents->startTime),
+                            date(DateTimeFactory::$YmdHis,
+                                date('Y', $exTStamp) .
+                                date('m', $exTStamp) .
+                                date('d', $exTStamp) .
+                                date('H', $objEvents->startTime) .
+                                date('i', $objEvents->startTime) .
                                 date('s', $objEvents->startTime)
                             )
                         );
-                        $vevent->setProperty('exdate', $exdate);
+                        $vevent->setExdate($exdate);
                     }
                 }
                 /*
