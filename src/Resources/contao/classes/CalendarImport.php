@@ -36,8 +36,8 @@ class CalendarImport extends \Backend
 
     public function getAllEvents($arrEvents, $arrCalendars, $intStart, $intEnd)
     {
-        $arrCalendars = $this->Database->prepare("SELECT id FROM tl_calendar WHERE id IN (" . join($arrCalendars,
-                ',') . ") AND ical_source = ?")
+        $arrCalendars = $this->Database->prepare("SELECT id FROM tl_calendar WHERE id IN (" .
+                                                 join(',', $arrCalendars) . ") AND ical_source = ?")
             ->execute('1')
             ->fetchAllAssoc();
 
@@ -837,7 +837,7 @@ class CalendarImport extends \Backend
                         }
 
                         if (count($attendees)) {
-                            $arrFields['cep_participants'] = join($attendees, ',');
+                            $arrFields['cep_participants'] = join(',', $attendees);
                         }
                     }
                 }
@@ -852,7 +852,7 @@ class CalendarImport extends \Backend
                             }
                         }
                         if (count($contacts)) {
-                            $arrFields['cep_contact'] = join($contacts, ',');
+                            $arrFields['cep_contact'] = join(',', $contacts);
                         }
                     }
                 }

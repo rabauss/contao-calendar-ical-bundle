@@ -1,7 +1,7 @@
 Contao 4 Calendar iCal Bundle
 =======================
 
-iCal support for calendar of Contao OpenSource CMS
+iCal support for calendar of Contao OpenSource CMS. Forked from https://github.com/Craffft/contao-calendar-ical-bundle. PHP-8 ready.
 
 Installation
 ------------
@@ -12,7 +12,7 @@ Open a command console, enter your project directory and execute the
 following command to download the latest stable version of this bundle:
 
 ```bash
-$ composer require craffft/contao-calendar-ical-bundle "dev-master"
+$ composer require cgoIT/contao-calendar-ical-php8-bundle "dev-master"
 ```
 
 This command requires you to have Composer installed globally, as explained

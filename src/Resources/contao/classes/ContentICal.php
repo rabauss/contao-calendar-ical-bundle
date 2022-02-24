@@ -91,8 +91,8 @@ class ContentICal extends ContentElement
         $src = \Environment::get('request');
         $this->Template->link = $this->strTitle;
         $arrCalendars = deserialize($this->ical_calendar, true);
-        $this->Template->href = $this->addToUrl("ical=" . join($arrCalendars,
-                ',') . "&title=" . urlencode($this->strTitle));
+        $this->Template->href = $this->addToUrl("ical=" .
+                                                join(',', $arrCalendars) . "&title=" . urlencode($this->strTitle));
         $this->Template->title = $GLOBALS['TL_LANG']['tl_content']['ical_title'];
     }
 
