@@ -917,6 +917,9 @@ class CalendarImport extends \Backend
                     $arrFields['repeatEnd'] = $this->getRepeatEnd($arrFields, $rrule, $repeatEach);
                 }
 
+                if (!isset($foundevents[$uid])) {
+                    $foundevents[$uid] = 0;
+                }
                 $foundevents[$uid]++;
 
                 if ($foundevents[$uid] <= 1) {
