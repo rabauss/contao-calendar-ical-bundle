@@ -1020,7 +1020,7 @@ class CalendarImport extends \Backend
         $this->Template->hrefBack = ampersand(str_replace('&key=import', '', \Environment::get('request')));
         $this->Template->goBack = $GLOBALS['TL_LANG']['MSC']['goBack'];
         $this->Template->headline = $GLOBALS['TL_LANG']['MSC']['import_calendar'][0];
-        $this->Template->request = ampersand(\Environment::get('request'), ENCODE_AMPERSANDS);
+        $this->Template->request = ampersand(\Environment::get('request'));
         $this->Template->submit = specialchars($GLOBALS['TL_LANG']['tl_calendar_events']['proceed'][0]);
 
         return $this->Template->parse();
