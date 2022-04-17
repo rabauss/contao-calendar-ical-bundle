@@ -17,6 +17,7 @@ use Kigkonsult\Icalcreator\Util\DateTimeFactory;
 use Kigkonsult\Icalcreator\Util\Util;
 use Kigkonsult\Icalcreator\Util\UtilDateTime;
 use Kigkonsult\Icalcreator\Vcalendar;
+use Kigkonsult\Icalcreator\Vevent;
 
 /**
  * Class CalendarImport
@@ -26,6 +27,7 @@ use Kigkonsult\Icalcreator\Vcalendar;
 class CalendarImport extends \Backend
 {
     protected $blnSave = true;
+    /** @var Vcalendar */
     protected $cal;
 
     /** @var string */
@@ -774,25 +776,19 @@ class CalendarImport extends \Backend
 
         if (is_array($eventArray)) {
             foreach ($eventArray as $vevent) {
+                /** @var Vevent $vevent */
                 $arrFields = $defaultFields;
-                $currddate = $vevent->getProperty('x-current-dtstart');
-                // if member of a recurrence set,
-                // returns array( 'x-current-dtstart', <DATE>)
-                // <DATE> = (string) date("Y-m-d [H:i:s][timezone/UTC offset]")
-                $dtstartrow = $vevent->getProperty('dtstart', false, true);
-                $dtstart = $dtstartrow['value'];
-                $dtendrow = $vevent->getProperty('dtend', false, true);
-                $dtend = $dtendrow['value'];
-                $rrule = $vevent->getProperty('rrule', 1);
-                $summary = $vevent->getProperty('summary');
+                $dtstart = $vevent->getDtstart();
+                $dtend = $vevent->getDtend();
+                $rrule = $vevent->getRrule( 1);
+                $summary = $vevent->getSummary() ?? '';
                 if (!empty($this->filterEventTitle) && strpos($summary, $this->filterEventTitle) === false) {
                     continue;
                 }
-                $descriptionraw = $vevent->getProperty('description', false, true);
-                $description = $descriptionraw['value'];
-                $location = trim($vevent->getProperty('location'));
-                $uid = $vevent->getProperty('UID');
-                $fixend = (!array_key_exists('hour', $dtend)) ? 24 * 60 * 60 : 0;
+                $description = $vevent->getDescription() ?? '';
+                $location = trim($vevent->getLocation() ?? '');
+                $uid = $vevent->getUid();
+                $fixend = ($dtend instanceof \DateTime && (int)$dtend->format('Hi') === 0) ? 24 * 60 * 60 : 0;
 
                 $arrFields['tstamp'] = time();
                 $arrFields['pid'] = $pid;
@@ -860,23 +856,28 @@ class CalendarImport extends \Backend
                     }
                 }
 
-                $timezone = (array_key_exists('TZID',
-                    $dtstartrow['params'])) ? $dtstartrow['params']['TZID'] : ((strcmp(strtoupper($dtstart['tz']),
-                        'Z') == 0) ? 'UTC' : $tz[1]);
-                @ini_set('date.timezone', $timezone);
-                @date_default_timezone_set($timezone);
-                $arrFields['startDate'] = mktime(0, 0, 0, $dtstart['month'], $dtstart['day'], $dtstart['year']);
-                $arrFields['addTime'] = (array_key_exists('hour', $dtstart)) ? 1 : '';
-                $arrFields['startTime'] = mktime($dtstart['hour'], $dtstart['min'], $dtstart['sec'], $dtstart['month'],
-                    $dtstart['day'], $dtstart['year']);
-                $timezone = (array_key_exists('TZID',
-                    $dtendrow['params'])) ? $dtendrow['params']['TZID'] : ((strcmp(strtoupper($dtend['tz']),
-                        'Z') == 0) ? 'UTC' : $tz[1]);
-                @ini_set('date.timezone', $timezone);
-                @date_default_timezone_set($timezone);
-                $arrFields['endDate'] = mktime(0, 0, 0, $dtend['month'], $dtend['day'], $dtend['year']);
-                $arrFields['endTime'] = mktime($dtend['hour'], $dtend['min'], $dtend['sec'], $dtend['month'],
-                    $dtend['day'], $dtend['year']);
+                $arrFields['startDate'] = 0;
+                $arrFields['startTime'] = 0;
+                $arrFields['endDate'] = 0;
+                $arrFields['endTime'] = 0;
+
+                if ($dtstart instanceof \DateTime) {
+                    if (($timezone = $dtstart->getTimezone()) instanceof \DateTimeZone) {
+                        @ini_set('date.timezone', $timezone->getName());
+                        @date_default_timezone_set($timezone->getName());
+                    }
+                    $arrFields['startDate'] = (clone $dtstart)->setTime(0, 0)->getTimestamp();
+                    $arrFields['addTime'] = ((int)$dtstart->format('Hi') > 0) ? 1 : '';
+                    $arrFields['startTime'] = $dtstart->getTimestamp();
+                }
+                if ($dtend instanceof \DateTime) {
+                    if (($timezone = $dtend->getTimezone()) instanceof \DateTimeZone) {
+                        @ini_set('date.timezone', $timezone->getName());
+                        @date_default_timezone_set($timezone->getName());
+                    }
+                    $arrFields['endDate'] = (clone $dtend)->setTime(0, 0)->getTimestamp();
+                    $arrFields['endTime'] = $dtend->getTimestamp();
+                }
 
                 if ($timeshift != 0) {
                     $arrFields['startDate'] += $timeshift * 3600;
