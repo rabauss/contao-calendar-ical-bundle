@@ -127,14 +127,12 @@ class CalendarImport extends \Backend
         $this->cal->setXprop(Vcalendar::X_WR_CALDESC, $this->strTitle);
 
         /* start parse of local file */
-        $filename = $this->downloadURLToTempFile($url, $proxy, $benutzerpw, $port);
-        if ($filename === null) {
+        $file = $this->downloadURLToTempFile($url, $proxy, $benutzerpw, $port);
+        if ($file === null) {
             return;
         }
-        $this->cal->setConfig('directory', TL_ROOT . '/' . dirname($filename));
-        $this->cal->setConfig('filename', basename($filename));
         try {
-            $this->cal->parse();
+            $this->cal->parse($file->getContent());
         } catch (Exception $e) {
             \System::log($e->getMessage(), __METHOD__, TL_ERROR);
             return;
@@ -148,6 +146,9 @@ class CalendarImport extends \Backend
         $this->importFromICS($pid, $startDate, $endDate, true, $tz, true);
     }
 
+    /**
+     * @return File|null
+     */
     protected function downloadURLToTempFile($url, $proxy, $benutzerpw, $port)
     {
         $url = html_entity_decode($url);
@@ -190,11 +191,11 @@ class CalendarImport extends \Backend
         }
 
         $filename = md5(time());
-        $objFile = new \File('system/tmp/' . $filename);
+        $objFile = new \Contao\File('system/tmp/' . $filename);
         $objFile->write($content);
         $objFile->close();
 
-        return 'system/tmp/' . $filename;
+        return $objFile;
     }
 
     private function isCurlInstalled()
@@ -684,11 +685,13 @@ class CalendarImport extends \Backend
         $this->cal->setXprop(Vcalendar::X_WR_CALNAME, $this->strTitle);
         $this->cal->setXprop(Vcalendar::X_WR_CALDESC, $this->strTitle);
 
-        /* start parse of local file */
-        $this->cal->setConfig('directory', TL_ROOT . '/' . dirname($filename));
-        $this->cal->setConfig('filename', basename($filename));
         try {
-            $this->cal->parse();
+            $file = new \Contao\File($filename);
+            $content = $file->exists() ? $file->getContent() : '';
+            if (empty($content)) {
+                throw new \InvalidArgumentException('Ical content empty');
+            }
+            $this->cal->parse($content);
         } catch (Exception $e) {
             \Message::addError($e->getMessage());
             $this->redirect(str_replace('&key=import', '', \Environment::get('request')));
