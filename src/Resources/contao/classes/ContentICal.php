@@ -12,6 +12,7 @@
 
 namespace Contao;
 
+use Kigkonsult\Icalcreator\Util\DateTimeFactory;
 use Kigkonsult\Icalcreator\Vcalendar;
 use Kigkonsult\Icalcreator\Vevent;
 
@@ -131,40 +132,24 @@ class ContentICal extends ContentElement
                 $vevent = new Vevent();
 
                 if ($objEvents->addTime) {
-                    $vevent->setProperty('dtstart', array(
-                        'year'  => date('Y', $objEvents->startTime),
-                        'month' => date('m', $objEvents->startTime),
-                        'day'   => date('d', $objEvents->startTime),
-                        'hour'  => date('H', $objEvents->startTime),
-                        'min'   => date('i', $objEvents->startTime),
-                        'sec'   => 0
-                    ));
-                    $vevent->setProperty('dtend', array(
-                        'year'  => date('Y', $objEvents->endTime),
-                        'month' => date('m', $objEvents->endTime),
-                        'day'   => date('d', $objEvents->endTime),
-                        'hour'  => date('H', $objEvents->endTime),
-                        'min'   => date('i', $objEvents->endTime),
-                        'sec'   => 0
-                    ));
+                    $vevent->setDtstart(date(DateTimeFactory::$YmdTHis, $objEvents->startTime), [ Vcalendar::VALUE => Vcalendar::DATE_TIME ]);
+                    $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $objEvents->endTime), [ Vcalendar::VALUE => Vcalendar::DATE_TIME ]);
                 } else {
-                    $vevent->setProperty('dtstart', date('Ymd', $objEvents->startDate), array('VALUE' => 'DATE'));
+                    $vevent->setDtstart(date(DateTimeFactory::$Ymd, $objEvents->startDate), [ Vcalendar::VALUE => Vcalendar::DATE ]);
                     if (!strlen($objEvents->endDate) || $objEvents->endDate == 0) {
-                        $vevent->setProperty('dtend', date('Ymd', $objEvents->startDate + 24 * 60 * 60),
-                            array('VALUE' => 'DATE'));
+                        $vevent->setDtend(date(DateTimeFactory::$Ymd, $objEvents->startDate + 24 * 60 * 60),
+                                          [ Vcalendar::VALUE => Vcalendar::DATE ]);
                     } else {
-                        $vevent->setProperty('dtend', date('Ymd', $objEvents->endDate + 24 * 60 * 60),
-                            array('VALUE' => 'DATE'));
+                        $vevent->setDtend(date(DateTimeFactory::$Ymd, $objEvents->endDate + 24 * 60 * 60),
+                                          [ Vcalendar::VALUE => Vcalendar::DATE ]);
                     }
                 }
 
                 $ical_prefix = (strlen($this->ical_prefix)) ? $this->ical_prefix : $objEvents->ical_prefix;
-                $vevent->setProperty('summary',
-                    html_entity_decode((strlen($ical_prefix) ? $ical_prefix . " " : "") . $objEvents->title, ENT_QUOTES,
-                        'UTF-8'));
-                $vevent->setProperty('description',
-                    html_entity_decode(strip_tags(preg_replace('/<br \\/>/', "\n", $objEvents->details)), ENT_QUOTES,
-                        'UTF-8'));
+                $vevent->setSummary(html_entity_decode((strlen($ical_prefix) ? $ical_prefix . " " : "") . $objEvents->title,
+                    ENT_QUOTES, 'UTF-8'));
+                $vevent->setDescription(html_entity_decode(strip_tags(preg_replace('/<br \\/>/', "\n",
+                    $this->replaceInsertTags($objEvents->teaser))), ENT_QUOTES, 'UTF-8'));
 
                 if ($objEvents->recurring) {
                     $count = 0;
@@ -206,7 +191,7 @@ class ContentICal extends ContentElement
                         $rrule['INTERVAL'] = $arg;
                     }
 
-                    $vevent->setProperty('rrule', $rrule);
+                    $vevent->setRrule($rrule);
                 }
 
                 /*
@@ -217,16 +202,16 @@ class ContentICal extends ContentElement
                     foreach ($arrSkipDates as $skipDate) {
                         $exTStamp = strtotime($skipDate);
                         $exdate = array(
-                            array(
-                                date('Y', $exTStamp),
-                                date('m', $exTStamp),
-                                date('d', $exTStamp),
-                                date('H', $objEvents->startTime),
-                                date('i', $objEvents->startTime),
+                            date(DateTimeFactory::$YmdHis,
+                                date('Y', $exTStamp) .
+                                date('m', $exTStamp) .
+                                date('d', $exTStamp) .
+                                date('H', $objEvents->startTime) .
+                                date('i', $objEvents->startTime) .
                                 date('s', $objEvents->startTime)
                             )
                         );
-                        $vevent->setProperty('exdate', $exdate);
+                        $vevent->setExdate($exdate);
                     }
                 }
                 /*
