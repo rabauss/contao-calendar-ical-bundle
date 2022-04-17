@@ -120,9 +120,9 @@ class CalendarImport extends \Backend
     public function importFromWebICS($pid, $url, $startDate, $endDate, $timezone, $proxy, $benutzerpw, $port)
     {
         $this->cal = new Vcalendar();
-        $this->cal->setProperty('method', 'PUBLISH');
-        $this->cal->setProperty("x-wr-calname", $this->strTitle);
-        $this->cal->setProperty("X-WR-CALDESC", $this->strTitle);
+        $this->cal->setMethod(Vcalendar::PUBLISH);
+        $this->cal->setXprop(Vcalendar::X_WR_CALNAME, $this->strTitle);
+        $this->cal->setXprop(Vcalendar::X_WR_CALDESC, $this->strTitle);
 
         /* start parse of local file */
         $filename = $this->downloadURLToTempFile($url, $proxy, $benutzerpw, $port);
@@ -137,7 +137,7 @@ class CalendarImport extends \Backend
             \System::log($e->getMessage(), __METHOD__, TL_ERROR);
             return;
         }
-        $tz = $this->cal->getProperty('X-WR-TIMEZONE');
+        $tz = $this->cal->getProperty(Vcalendar::X_WR_TIMEZONE);
 
         if (!is_array($tz) || strlen($tz[1]) == 0) {
             $tz = $timezone;
@@ -678,9 +678,9 @@ class CalendarImport extends \Backend
     ) {
         $pid = $dc->id;
         $this->cal = new Vcalendar();
-        $this->cal->setProperty('method', 'PUBLISH');
-        $this->cal->setProperty("x-wr-calname", $this->strTitle);
-        $this->cal->setProperty("X-WR-CALDESC", $this->strTitle);
+        $this->cal->setMethod(Vcalendar::PUBLISH);
+        $this->cal->setXprop(Vcalendar::X_WR_CALNAME, $this->strTitle);
+        $this->cal->setXprop(Vcalendar::X_WR_CALDESC, $this->strTitle);
 
         /* start parse of local file */
         $this->cal->setConfig('directory', TL_ROOT . '/' . dirname($filename));
@@ -691,7 +691,7 @@ class CalendarImport extends \Backend
             \Message::addError($e->getMessage());
             $this->redirect(str_replace('&key=import', '', \Environment::get('request')));
         }
-        $tz = $this->cal->getProperty('X-WR-TIMEZONE');
+        $tz = $this->cal->getProperty(Vcalendar::X_WR_TIMEZONE);
 
         if ($timeshift == 0) {
             if (is_array($tz) && strlen($tz[1]) && strcmp($tz[1], $GLOBALS['TL_CONFIG']['timeZone']) != 0) {

@@ -109,12 +109,12 @@ class ContentICal extends ContentElement
         }
 
         $this->ical = new Vcalendar();
-        $this->ical->setProperty('method', 'PUBLISH');
-        $this->ical->setProperty("x-wr-calname",
+        $this->ical->setMethod(Vcalendar::PUBLISH);
+        $this->ical->setXprop(Vcalendar::X_WR_CALNAME,
             (strlen(\Input::get('title'))) ? \Input::get('title') : $this->strTitle);
-        $this->ical->setProperty("X-WR-CALDESC",
+        $this->ical->setXprop(Vcalendar::X_WR_CALDESC,
             (strlen(\Input::get('title'))) ? \Input::get('title') : $this->strTitle);
-        $this->ical->setProperty("X-WR-TIMEZONE", $GLOBALS['TL_CONFIG']['timeZone']);
+        $this->ical->setXprop(Vcalendar::X_WR_TIMEZONE, $GLOBALS['TL_CONFIG']['timeZone']);
         $time = time();
 
         foreach ($arrCalendars as $id) {

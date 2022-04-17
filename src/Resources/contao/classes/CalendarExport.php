@@ -135,10 +135,10 @@ class CalendarExport extends \Backend
         }
 
         $ical = new Vcalendar();
-        $ical->setMethod('PUBLISH');
-        $ical->setXprop("x-wr-calname", $title);
-        $ical->setXprop("X-WR-CALDESC", $description);
-        $ical->setXprop("X-WR-TIMEZONE", $GLOBALS['TL_CONFIG']['timeZone']);
+        $ical->setMethod(Vcalendar::PUBLISH);
+        $ical->setXprop(Vcalendar::X_WR_CALNAME, $title);
+        $ical->setXprop(Vcalendar::X_WR_CALDESC, $description);
+        $ical->setXprop(Vcalendar::X_WR_TIMEZONE, $GLOBALS['TL_CONFIG']['timeZone']);
         $time = time();
 
         foreach ($arrCalendars as $id) {
