@@ -17,6 +17,7 @@ use Kigkonsult\Icalcreator\Util\DateTimeFactory;
 use Kigkonsult\Icalcreator\Util\Util;
 use Kigkonsult\Icalcreator\Util\UtilDateTime;
 use Kigkonsult\Icalcreator\Vcalendar;
+use Kigkonsult\Icalcreator\Vevent;
 
 /**
  * Class CalendarImport
@@ -912,6 +913,7 @@ class CalendarImport extends \Backend
                     $arrFields['repeatEach'] = serialize($repeatEach);
                     $arrFields['repeatEnd'] = $this->getRepeatEnd($arrFields, $rrule, $repeatEach);
                 }
+                $this->handleRecurringExceptions($arrFields, $vevent, $tz[1], $timeshift);
 
                 $foundevents[$uid]++;
 
@@ -1503,5 +1505,48 @@ class CalendarImport extends \Backend
         }
 
         return 0;
+    }
+
+    /**
+     * @param array $arrFields
+     * @param Vevent $vevent
+     * @param string $timezone
+     * @param int $timeshift
+     */
+    private function handleRecurringExceptions(&$arrFields, $vevent, $timezone, $timeshift)
+    {
+        if (!array_key_exists('useExceptions', $arrFields)
+            && !array_key_exists('repeatExceptions', $arrFields)
+            && !array_key_exists('exceptionList', $arrFields)) {
+            return;
+        }
+
+        $arrFields['useExceptions'] = 0;
+        $arrFields['repeatExceptions'] = null;
+        $arrFields['exceptionList'] = null;
+
+        $exDates = [];
+        while (false !== ($prop = $vevent->getExdate(false, true))) {
+            foreach ($prop[Util::$LCvalue] as $exDate) {
+                $exDate = UtilDateTime::factory($exDate, $prop[Util::$LCparams], $exDate, $timezone);
+                $timestamp = (int)$exDate->format('U');
+                if ($timeshift != 0) {
+                    $timestamp += $timeshift * 3600;
+                }
+                $exDates[$timestamp] = [
+                    'exception' => $timestamp,
+                    'action' => 'hide',
+                ];
+            }
+        }
+
+        if (empty($exDates)) {
+            return;
+        }
+
+        $arrFields['useExceptions'] = 1;
+        ksort($exDates);
+        $arrFields['exceptionList'] = $exDates;
+        $arrFields['repeatExceptions'] = array_values($exDates);
     }
 }

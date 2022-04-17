@@ -36,6 +36,9 @@
   "require-dev": {
     "contao/manager-plugin": "^2.0"
   },
+  "suggest": {
+    "kmielke/calendar-extended-bundle": "to handle recurring exception dates"
+  },
   "conflict": {
     "contao/core": "*"
   },
