@@ -221,23 +221,14 @@ class CalendarImport extends \Backend
             array('teaser', $GLOBALS['TL_LANG']['tl_calendar_events']['teaser'][0])
         );
 
-        if (in_array('location', $fieldnames)) {
-            array_push(
-                $calfields,
-                array('location', $GLOBALS['TL_LANG']['tl_calendar_events']['location'][0])
-            );
+        if (in_array('location', $fieldnames, true)) {
+            $calfields[] = array('location', $GLOBALS['TL_LANG']['tl_calendar_events']['location'][0]);
         }
-        if (in_array('cep_participants', $fieldnames)) {
-            array_push(
-                $calfields,
-                array('cep_participants', $GLOBALS['TL_LANG']['tl_calendar_events']['cep_participants'][0])
-            );
+        if (in_array('cep_participants', $fieldnames, true)) {
+            $calfields[] = array('cep_participants', $GLOBALS['TL_LANG']['tl_calendar_events']['cep_participants'][0]);
         }
-        if (in_array('location_contact', $fieldnames)) {
-            array_push(
-                $calfields,
-                array('location_contact', $GLOBALS['TL_LANG']['tl_calendar_events']['location_contact'][0])
-            );
+        if (in_array('location_contact', $fieldnames, true)) {
+            $calfields[] = array('location_contact', $GLOBALS['TL_LANG']['tl_calendar_events']['location_contact'][0]);
         }
 
         $dateFormat = \Input::post('dateFormat');
@@ -828,31 +819,26 @@ class CalendarImport extends \Backend
                 }
 
                 // calendar_events_plus fields
-                if (array_key_exists('location', $arrFields)) {
-                    if (strlen($location)) {
-                        $arrFields['location'] =
-                            preg_replace("/(\\\\r)|(\\\\n)/ims", "\n", $location);
-                    }
-                } else {
-                    if (strlen($location)) {
-                        array_push($eventcontent,
-                            '<p><strong>' . $GLOBALS['TL_LANG']['MSC']['location'] . ':</strong> ' . preg_replace("/(\\\\r)|(\\\\n)/ims",
-                                "<br />", $location) . "</p>");
+                if (!empty($location)) {
+                    if (array_key_exists('location', $arrFields)) {
+                        $location = preg_replace("/(\\\\r)|(\\\\n)/im", "\n", $location);
+                        $arrFields['location'] = $location;
+                    } else {
+                        $location = preg_replace("/(\\\\r)|(\\\\n)/im", "<br />", $location);
+                        $eventcontent[] = '<p><strong>'.$GLOBALS['TL_LANG']['MSC']['location'].':</strong> '.$location."</p>";
                     }
                 }
 
-                if (array_key_exists('cep_participants', $arrFields)) {
-                    if (is_array($vevent->attendee)) {
-                        $attendees = array();
-                        foreach ($vevent->attendee as $attendee) {
-                            if (strlen($attendee['params']['CN'])) {
-                                array_push($attendees, $attendee['params']['CN']);
-                            }
+                if (array_key_exists('cep_participants', $arrFields) && is_array($vevent->attendee)) {
+                    $attendees = array();
+                    foreach ($vevent->attendee as $attendee) {
+                        if (!empty($attendee['params']['CN'])) {
+                            $attendees[] = $attendee['params']['CN'];
                         }
+                    }
 
-                        if (count($attendees)) {
-                            $arrFields['cep_participants'] = join(',', $attendees);
-                        }
+                    if (count($attendees)) {
+                        $arrFields['cep_participants'] = implode(',', $attendees);
                     }
                 }
 
@@ -861,12 +847,12 @@ class CalendarImport extends \Backend
                     if (is_array($contact)) {
                         $contacts = array();
                         foreach ($contact as $data) {
-                            if (strlen($data['value'])) {
-                                array_push($contacts, $data['value']);
+                            if (!empty($data['value'])) {
+                                $contacts[] = $data['value'];
                             }
                         }
                         if (count($contacts)) {
-                            $arrFields['location_contact'] = join(',', $contacts);
+                            $arrFields['location_contact'] = implode(',', $contacts);
                         }
                     }
                 }
