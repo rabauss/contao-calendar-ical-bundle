@@ -13,6 +13,7 @@
 namespace Contao;
 
 use Exception;
+use Kigkonsult\Icalcreator\Pc;
 use Kigkonsult\Icalcreator\Util\DateTimeFactory;
 use Kigkonsult\Icalcreator\Util\Util;
 use Kigkonsult\Icalcreator\Util\UtilDateTime;
@@ -1527,8 +1528,8 @@ class CalendarImport extends \Backend
 
         $exDates = [];
         while (false !== ($prop = $vevent->getExdate(false, true))) {
-            foreach ($prop[Util::$LCvalue] as $exDate) {
-                $exDate = UtilDateTime::factory($exDate, $prop[Util::$LCparams], $timezone);
+            foreach ($prop[Pc::$LCvalue] as $exDate) {
+                $exDate = UtilDateTime::factory($exDate, $prop[Pc::$LCparams], $timezone);
                 $timestamp = (int)$exDate->format('U');
                 if ($timeshift != 0) {
                     $timestamp += $timeshift * 3600;
