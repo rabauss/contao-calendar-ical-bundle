@@ -930,7 +930,7 @@ class CalendarImport extends \Backend
 
                     $repeatEach['value'] = $rrule['INTERVAL'] ?? 1;
                     $arrFields['repeatEach'] = serialize($repeatEach);
-                    $arrFields['repeatEnd'] = $this->getRepeatEnd($arrFields, $rrule, $repeatEach, $timezone);
+                    $arrFields['repeatEnd'] = $this->getRepeatEnd($arrFields, $rrule, $repeatEach, $timezone, $timeshift);
 
                     if (isset($rrule['WKST']) && is_array($rrule['WKST'])) {
                         $weekdays = ['MO' => 1, 'TU' => 2, 'WE' => 3, 'TH' => 4, 'FR' => 5, 'SA' => 6, 'SU' => 0];
@@ -1494,10 +1494,11 @@ class CalendarImport extends \Backend
      * @param array $rrule
      * @param array $repeatEach
      * @param string $timezone
+     * @param int $timeshift
      * @return int
      * @throws Exception
      */
-    private function getRepeatEnd($arrFields, $rrule, $repeatEach, $timezone)
+    private function getRepeatEnd($arrFields, $rrule, $repeatEach, $timezone, $timeshift = 0)
     {
         if (($until = $rrule[IcalInterface::UNTIL] ?? null) instanceof \DateTime) {
             // convert UNTIL date to current timezone
@@ -1506,7 +1507,11 @@ class CalendarImport extends \Backend
                 DateTimeZoneFactory::factory($timezone)
             );
 
-            return $until->getTimestamp();
+            $timestamp = $until->getTimestamp();
+            if ($timeshift != 0) {
+                $timestamp += $timeshift * 3600;
+            }
+            return $timestamp;
         }
 
         if ((int)$arrFields['recurrences'] === 0) {
