@@ -13,9 +13,8 @@
 namespace Contao;
 
 use Exception;
-use Kigkonsult\Icalcreator\Pc;
 use Kigkonsult\Icalcreator\Util\DateTimeFactory;
-use Kigkonsult\Icalcreator\Util\Util;
+use Kigkonsult\Icalcreator\Util\DateTimeZoneFactory;
 use Kigkonsult\Icalcreator\Util\UtilDateTime;
 use Kigkonsult\Icalcreator\Vcalendar;
 use Kigkonsult\Icalcreator\Vevent;
@@ -914,7 +913,7 @@ class CalendarImport extends \Backend
                     $arrFields['repeatEach'] = serialize($repeatEach);
                     $arrFields['repeatEnd'] = $this->getRepeatEnd($arrFields, $rrule, $repeatEach);
                 }
-                $this->handleRecurringExceptions($arrFields, $vevent, $tz[1], $timeshift);
+                $this->handleRecurringExceptions($arrFields, $vevent, $timezone, $timeshift);
 
                 $foundevents[$uid]++;
 
@@ -1527,17 +1526,23 @@ class CalendarImport extends \Backend
         $arrFields['exceptionList'] = null;
 
         $exDates = [];
-        while (false !== ($prop = $vevent->getExdate(false, true))) {
-            foreach ($prop[Pc::$LCvalue] as $exDate) {
-                $exDate = UtilDateTime::factory($exDate, $prop[Pc::$LCparams], $timezone);
-                $timestamp = (int)$exDate->format('U');
-                if ($timeshift != 0) {
-                    $timestamp += $timeshift * 3600;
+        while (false !== ($exDateRow = $vevent->getExdate())) {
+            foreach ($exDateRow as $exDate) {
+                if ($exDate instanceof \DateTime) {
+                    // convert UNTIL date to current timezone
+                    $exDate = new \DateTime(
+                        $exDate->format(DateTimeFactory::$YmdHis),
+                        DateTimeZoneFactory::factory($timezone)
+                    );
+                    $timestamp = $exDate->getTimestamp();
+                    if ($timeshift != 0) {
+                        $timestamp += $timeshift * 3600;
+                    }
+                    $exDates[$timestamp] = [
+                        'exception' => $timestamp,
+                        'action' => 'hide',
+                    ];
                 }
-                $exDates[$timestamp] = [
-                    'exception' => $timestamp,
-                    'action' => 'hide',
-                ];
             }
         }
 
