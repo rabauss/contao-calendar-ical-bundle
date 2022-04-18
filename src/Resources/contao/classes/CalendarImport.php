@@ -868,7 +868,7 @@ class CalendarImport extends \Backend
                 $arrFields['addTime'] = '';
                 $arrFields['endDate'] = 0;
                 $arrFields['endTime'] = 0;
-                $dtStartTz = $tz[1];
+                $timezone = $tz[1];
 
                 if ($dtstart instanceof \DateTime && $dtstartRow instanceof Pc) {
                     if (!$dtstartRow->hasParamValue(IcalInterface::TZID)) {
@@ -877,7 +877,7 @@ class CalendarImport extends \Backend
                             DateTimeZoneFactory::factory($tz[1])
                         );
                     } else {
-                        $dtStartTz = $dtstartRow->getParams(IcalInterface::TZID);
+                        $timezone = $dtstartRow->getParams(IcalInterface::TZID);
                     }
                     $arrFields['startDate'] = $dtstart->getTimestamp();
                     if (!$dtstartRow->hasParamValue(IcalInterface::DATE)) {
@@ -930,7 +930,7 @@ class CalendarImport extends \Backend
 
                     $repeatEach['value'] = $rrule['INTERVAL'] ?? 1;
                     $arrFields['repeatEach'] = serialize($repeatEach);
-                    $arrFields['repeatEnd'] = $this->getRepeatEnd($arrFields, $rrule, $repeatEach, $dtStartTz);
+                    $arrFields['repeatEnd'] = $this->getRepeatEnd($arrFields, $rrule, $repeatEach, $timezone);
 
                     if (isset($rrule['WKST']) && is_array($rrule['WKST'])) {
                         $weekdays = ['MO' => 1, 'TU' => 2, 'WE' => 3, 'TH' => 4, 'FR' => 5, 'SA' => 6, 'SU' => 0];
@@ -1493,17 +1493,17 @@ class CalendarImport extends \Backend
      * @param array $arrFields
      * @param array $rrule
      * @param array $repeatEach
-     * @param string $dtStartTz
+     * @param string $timezone
      * @return int
      * @throws Exception
      */
-    private function getRepeatEnd($arrFields, $rrule, $repeatEach, $dtStartTz)
+    private function getRepeatEnd($arrFields, $rrule, $repeatEach, $timezone)
     {
         if (($until = $rrule[IcalInterface::UNTIL] ?? null) instanceof \DateTime) {
-            // convert UNTIL date to DTSTART timezone
+            // convert UNTIL date to current timezone
             $until = new \DateTime(
                 $until->format(DateTimeFactory::$YmdHis),
-                DateTimeZoneFactory::factory($dtStartTz)
+                DateTimeZoneFactory::factory($timezone)
             );
 
             return $until->getTimestamp();
