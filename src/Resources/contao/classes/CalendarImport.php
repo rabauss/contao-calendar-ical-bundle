@@ -18,8 +18,7 @@ use Kigkonsult\Icalcreator\Pc;
 use Kigkonsult\Icalcreator\Util\DateTimeFactory;
 use Kigkonsult\Icalcreator\Util\DateTimeZoneFactory;
 use Kigkonsult\Icalcreator\Util\RecurFactory;
-use Kigkonsult\Icalcreator\Util\Util;
-use Kigkonsult\Icalcreator\Util\UtilDateTime;
+use Kigkonsult\Icalcreator\Util\RecurFactory2;
 use Kigkonsult\Icalcreator\Vcalendar;
 use Kigkonsult\Icalcreator\Vevent;
 
@@ -789,7 +788,7 @@ class CalendarImport extends \Backend
                 $dtstartRow = $vevent->getDtstart(true);
                 $dtend = $vevent->getDtend();
                 $dtendRow = $vevent->getDtend(true);
-                $rrule = $vevent->getRrule( 1);
+                $rrule = $vevent->getRrule();
                 $summary = $vevent->getSummary() ?? '';
                 if (!empty($this->filterEventTitle) && strpos($summary, $this->filterEventTitle) === false) {
                     continue;
@@ -869,6 +868,7 @@ class CalendarImport extends \Backend
                 $arrFields['addTime'] = '';
                 $arrFields['endDate'] = 0;
                 $arrFields['endTime'] = 0;
+                $dtStartTz = $tz[1];
 
                 if ($dtstart instanceof \DateTime && $dtstartRow instanceof Pc) {
                     if (!$dtstartRow->hasParamValue(IcalInterface::TZID)) {
@@ -876,6 +876,8 @@ class CalendarImport extends \Backend
                             $dtstart->format(DateTimeFactory::$YmdHis),
                             DateTimeZoneFactory::factory($tz[1])
                         );
+                    } else {
+                        $dtStartTz = $dtstartRow->getParams(IcalInterface::TZID);
                     }
                     $arrFields['startDate'] = $dtstart->getTimestamp();
                     if (!$dtstartRow->hasParamValue(IcalInterface::DATE)) {
@@ -926,9 +928,17 @@ class CalendarImport extends \Backend
                             break;
                     }
 
-                    $repeatEach['value'] = (array_key_exists('INTERVAL', $rrule)) ? $rrule['INTERVAL'] : 1;
+                    $repeatEach['value'] = $rrule['INTERVAL'] ?? 1;
                     $arrFields['repeatEach'] = serialize($repeatEach);
-                    $arrFields['repeatEnd'] = $this->getRepeatEnd($arrFields, $rrule, $repeatEach, $tz[1]);
+                    $arrFields['repeatEnd'] = $this->getRepeatEnd($arrFields, $rrule, $repeatEach, $dtStartTz);
+
+                    if (isset($rrule['WKST']) && is_array($rrule['WKST'])) {
+                        $weekdays = ['MO' => 1, 'TU' => 2, 'WE' => 3, 'TH' => 4, 'FR' => 5, 'SA' => 6, 'SU' => 0];
+                        $mapWeekdays = static function(string $value) use ($weekdays): ?int {
+                            return $weekdays[$value] ?? null;
+                        };
+                        $arrFields['repeatWeekday'] = serialize(array_map($mapWeekdays, $rrule['WKST']));
+                    }
                 }
 
                 if (!isset($foundevents[$uid])) {
@@ -1489,24 +1499,14 @@ class CalendarImport extends \Backend
      */
     private function getRepeatEnd($arrFields, $rrule, $repeatEach, $dtStartTz)
     {
-        if (isset($rrule[Vcalendar::UNTIL]) && ($rrule[Vcalendar::UNTIL] != Util::$SP0)) {
-            if (isset($rrule[Vcalendar::UNTIL][RecurFactory::$LCHOUR])) {
-                // Fix timezone
-                $rrule[Vcalendar::UNTIL] = UtilDateTime::factory(
-                    $rrule[Vcalendar::UNTIL],
-                    [Vcalendar::TZID => Vcalendar::UTC],
-                    $dtStartTz
-                );
-            }
-
-            return (int)mktime(
-                $rrule[Vcalendar::UNTIL][RecurFactory::$LCHOUR],
-                $rrule[Vcalendar::UNTIL][RecurFactory::$LCMIN],
-                $rrule[Vcalendar::UNTIL][RecurFactory::$LCSEC],
-                $rrule[Vcalendar::UNTIL][RecurFactory::$LCMONTH],
-                $rrule[Vcalendar::UNTIL][RecurFactory::$LCDAY],
-                $rrule[Vcalendar::UNTIL][RecurFactory::$LCYEAR]
+        if (($until = $rrule[IcalInterface::UNTIL] ?? null) instanceof \DateTime) {
+            // convert UNTIL date to DTSTART timezone
+            $until = new \DateTime(
+                $until->format(DateTimeFactory::$YmdHis),
+                DateTimeZoneFactory::factory($dtStartTz)
             );
+
+            return $until->getTimestamp();
         }
 
         if ((int)$arrFields['recurrences'] === 0) {
