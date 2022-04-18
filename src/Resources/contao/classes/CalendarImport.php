@@ -1528,7 +1528,7 @@ class CalendarImport extends \Backend
         $exDates = [];
         while (false !== ($prop = $vevent->getExdate(false, true))) {
             foreach ($prop[Util::$LCvalue] as $exDate) {
-                $exDate = UtilDateTime::factory($exDate, $prop[Util::$LCparams], $exDate, $timezone);
+                $exDate = UtilDateTime::factory($exDate, $prop[Util::$LCparams], $timezone);
                 $timestamp = (int)$exDate->format('U');
                 if ($timeshift != 0) {
                     $timestamp += $timeshift * 3600;
