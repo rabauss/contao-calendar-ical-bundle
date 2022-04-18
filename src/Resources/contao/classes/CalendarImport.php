@@ -13,6 +13,10 @@
 namespace Contao;
 
 use Exception;
+use Kigkonsult\Icalcreator\IcalInterface;
+use Kigkonsult\Icalcreator\Pc;
+use Kigkonsult\Icalcreator\Util\DateTimeFactory;
+use Kigkonsult\Icalcreator\Util\DateTimeZoneFactory;
 use Kigkonsult\Icalcreator\Util\RecurFactory;
 use Kigkonsult\Icalcreator\Util\Util;
 use Kigkonsult\Icalcreator\Util\UtilDateTime;
@@ -782,7 +786,9 @@ class CalendarImport extends \Backend
                 /** @var Vevent $vevent */
                 $arrFields = $defaultFields;
                 $dtstart = $vevent->getDtstart();
+                $dtstartRow = $vevent->getDtstart(true);
                 $dtend = $vevent->getDtend();
+                $dtendRow = $vevent->getDtend(true);
                 $rrule = $vevent->getRrule( 1);
                 $summary = $vevent->getSummary() ?? '';
                 if (!empty($this->filterEventTitle) && strpos($summary, $this->filterEventTitle) === false) {
@@ -791,7 +797,6 @@ class CalendarImport extends \Backend
                 $description = $vevent->getDescription() ?? '';
                 $location = trim($vevent->getLocation() ?? '');
                 $uid = $vevent->getUid();
-                $fixend = ($dtend instanceof \DateTime && (int)$dtend->format('Hi') === 0) ? 24 * 60 * 60 : 0;
 
                 $arrFields['tstamp'] = time();
                 $arrFields['pid'] = $pid;
@@ -861,27 +866,37 @@ class CalendarImport extends \Backend
 
                 $arrFields['startDate'] = 0;
                 $arrFields['startTime'] = 0;
+                $arrFields['addTime'] = '';
                 $arrFields['endDate'] = 0;
                 $arrFields['endTime'] = 0;
-                $dtStartTz = null;
 
-                if ($dtstart instanceof \DateTime) {
-                    if (($timezone = $dtstart->getTimezone()) instanceof \DateTimeZone) {
-                        $dtStartTz = $timezone->getName();
-                        @ini_set('date.timezone', $dtStartTz);
-                        @date_default_timezone_set($dtStartTz);
+                if ($dtstart instanceof \DateTime && $dtstartRow instanceof Pc) {
+                    if (!$dtstartRow->hasParamValue(IcalInterface::TZID)) {
+                        $dtstart = new \DateTime(
+                            $dtstart->format(DateTimeFactory::$YmdHis),
+                            DateTimeZoneFactory::factory($tz[1])
+                        );
                     }
-                    $arrFields['startDate'] = (clone $dtstart)->setTime(0, 0)->getTimestamp();
-                    $arrFields['addTime'] = ((int)$dtstart->format('Hi') > 0) ? 1 : '';
+                    $arrFields['startDate'] = $dtstart->getTimestamp();
+                    if (!$dtstartRow->hasParamValue(IcalInterface::DATE)) {
+                        $arrFields['addTime'] = 1;
+                    }
                     $arrFields['startTime'] = $dtstart->getTimestamp();
                 }
-                if ($dtend instanceof \DateTime) {
-                    if (($timezone = $dtend->getTimezone()) instanceof \DateTimeZone) {
-                        @ini_set('date.timezone', $timezone->getName());
-                        @date_default_timezone_set($timezone->getName());
+                if ($dtend instanceof \DateTime && $dtendRow instanceof Pc) {
+                    if (!$dtendRow->hasParamValue(IcalInterface::TZID)) {
+                        $dtend = new \DateTime(
+                            $dtend->format(DateTimeFactory::$YmdHis),
+                            DateTimeZoneFactory::factory($tz[1])
+                        );
                     }
-                    $arrFields['endDate'] = (clone $dtend)->setTime(0, 0)->getTimestamp();
-                    $arrFields['endTime'] = $dtend->getTimestamp();
+                    if (!$dtendRow->hasParamValue( IcalInterface::DATE )) {
+                        $arrFields['endDate'] = $dtend->getTimestamp();
+                        $arrFields['endTime'] = $dtend->getTimestamp();
+                    } else {
+                        $arrFields['endDate'] = (clone $dtend)->modify('- 1 day')->getTimestamp();
+                        $arrFields['endTime'] = (clone $dtend)->modify('- 1 second')->getTimestamp();
+                    }
                 }
 
                 if ($timeshift != 0) {
@@ -890,9 +905,6 @@ class CalendarImport extends \Backend
                     $arrFields['startTime'] += $timeshift * 3600;
                     $arrFields['endTime'] += $timeshift * 3600;
                 }
-
-                $arrFields['endDate'] -= $fixend;
-                $arrFields['endTime'] -= $fixend;
 
                 if (is_array($rrule)) {
                     $arrFields['recurring'] = 1;
@@ -916,7 +928,7 @@ class CalendarImport extends \Backend
 
                     $repeatEach['value'] = (array_key_exists('INTERVAL', $rrule)) ? $rrule['INTERVAL'] : 1;
                     $arrFields['repeatEach'] = serialize($repeatEach);
-                    $arrFields['repeatEnd'] = $this->getRepeatEnd($arrFields, $rrule, $repeatEach, $dtStartTz);
+                    $arrFields['repeatEnd'] = $this->getRepeatEnd($arrFields, $rrule, $repeatEach, $tz[1]);
                 }
 
                 if (!isset($foundevents[$uid])) {
