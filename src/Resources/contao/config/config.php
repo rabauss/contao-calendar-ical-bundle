@@ -26,6 +26,9 @@ $GLOBALS['TL_CRON']['daily'][] = array('CalendarExport', 'generateSubscriptions'
 /**
  * Add 'ical' to the URL keywords to prevent problems with URL manipulating modules like folderurl
  */
+if (!array_key_exists('urlKeywords', $GLOBALS['TL_CONFIG'])) {
+    $GLOBALS['TL_CONFIG'] += ['urlKeywords' => ''];
+}
 $GLOBALS['TL_CONFIG']['urlKeywords'] .= (strlen(trim($GLOBALS['TL_CONFIG']['urlKeywords'])) ? ',' : '') . 'ical';
 
 $GLOBALS['TL_HOOKS']['removeOldFeeds'][] = array('CalendarExport', 'removeOldSubscriptions');
