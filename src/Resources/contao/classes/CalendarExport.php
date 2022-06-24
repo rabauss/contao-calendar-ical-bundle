@@ -168,8 +168,12 @@ class CalendarExport extends \Backend
 
                 if ($objEvents->addTime) {
                     $vevent->setDtstart(date(DateTimeFactory::$YmdTHis, $objEvents->startTime), [ Vcalendar::VALUE => Vcalendar::DATE_TIME ]);
-                    if (!strlen($objEvents->ignoreEndTime) || $objEvents->ignoreEndTime == 0 || !strlen($objEvents->endDate) || $objEvents->endDate == 0) {
-                        $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $objEvents->endTime), [Vcalendar::VALUE => Vcalendar::DATE_TIME]);
+                    if (!strlen($objEvents->ignoreEndTime) || $objEvents->ignoreEndTime == 0) {
+                        if ($objEvents->startTime < $objEvents->endTime) {
+                            $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $objEvents->endTime), [Vcalendar::VALUE => Vcalendar::DATE_TIME]);
+                        } else {
+                            $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $objEvents->startTime + 60 * 60), [ Vcalendar::VALUE => Vcalendar::DATE_TIME ]);
+                        }
                     } else {
                         $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $objEvents->startTime), [ Vcalendar::VALUE => Vcalendar::DATE_TIME ]);
                     }
