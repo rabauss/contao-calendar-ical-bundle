@@ -144,7 +144,7 @@ class CalendarExport extends \Backend
         foreach ($arrCalendars as $id) {
             // Get events of the current period
             $objEvents = $this->Database
-                ->prepare("SELECT *, (SELECT title FROM tl_calendar WHERE id=?) AS calendar FROM tl_calendar_events WHERE pid=? AND ((startTime>=? AND startTime<=?) OR (endTime>=? AND endTime<=?) OR (startTime<=? AND endTime>=?) OR (recurring=1 AND (recurrences=0 OR repeatEnd>=?))) AND (start='' OR start<?) AND (stop='' OR stop>?) AND published=1 ORDER BY startTime")
+                ->prepare("SELECT *, (SELECT title FROM tl_calendar WHERE id=?) AS calendar FROM tl_calendar_events WHERE pid=? AND ((startTime>=? AND startTime<=?) OR (endTime>=? AND endTime<=?) OR (startTime<=? AND endTime>=?) OR (recurring='1' AND (recurrences=0 OR repeatEnd>=?))) AND (start='' OR CAST(start AS UNSIGNED)<?) AND (stop='' OR CAST(stop AS UNSIGNED)>?) AND published='1' ORDER BY startTime")
                 ->execute(
                     $id,
                     $id,
