@@ -13,10 +13,14 @@
 namespace Contao;
 
 use Exception;
+use Kigkonsult\Icalcreator\IcalInterface;
+use Kigkonsult\Icalcreator\Pc;
 use Kigkonsult\Icalcreator\Util\DateTimeFactory;
-use Kigkonsult\Icalcreator\Util\Util;
-use Kigkonsult\Icalcreator\Util\UtilDateTime;
+use Kigkonsult\Icalcreator\Util\DateTimeZoneFactory;
+use Kigkonsult\Icalcreator\Util\RecurFactory;
+use Kigkonsult\Icalcreator\Util\RecurFactory2;
 use Kigkonsult\Icalcreator\Vcalendar;
+use Kigkonsult\Icalcreator\Vevent;
 
 /**
  * Class CalendarImport
@@ -26,6 +30,7 @@ use Kigkonsult\Icalcreator\Vcalendar;
 class CalendarImport extends \Backend
 {
     protected $blnSave = true;
+    /** @var Vcalendar */
     protected $cal;
 
     /** @var string */
@@ -120,24 +125,22 @@ class CalendarImport extends \Backend
     public function importFromWebICS($pid, $url, $startDate, $endDate, $timezone, $proxy, $benutzerpw, $port)
     {
         $this->cal = new Vcalendar();
-        $this->cal->setProperty('method', 'PUBLISH');
-        $this->cal->setProperty("x-wr-calname", $this->strTitle);
-        $this->cal->setProperty("X-WR-CALDESC", $this->strTitle);
+        $this->cal->setMethod(Vcalendar::PUBLISH);
+        $this->cal->setXprop(Vcalendar::X_WR_CALNAME, $this->strTitle);
+        $this->cal->setXprop(Vcalendar::X_WR_CALDESC, $this->strTitle);
 
         /* start parse of local file */
-        $filename = $this->downloadURLToTempFile($url, $proxy, $benutzerpw, $port);
-        if ($filename === null) {
+        $file = $this->downloadURLToTempFile($url, $proxy, $benutzerpw, $port);
+        if ($file === null) {
             return;
         }
-        $this->cal->setConfig('directory', TL_ROOT . '/' . dirname($filename));
-        $this->cal->setConfig('filename', basename($filename));
         try {
-            $this->cal->parse();
+            $this->cal->parse($file->getContent());
         } catch (Exception $e) {
             \System::log($e->getMessage(), __METHOD__, TL_ERROR);
             return;
         }
-        $tz = $this->cal->getProperty('X-WR-TIMEZONE');
+        $tz = $this->cal->getProperty(Vcalendar::X_WR_TIMEZONE);
 
         if (!is_array($tz) || strlen($tz[1]) == 0) {
             $tz = $timezone;
@@ -146,6 +149,9 @@ class CalendarImport extends \Backend
         $this->importFromICS($pid, $startDate, $endDate, true, $tz, true);
     }
 
+    /**
+     * @return File|null
+     */
     protected function downloadURLToTempFile($url, $proxy, $benutzerpw, $port)
     {
         $url = html_entity_decode($url);
@@ -188,11 +194,11 @@ class CalendarImport extends \Backend
         }
 
         $filename = md5(time());
-        $objFile = new \File('system/tmp/' . $filename);
+        $objFile = new \Contao\File('system/tmp/' . $filename);
         $objFile->write($content);
         $objFile->close();
 
-        return 'system/tmp/' . $filename;
+        return $objFile;
     }
 
     private function isCurlInstalled()
@@ -678,20 +684,22 @@ class CalendarImport extends \Backend
     ) {
         $pid = $dc->id;
         $this->cal = new Vcalendar();
-        $this->cal->setProperty('method', 'PUBLISH');
-        $this->cal->setProperty("x-wr-calname", $this->strTitle);
-        $this->cal->setProperty("X-WR-CALDESC", $this->strTitle);
+        $this->cal->setMethod(Vcalendar::PUBLISH);
+        $this->cal->setXprop(Vcalendar::X_WR_CALNAME, $this->strTitle);
+        $this->cal->setXprop(Vcalendar::X_WR_CALDESC, $this->strTitle);
 
-        /* start parse of local file */
-        $this->cal->setConfig('directory', TL_ROOT . '/' . dirname($filename));
-        $this->cal->setConfig('filename', basename($filename));
         try {
-            $this->cal->parse();
+            $file = new \Contao\File($filename);
+            $content = $file->exists() ? $file->getContent() : '';
+            if (empty($content)) {
+                throw new \InvalidArgumentException('Ical content empty');
+            }
+            $this->cal->parse($content);
         } catch (Exception $e) {
             \Message::addError($e->getMessage());
             $this->redirect(str_replace('&key=import', '', \Environment::get('request')));
         }
-        $tz = $this->cal->getProperty('X-WR-TIMEZONE');
+        $tz = $this->cal->getProperty(Vcalendar::X_WR_TIMEZONE);
 
         if ($timeshift == 0) {
             if (is_array($tz) && strlen($tz[1]) && strcmp($tz[1], $GLOBALS['TL_CONFIG']['timeZone']) != 0) {
@@ -774,25 +782,20 @@ class CalendarImport extends \Backend
 
         if (is_array($eventArray)) {
             foreach ($eventArray as $vevent) {
+                /** @var Vevent $vevent */
                 $arrFields = $defaultFields;
-                $currddate = $vevent->getProperty('x-current-dtstart');
-                // if member of a recurrence set,
-                // returns array( 'x-current-dtstart', <DATE>)
-                // <DATE> = (string) date("Y-m-d [H:i:s][timezone/UTC offset]")
-                $dtstartrow = $vevent->getProperty('dtstart', false, true);
-                $dtstart = $dtstartrow['value'];
-                $dtendrow = $vevent->getProperty('dtend', false, true);
-                $dtend = $dtendrow['value'];
-                $rrule = $vevent->getProperty('rrule', 1);
-                $summary = $vevent->getProperty('summary');
+                $dtstart = $vevent->getDtstart();
+                $dtstartRow = $vevent->getDtstart(true);
+                $dtend = $vevent->getDtend();
+                $dtendRow = $vevent->getDtend(true);
+                $rrule = $vevent->getRrule();
+                $summary = $vevent->getSummary() ?? '';
                 if (!empty($this->filterEventTitle) && strpos($summary, $this->filterEventTitle) === false) {
                     continue;
                 }
-                $descriptionraw = $vevent->getProperty('description', false, true);
-                $description = $descriptionraw['value'];
-                $location = trim($vevent->getProperty('location'));
-                $uid = $vevent->getProperty('UID');
-                $fixend = (!array_key_exists('hour', $dtend)) ? 24 * 60 * 60 : 0;
+                $description = $vevent->getDescription() ?? '';
+                $location = trim($vevent->getLocation() ?? '');
+                $uid = $vevent->getUid();
 
                 $arrFields['tstamp'] = time();
                 $arrFields['pid'] = $pid;
@@ -860,23 +863,43 @@ class CalendarImport extends \Backend
                     }
                 }
 
-                $timezone = (array_key_exists('TZID',
-                    $dtstartrow['params'])) ? $dtstartrow['params']['TZID'] : ((strcmp(strtoupper($dtstart['tz']),
-                        'Z') == 0) ? 'UTC' : $tz[1]);
-                @ini_set('date.timezone', $timezone);
-                @date_default_timezone_set($timezone);
-                $arrFields['startDate'] = mktime(0, 0, 0, $dtstart['month'], $dtstart['day'], $dtstart['year']);
-                $arrFields['addTime'] = (array_key_exists('hour', $dtstart)) ? 1 : '';
-                $arrFields['startTime'] = mktime($dtstart['hour'], $dtstart['min'], $dtstart['sec'], $dtstart['month'],
-                    $dtstart['day'], $dtstart['year']);
-                $timezone = (array_key_exists('TZID',
-                    $dtendrow['params'])) ? $dtendrow['params']['TZID'] : ((strcmp(strtoupper($dtend['tz']),
-                        'Z') == 0) ? 'UTC' : $tz[1]);
-                @ini_set('date.timezone', $timezone);
-                @date_default_timezone_set($timezone);
-                $arrFields['endDate'] = mktime(0, 0, 0, $dtend['month'], $dtend['day'], $dtend['year']);
-                $arrFields['endTime'] = mktime($dtend['hour'], $dtend['min'], $dtend['sec'], $dtend['month'],
-                    $dtend['day'], $dtend['year']);
+                $arrFields['startDate'] = 0;
+                $arrFields['startTime'] = 0;
+                $arrFields['addTime'] = '';
+                $arrFields['endDate'] = 0;
+                $arrFields['endTime'] = 0;
+                $timezone = $tz[1];
+
+                if ($dtstart instanceof \DateTime && $dtstartRow instanceof Pc) {
+                    if (!$dtstartRow->hasParamValue(IcalInterface::TZID)) {
+                        $dtstart = new \DateTime(
+                            $dtstart->format(DateTimeFactory::$YmdHis),
+                            DateTimeZoneFactory::factory($tz[1])
+                        );
+                    } else {
+                        $timezone = $dtstartRow->getParams(IcalInterface::TZID);
+                    }
+                    $arrFields['startDate'] = $dtstart->getTimestamp();
+                    if (!$dtstartRow->hasParamValue(IcalInterface::DATE)) {
+                        $arrFields['addTime'] = 1;
+                    }
+                    $arrFields['startTime'] = $dtstart->getTimestamp();
+                }
+                if ($dtend instanceof \DateTime && $dtendRow instanceof Pc) {
+                    if (!$dtendRow->hasParamValue(IcalInterface::TZID)) {
+                        $dtend = new \DateTime(
+                            $dtend->format(DateTimeFactory::$YmdHis),
+                            DateTimeZoneFactory::factory($tz[1])
+                        );
+                    }
+                    if (!$dtendRow->hasParamValue( IcalInterface::DATE )) {
+                        $arrFields['endDate'] = $dtend->getTimestamp();
+                        $arrFields['endTime'] = $dtend->getTimestamp();
+                    } else {
+                        $arrFields['endDate'] = (clone $dtend)->modify('- 1 day')->getTimestamp();
+                        $arrFields['endTime'] = (clone $dtend)->modify('- 1 second')->getTimestamp();
+                    }
+                }
 
                 if ($timeshift != 0) {
                     $arrFields['startDate'] += $timeshift * 3600;
@@ -884,9 +907,6 @@ class CalendarImport extends \Backend
                     $arrFields['startTime'] += $timeshift * 3600;
                     $arrFields['endTime'] += $timeshift * 3600;
                 }
-
-                $arrFields['endDate'] -= $fixend;
-                $arrFields['endTime'] -= $fixend;
 
                 if (is_array($rrule)) {
                     $arrFields['recurring'] = 1;
@@ -908,11 +928,22 @@ class CalendarImport extends \Backend
                             break;
                     }
 
-                    $repeatEach['value'] = (array_key_exists('INTERVAL', $rrule)) ? $rrule['INTERVAL'] : 1;
+                    $repeatEach['value'] = $rrule['INTERVAL'] ?? 1;
                     $arrFields['repeatEach'] = serialize($repeatEach);
-                    $arrFields['repeatEnd'] = $this->getRepeatEnd($arrFields, $rrule, $repeatEach);
+                    $arrFields['repeatEnd'] = $this->getRepeatEnd($arrFields, $rrule, $repeatEach, $timezone, $timeshift);
+
+                    if (isset($rrule['WKST']) && is_array($rrule['WKST'])) {
+                        $weekdays = ['MO' => 1, 'TU' => 2, 'WE' => 3, 'TH' => 4, 'FR' => 5, 'SA' => 6, 'SU' => 0];
+                        $mapWeekdays = static function(string $value) use ($weekdays): ?int {
+                            return $weekdays[$value] ?? null;
+                        };
+                        $arrFields['repeatWeekday'] = serialize(array_map($mapWeekdays, $rrule['WKST']));
+                    }
                 }
 
+                if (!isset($foundevents[$uid])) {
+                    $foundevents[$uid] = 0;
+                }
                 $foundevents[$uid]++;
 
                 if ($foundevents[$uid] <= 1) {
@@ -1016,7 +1047,7 @@ class CalendarImport extends \Backend
         $this->Template->hrefBack = ampersand(str_replace('&key=import', '', \Environment::get('request')));
         $this->Template->goBack = $GLOBALS['TL_LANG']['MSC']['goBack'];
         $this->Template->headline = $GLOBALS['TL_LANG']['MSC']['import_calendar'][0];
-        $this->Template->request = ampersand(\Environment::get('request'), ENCODE_AMPERSANDS);
+        $this->Template->request = ampersand(\Environment::get('request'));
         $this->Template->submit = specialchars($GLOBALS['TL_LANG']['tl_calendar_events']['proceed'][0]);
 
         return $this->Template->parse();
@@ -1462,44 +1493,38 @@ class CalendarImport extends \Backend
      * @param array $arrFields
      * @param array $rrule
      * @param array $repeatEach
+     * @param string $timezone
+     * @param int $timeshift
      * @return int
      * @throws Exception
      */
-    private function getRepeatEnd($arrFields, $rrule, $repeatEach)
+    private function getRepeatEnd($arrFields, $rrule, $repeatEach, $timezone, $timeshift = 0)
     {
-        if (isset($rrule[Vcalendar::UNTIL]) && ($rrule[Vcalendar::UNTIL] != Util::$SP0)) {
-            if (isset($rrule[Vcalendar::UNTIL][Util::$LCHOUR])) {
-                // Fix timezone
-                $until = UtilDateTime::factory(
-                    $rrule[Vcalendar::UNTIL],
-                    [Vcalendar::TZID => Vcalendar::UTC],
-                    null,
-                    $tz[1]
-                );
-                $rrule[Vcalendar::UNTIL] = DateTimeFactory::strDate2arr($until->format());
-            }
-
-            return (int)mktime(
-                $rrule[Vcalendar::UNTIL][Util::$LCHOUR],
-                $rrule[Vcalendar::UNTIL][Util::$LCMIN],
-                $rrule[Vcalendar::UNTIL][Util::$LCSEC],
-                $rrule[Vcalendar::UNTIL][Util::$LCMONTH],
-                $rrule[Vcalendar::UNTIL][Util::$LCDAY],
-                $rrule[Vcalendar::UNTIL][Util::$LCYEAR]
+        if (($until = $rrule[IcalInterface::UNTIL] ?? null) instanceof \DateTime) {
+            // convert UNTIL date to current timezone
+            $until = new \DateTime(
+                $until->format(DateTimeFactory::$YmdHis),
+                DateTimeZoneFactory::factory($timezone)
             );
+
+            $timestamp = $until->getTimestamp();
+            if ($timeshift != 0) {
+                $timestamp += $timeshift * 3600;
+            }
+            return $timestamp;
         }
 
         if ((int)$arrFields['recurrences'] === 0) {
             return (int)min(4294967295, PHP_INT_MAX);
-        } else {
-            if (isset($repeatEach['unit'], $repeatEach['value'])) {
-                $arg = $repeatEach['value'] * $arrFields['recurrences'];
-                $unit = $repeatEach['unit'];
+        }
 
-                $strtotime = '+ '.$arg.' '.$unit;
+        if (isset($repeatEach['unit'], $repeatEach['value'])) {
+            $arg = $repeatEach['value'] * $arrFields['recurrences'];
+            $unit = $repeatEach['unit'];
 
-                return (int)strtotime($strtotime, $arrFields['endTime']);
-            }
+            $strtotime = '+ '.$arg.' '.$unit;
+
+            return (int)strtotime($strtotime, $arrFields['endTime']);
         }
 
         return 0;
