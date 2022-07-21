@@ -29,8 +29,8 @@
     "source": "https://github.com/Craffft/contao-calendar-ical-bundle"
   },
   "require": {
-    "php": ">=7.4.0",
-    "contao/core-bundle": ">=4.2,<5.0",
+    "php": "^7.4 || ^8.0",
+    "contao/core-bundle": ">=4.4,<5.0",
     "kigkonsult/icalcreator": "2.39.*"
   },
   "require-dev": {
