@@ -868,34 +868,68 @@ class CalendarImport extends \Backend
                 $arrFields['endTime'] = 0;
                 $timezone = $tz[1];
 
-                if ($dtstart instanceof \DateTime && $dtstartRow instanceof Pc) {
-                    if (!$dtstartRow->hasParamValue(IcalInterface::TZID)) {
+                if ($dtstart instanceof \DateTime) {
+                    if ($dtstartRow instanceof Pc) {
+                        if ($dtstartRow->hasParamKey(IcalInterface::TZID)) {
+                            $timezone = $dtstartRow->getParams(IcalInterface::TZID);
+                        } else {
+                            $dtstart = new \DateTime(
+                                $dtstart->format(DateTimeFactory::$YmdHis),
+                                DateTimeZoneFactory::factory($tz[1])
+                            );
+                        }
+
+                        if (!$dtstartRow->hasParamValue(IcalInterface::DATE)) {
+                            $arrFields['addTime'] = 1;
+                        } else {
+                            $arrFields['addTime'] = 0;
+                        }
+                    } else {
                         $dtstart = new \DateTime(
                             $dtstart->format(DateTimeFactory::$YmdHis),
                             DateTimeZoneFactory::factory($tz[1])
                         );
-                    } else {
-                        $timezone = $dtstartRow->getParams(IcalInterface::TZID);
+
+                        if (array_key_exists('params', $dtstartRow) && array_key_exists('VALUE', $dtstartRow['params']) && strcmp(strtoupper($dtstartRow['params']['VALUE']), 'DATE') == 0) {
+                            $arrFields['addTime'] = 0;
+                        } else {
+                            $arrFields['addTime'] = 1;
+                        }
                     }
-                    $arrFields['startDate'] = $dtstart->getTimestamp();
-                    if (!$dtstartRow->hasParamValue(IcalInterface::DATE)) {
-                        $arrFields['addTime'] = 1;
-                    }
-                    $arrFields['startTime'] = $dtstart->getTimestamp();
+                    $arrFields['startDate'] = $dtstart->getTimestamp() + $dtstart->getOffset();
+                    $arrFields['startTime'] = $dtstart->getTimestamp() + $dtstart->getOffset();
                 }
-                if ($dtend instanceof \DateTime && $dtendRow instanceof Pc) {
-                    if (!$dtendRow->hasParamValue(IcalInterface::TZID)) {
+                if ($dtend instanceof \DateTime) {
+                    if ($dtendRow instanceof Pc) {
+                        if ($dtendRow->hasParamKey(IcalInterface::TZID)) {
+                            $timezone = $dtendRow->getParams(IcalInterface::TZID);
+                        } else {
+                            $dtend = new \DateTime(
+                                $dtend->format(DateTimeFactory::$YmdHis),
+                                DateTimeZoneFactory::factory($tz[1])
+                            );
+                        }
+
+                        if ($arrFields['addTime'] == 1) {
+                            $arrFields['endDate'] = $dtend->getTimestamp() + $dtstart->getOffset();
+                            $arrFields['endTime'] = $dtend->getTimestamp() + $dtstart->getOffset();
+                        } else {
+                            $arrFields['endDate'] = (clone $dtend)->modify('- 1 day')->getTimestamp() + $dtstart->getOffset();
+                            $arrFields['endTime'] = (clone $dtend)->modify('- 1 second')->getTimestamp() + $dtstart->getOffset();
+                        }
+                    } else {
                         $dtend = new \DateTime(
                             $dtend->format(DateTimeFactory::$YmdHis),
                             DateTimeZoneFactory::factory($tz[1])
                         );
-                    }
-                    if (!$dtendRow->hasParamValue( IcalInterface::DATE )) {
-                        $arrFields['endDate'] = $dtend->getTimestamp();
-                        $arrFields['endTime'] = $dtend->getTimestamp();
-                    } else {
-                        $arrFields['endDate'] = (clone $dtend)->modify('- 1 day')->getTimestamp();
-                        $arrFields['endTime'] = (clone $dtend)->modify('- 1 second')->getTimestamp();
+
+                        if ($arrFields['addTime'] == 1) {
+                            $arrFields['endDate'] = $dtend->getTimestamp() + $dtstart->getOffset();
+                            $arrFields['endTime'] = $dtend->getTimestamp() + $dtstart->getOffset();
+                        } else {
+                            $arrFields['endDate'] = (clone $dtend)->modify('- 1 day')->getTimestamp() + $dtstart->getOffset();
+                            $arrFields['endTime'] = (clone $dtend)->modify('- 1 second')->getTimestamp() + $dtstart->getOffset();
+                        }
                     }
                 }
 
