@@ -193,11 +193,11 @@ class CalendarExport extends \Backend
                 $vevent->setDescription(html_entity_decode(strip_tags(preg_replace('/<br \\/>/', "\n",
                     $this->replaceInsertTags($objEvents->teaser))), ENT_QUOTES, 'UTF-8'));
 
-                if ($objEvents->cep_location) {
-                    $vevent->setDescription(trim(html_entity_decode($objEvents->cep_location, ENT_QUOTES, 'UTF-8')));
+                if (!empty($objEvents->location)) {
+                    $vevent->setLocation(trim(html_entity_decode($objEvents->location, ENT_QUOTES, 'UTF-8')));
                 }
 
-                if ($objEvents->cep_participants) {
+                if (!empty($objEvents->cep_participants)) {
                     $attendees = preg_split("/,/", $objEvents->cep_participants);
                     if (count($attendees)) {
                         foreach ($attendees as $attendee) {
@@ -211,8 +211,8 @@ class CalendarExport extends \Backend
                     }
                 }
 
-                if ($objEvents->cep_contact) {
-                    $contact = trim($objEvents->cep_contact);
+                if (!empty($objEvents->location_contact)) {
+                    $contact = trim($objEvents->location_contact);
                     $vevent->setContact($contact);
                 }
 
