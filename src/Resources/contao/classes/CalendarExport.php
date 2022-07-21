@@ -135,16 +135,16 @@ class CalendarExport extends \Backend
         }
 
         $ical = new Vcalendar();
-        $ical->setMethod('PUBLISH');
-        $ical->setXprop("x-wr-calname", $title);
-        $ical->setXprop("X-WR-CALDESC", $description);
-        $ical->setXprop("X-WR-TIMEZONE", $GLOBALS['TL_CONFIG']['timeZone']);
+        $ical->setMethod(Vcalendar::PUBLISH);
+        $ical->setXprop(Vcalendar::X_WR_CALNAME, $title);
+        $ical->setXprop(Vcalendar::X_WR_CALDESC, $description);
+        $ical->setXprop(Vcalendar::X_WR_TIMEZONE, $GLOBALS['TL_CONFIG']['timeZone']);
         $time = time();
 
         foreach ($arrCalendars as $id) {
             // Get events of the current period
             $objEvents = $this->Database
-                ->prepare("SELECT *, (SELECT title FROM tl_calendar WHERE id=?) AS calendar FROM tl_calendar_events WHERE pid=? AND ((startTime>=? AND startTime<=?) OR (endTime>=? AND endTime<=?) OR (startTime<=? AND endTime>=?) OR (recurring=1 AND (recurrences=0 OR repeatEnd>=?))) AND (start='' OR start<?) AND (stop='' OR stop>?) AND published=1 ORDER BY startTime")
+                ->prepare("SELECT *, (SELECT title FROM tl_calendar WHERE id=?) AS calendar FROM tl_calendar_events WHERE pid=? AND ((startTime>=? AND startTime<=?) OR (endTime>=? AND endTime<=?) OR (startTime<=? AND endTime>=?) OR (recurring='1' AND (recurrences=0 OR repeatEnd>=?))) AND (start='' OR CAST(start AS UNSIGNED)<?) AND (stop='' OR CAST(stop AS UNSIGNED)>?) AND published='1' ORDER BY startTime")
                 ->execute(
                     $id,
                     $id,
@@ -168,7 +168,15 @@ class CalendarExport extends \Backend
 
                 if ($objEvents->addTime) {
                     $vevent->setDtstart(date(DateTimeFactory::$YmdTHis, $objEvents->startTime), [ Vcalendar::VALUE => Vcalendar::DATE_TIME ]);
-                    $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $objEvents->endTime), [ Vcalendar::VALUE => Vcalendar::DATE_TIME ]);
+                    if (!strlen($objEvents->ignoreEndTime) || $objEvents->ignoreEndTime == 0) {
+                        if ($objEvents->startTime < $objEvents->endTime) {
+                            $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $objEvents->endTime), [Vcalendar::VALUE => Vcalendar::DATE_TIME]);
+                        } else {
+                            $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $objEvents->startTime + 60 * 60), [ Vcalendar::VALUE => Vcalendar::DATE_TIME ]);
+                        }
+                    } else {
+                        $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $objEvents->startTime), [ Vcalendar::VALUE => Vcalendar::DATE_TIME ]);
+                    }
                 } else {
                     $vevent->setDtstart(date(DateTimeFactory::$Ymd, $objEvents->startDate), [ Vcalendar::VALUE => Vcalendar::DATE ]);
                     if (!strlen($objEvents->endDate) || $objEvents->endDate == 0) {
