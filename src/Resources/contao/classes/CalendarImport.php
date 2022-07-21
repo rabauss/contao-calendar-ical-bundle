@@ -17,6 +17,7 @@ use Kigkonsult\Icalcreator\IcalInterface;
 use Kigkonsult\Icalcreator\Pc;
 use Kigkonsult\Icalcreator\Util\DateTimeFactory;
 use Kigkonsult\Icalcreator\Util\DateTimeZoneFactory;
+use Kigkonsult\Icalcreator\Util\UtilDateTime;
 use Kigkonsult\Icalcreator\Util\RecurFactory;
 use Kigkonsult\Icalcreator\Util\RecurFactory2;
 use Kigkonsult\Icalcreator\Vcalendar;
@@ -940,6 +941,7 @@ class CalendarImport extends \Backend
                         $arrFields['repeatWeekday'] = serialize(array_map($mapWeekdays, $rrule['WKST']));
                     }
                 }
+                $this->handleRecurringExceptions($arrFields, $vevent, $timezone, $timeshift);
 
                 if (!isset($foundevents[$uid])) {
                     $foundevents[$uid] = 0;
@@ -1528,5 +1530,54 @@ class CalendarImport extends \Backend
         }
 
         return 0;
+    }
+
+    /**
+     * @param array $arrFields
+     * @param Vevent $vevent
+     * @param string $timezone
+     * @param int $timeshift
+     */
+    private function handleRecurringExceptions(&$arrFields, $vevent, $timezone, $timeshift)
+    {
+        if (!array_key_exists('useExceptions', $arrFields)
+            && !array_key_exists('repeatExceptions', $arrFields)
+            && !array_key_exists('exceptionList', $arrFields)) {
+            return;
+        }
+
+        $arrFields['useExceptions'] = 0;
+        $arrFields['repeatExceptions'] = null;
+        $arrFields['exceptionList'] = null;
+
+        $exDates = [];
+        while (false !== ($exDateRow = $vevent->getExdate())) {
+            foreach ($exDateRow as $exDate) {
+                if ($exDate instanceof \DateTime) {
+                    // convert UNTIL date to current timezone
+                    $exDate = new \DateTime(
+                        $exDate->format(DateTimeFactory::$YmdHis),
+                        DateTimeZoneFactory::factory($timezone)
+                    );
+                    $timestamp = $exDate->getTimestamp();
+                    if ($timeshift != 0) {
+                        $timestamp += $timeshift * 3600;
+                    }
+                    $exDates[$timestamp] = [
+                        'exception' => $timestamp,
+                        'action' => 'hide',
+                    ];
+                }
+            }
+        }
+
+        if (empty($exDates)) {
+            return;
+        }
+
+        $arrFields['useExceptions'] = 1;
+        ksort($exDates);
+        $arrFields['exceptionList'] = $exDates;
+        $arrFields['repeatExceptions'] = array_values($exDates);
     }
 }
