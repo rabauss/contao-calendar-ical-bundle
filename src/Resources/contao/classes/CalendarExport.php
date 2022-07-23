@@ -76,7 +76,8 @@ class CalendarExport extends \Backend
         $ical = $this->getAllEvents(array($arrArchive['id']), $startdate, $enddate, $arrArchive['title'],
             $arrArchive['ical_description'], $filename, $arrArchive['ical_prefix']);
         $content = $ical->createCalendar();
-        $objFile = new \File('web/share/' . $filename . '.ics');
+        $shareDir = \System::getContainer()->getParameter('contao.web_dir') . '/share';
+        $objFile = new \File(\StringUtil::stripRootDir($shareDir) . '/' . $filename . '.ics');
         $objFile->write($content);
         $objFile->close();
     }
@@ -96,9 +97,10 @@ class CalendarExport extends \Backend
         // Make sure dcaconfig.php is loaded TEST
         // include(TL_ROOT . '/system/config/dcaconfig.php');
 
+        $shareDir = \System::getContainer()->getParameter('contao.web_dir') . '/share';
         // Delete old files
-        foreach (scan(TL_ROOT . '/web/share') as $file) {
-            if (is_dir(TL_ROOT . '/web/share/' . $file)) {
+        foreach (scan($shareDir) as $file) {
+            if (is_dir($shareDir . $file)) {
                 continue;
             }
 
@@ -106,7 +108,7 @@ class CalendarExport extends \Backend
                 continue;
             }
 
-            $objFile = new \File('web/share/' . $file);
+            $objFile = new \File(\StringUtil::stripRootDir($shareDir) . '/' . $file);
 
             if (
                 $objFile->extension === 'ics'
