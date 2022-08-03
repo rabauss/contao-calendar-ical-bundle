@@ -896,8 +896,8 @@ class CalendarImport extends \Backend
                             $arrFields['addTime'] = 1;
                         }
                     }
-                    $arrFields['startDate'] = $dtstart->getTimestamp() + $dtstart->getOffset();
-                    $arrFields['startTime'] = $dtstart->getTimestamp() + $dtstart->getOffset();
+                    $arrFields['startDate'] = $dtstart->getTimestamp();
+                    $arrFields['startTime'] = $dtstart->getTimestamp();
                 }
                 if ($dtend instanceof \DateTime) {
                     if ($dtendRow instanceof Pc) {
@@ -911,11 +911,11 @@ class CalendarImport extends \Backend
                         }
 
                         if ($arrFields['addTime'] == 1) {
-                            $arrFields['endDate'] = $dtend->getTimestamp() + $dtstart->getOffset();
-                            $arrFields['endTime'] = $dtend->getTimestamp() + $dtstart->getOffset();
+                            $arrFields['endDate'] = $dtend->getTimestamp();
+                            $arrFields['endTime'] = $dtend->getTimestamp();
                         } else {
-                            $arrFields['endDate'] = (clone $dtend)->modify('- 1 day')->getTimestamp() + $dtstart->getOffset();
-                            $arrFields['endTime'] = (clone $dtend)->modify('- 1 second')->getTimestamp() + $dtstart->getOffset();
+                            $arrFields['endDate'] = (clone $dtend)->modify('- 1 day')->getTimestamp();
+                            $arrFields['endTime'] = (clone $dtend)->modify('- 1 second')->getTimestamp();
                         }
                     } else {
                         $dtend = new \DateTime(
@@ -924,11 +924,11 @@ class CalendarImport extends \Backend
                         );
 
                         if ($arrFields['addTime'] == 1) {
-                            $arrFields['endDate'] = $dtend->getTimestamp() + $dtstart->getOffset();
-                            $arrFields['endTime'] = $dtend->getTimestamp() + $dtstart->getOffset();
+                            $arrFields['endDate'] = $dtend->getTimestamp();
+                            $arrFields['endTime'] = $dtend->getTimestamp();
                         } else {
-                            $arrFields['endDate'] = (clone $dtend)->modify('- 1 day')->getTimestamp() + $dtstart->getOffset();
-                            $arrFields['endTime'] = (clone $dtend)->modify('- 1 second')->getTimestamp() + $dtstart->getOffset();
+                            $arrFields['endDate'] = (clone $dtend)->modify('- 1 day')->getTimestamp();
+                            $arrFields['endTime'] = (clone $dtend)->modify('- 1 second')->getTimestamp();
                         }
                     }
                 }
