@@ -509,7 +509,7 @@ class CalendarImport extends \Backend
                                 }
                             }
 
-                            $alias = $this->generateAlias("", $insertID);
+                            $alias = $this->generateAlias($arrFields['title'], $insertID, $this->Session->get('csv_pid'));
                             $this->Database->prepare("UPDATE tl_calendar_events SET alias = ? WHERE id = ?")
                                 ->execute($alias, $insertID);
                         }
@@ -1002,7 +1002,7 @@ class CalendarImport extends \Backend
                             }
                         }
 
-                        $alias = $this->generateAlias("", $insertID);
+                        $alias = $this->generateAlias($arrFields['title'], $insertID, $pid);
                         $this->Database->prepare("UPDATE tl_calendar_events SET alias = ? WHERE id = ?")
                             ->execute($alias, $insertID);
                     }
@@ -1012,38 +1012,24 @@ class CalendarImport extends \Backend
     }
 
     /**
-     * Autogenerate a event alias if it has not been set yet
-     * @param mixed
-     * @param object
-     * @return string
+     * Auto-generate the event alias if it has not been set yet
+     *
+     * @param mixed         $varValue
+     * @param integer       $id
+     * @param integer       $pid
+     *
+     * @return mixed
+     *
+     * @throws Exception
      */
-    public function generateAlias($varValue, $id)
-    {
-        $autoAlias = false;
+    private function generateAlias($varValue, $id, $pid) {
+        $aliasExists = function (string $alias) use ($id): bool
+        {
+            return $this->Database->prepare("SELECT id FROM tl_calendar_events WHERE alias=? AND id!=?")->execute($alias, $id)->numRows > 0;
+        };
 
-        // Generate alias if there is none
-        if (!strlen($varValue)) {
-            $objTitle = $this->Database->prepare("SELECT title FROM tl_calendar_events WHERE id=?")
-                ->limit(1)
-                ->execute($id);
-            $autoAlias = true;
-            $varValue = standardize($objTitle->title);
-        }
-
-        $objAlias = $this->Database->prepare("SELECT id FROM tl_calendar_events WHERE alias=?")
-            ->executeUncached($varValue);
-
-        // Check whether the news alias exists
-        if ($objAlias->numRows > 1 && !$autoAlias) {
-            throw new Exception(sprintf($GLOBALS['TL_LANG']['ERR']['aliasExists'], $varValue));
-        }
-
-        // Add ID to alias
-        if ($objAlias->numRows && $autoAlias) {
-            $varValue .= '.' . $id;
-        }
-
-        return $varValue;
+        // Generate the alias if there is none
+        return \System::getContainer()->get('contao.slug')->generate($varValue, \CalendarModel::findByPk($pid)->jumpTo, $aliasExists);
     }
 
     public function getConfirmationForm(
