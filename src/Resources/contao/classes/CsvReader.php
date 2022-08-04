@@ -12,8 +12,7 @@
 
 namespace Contao;
 
-class CsvReader implements \Iterator
-{
+class CsvReader implements \Iterator {
 
     protected $fileHandle = null;
     protected $position = null;
@@ -23,8 +22,7 @@ class CsvReader implements \Iterator
     protected $separator = ',';
     protected $encoding = 'utf8';
 
-    public function __construct($filename, $separator = ',', $encoding = 'utf8')
-    {
+    public function __construct($filename, $separator = ',', $encoding = 'utf8') {
         $this->separator = $separator;
         $this->fileHandle = fopen($filename, 'r');
         if (!$this->fileHandle) {
@@ -36,23 +34,20 @@ class CsvReader implements \Iterator
         $this->_readLine();
     }
 
-    public function __destruct()
-    {
+    public function __destruct() {
         $this->close();
     }
 
     // You should not have to call it unless you need to
     // explicitly free the file descriptor
-    public function close()
-    {
+    public function close() {
         if ($this->fileHandle) {
             fclose($this->fileHandle);
             $this->fileHandle = null;
         }
     }
 
-    public function rewind()
-    {
+    public function rewind() {
         if ($this->fileHandle) {
             $this->position = 0;
             rewind($this->fileHandle);
@@ -61,29 +56,24 @@ class CsvReader implements \Iterator
         $this->_readLine();
     }
 
-    public function current()
-    {
+    public function current() {
         return $this->currentArray;
     }
 
-    public function key()
-    {
+    public function key() {
         return $this->position;
     }
 
-    public function next()
-    {
+    public function next() {
         $this->position++;
         $this->_readLine();
     }
 
-    public function valid()
-    {
+    public function valid() {
         return $this->currentArray !== null;
     }
 
-    protected function _readLine()
-    {
+    protected function _readLine() {
         if (!feof($this->fileHandle)) {
             $this->currentLine = trim(fgets($this->fileHandle));
         } else {

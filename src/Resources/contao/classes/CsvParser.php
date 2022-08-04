@@ -12,23 +12,20 @@
 
 namespace Contao;
 
-class CsvParser
-{
+class CsvParser {
     protected $filename;
     protected $separator;
     protected $encoding;
     protected $reader;
 
-    public function __construct($filename, $encoding = 'utf8')
-    {
+    public function __construct($filename, $encoding = 'utf8') {
         $this->filename = $filename;
         $this->separator = $this->determineSeparator();
         $this->encoding = $encoding;
         $this->reader = new CsvReader($filename, $this->separator, $this->encoding);
     }
 
-    protected function determineSeparator()
-    {
+    protected function determineSeparator() {
         $separators = array(',', ';');
         $file = fopen($this->filename, 'r');
         $string = fgets($file);
@@ -48,15 +45,13 @@ class CsvParser
         }
     }
 
-    public function extractHeader()
-    {
+    public function extractHeader() {
         $this->reader->rewind();
 
         return $this->reader->current();
     }
 
-    public function getDataArray($lines = 1)
-    {
+    public function getDataArray($lines = 1) {
         if ($lines == 1) {
             $this->reader->next();
             if ($this->reader->valid()) {

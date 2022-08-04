@@ -16,10 +16,10 @@ use Kigkonsult\Icalcreator\Util\DateTimeFactory;
 use Kigkonsult\Icalcreator\Vcalendar;
 use Kigkonsult\Icalcreator\Vevent;
 
-class ContentICal extends ContentElement
-{
+class ContentICal extends ContentElement {
     /**
      * Template
+     *
      * @var string
      */
     protected $strTemplate = 'ce_ical';
@@ -28,10 +28,10 @@ class ContentICal extends ContentElement
 
     /**
      * Return if the file does not exist
+     *
      * @return string
      */
-    public function generate()
-    {
+    public function generate() {
         if (TL_MODE == 'BE') {
             $objTemplate = new BackendTemplate('be_wildcard');
             $objTemplate->wildcard = '### ICAL ###';
@@ -60,19 +60,19 @@ class ContentICal extends ContentElement
         if (is_array($arrcalendars)) {
             foreach ($arrcalendars as $id) {
                 $objEvents = $this->Database->prepare("SELECT *, (SELECT title FROM tl_calendar WHERE id=?) AS calendar FROM tl_calendar_events WHERE pid=? AND ((startTime>=? AND startTime<=?) OR (endTime>=? AND endTime<=?) OR (startTime<=? AND endTime>=?) OR (recurring=1 AND (recurrences=0 OR repeatEnd>=?)))" . (!BE_USER_LOGGED_IN ? " AND (start='' OR start<?) AND (stop='' OR stop>?) AND published=1" : "") . " ORDER BY startTime")
-                    ->execute(
-                        $id,
-                        $id,
-                        $intStart,
-                        $intEnd,
-                        $intStart,
-                        $intEnd,
-                        $intStart,
-                        $intEnd,
-                        $intStart,
-                        $time,
-                        $time
-                    );
+                                            ->execute(
+                                                $id,
+                                                $id,
+                                                $intStart,
+                                                $intEnd,
+                                                $intStart,
+                                                $intEnd,
+                                                $intStart,
+                                                $intEnd,
+                                                $intStart,
+                                                $time,
+                                                $time
+                                            );
                 $nrOfCalendars += $objEvents->numRows;
             }
         }
@@ -87,8 +87,7 @@ class ContentICal extends ContentElement
     /**
      * Generate content element
      */
-    protected function compile()
-    {
+    protected function compile() {
         $src = \Environment::get('request');
         $this->Template->link = $this->strTitle;
         $arrCalendars = deserialize($this->ical_calendar, true);
@@ -99,12 +98,12 @@ class ContentICal extends ContentElement
 
     /**
      * Get all events of a certain period
+     *
      * @param array
      * @param integer
      * @param integer
      */
-    protected function getAllEvents($arrCalendars, $intStart, $intEnd)
-    {
+    protected function getAllEvents($arrCalendars, $intStart, $intEnd) {
         if (!is_array($arrCalendars)) {
             return array();
         }
@@ -112,17 +111,18 @@ class ContentICal extends ContentElement
         $this->ical = new Vcalendar();
         $this->ical->setMethod(Vcalendar::PUBLISH);
         $this->ical->setXprop(Vcalendar::X_WR_CALNAME,
-            (strlen(\Input::get('title'))) ? \Input::get('title') : $this->strTitle);
+                              (strlen(\Input::get('title'))) ? \Input::get('title') : $this->strTitle);
         $this->ical->setXprop(Vcalendar::X_WR_CALDESC,
-            (strlen(\Input::get('title'))) ? \Input::get('title') : $this->strTitle);
+                              (strlen(\Input::get('title'))) ? \Input::get('title') : $this->strTitle);
         $this->ical->setXprop(Vcalendar::X_WR_TIMEZONE, $GLOBALS['TL_CONFIG']['timeZone']);
         $time = time();
 
         foreach ($arrCalendars as $id) {
             // Get events of the current period
             $objEvents = $this->Database->prepare("SELECT *, (SELECT title FROM tl_calendar WHERE id=?) AS calendar, (SELECT ical_prefix FROM tl_calendar WHERE id=?) AS ical_prefix FROM tl_calendar_events WHERE pid=? AND ((startTime>=? AND startTime<=?) OR (endTime>=? AND endTime<=?) OR (startTime<=? AND endTime>=?) OR (recurring=1 AND (recurrences=0 OR repeatEnd>=?)))" . (!BE_USER_LOGGED_IN ? " AND (start='' OR start<?) AND (stop='' OR stop>?) AND published=1" : "") . " ORDER BY startTime")
-                ->execute($id, $id, $id, $intStart, $intEnd, $intStart, $intEnd, $intStart, $intEnd, $intStart, $time,
-                    $time);
+                                        ->execute($id, $id, $id, $intStart, $intEnd, $intStart, $intEnd, $intStart, $intEnd, $intStart,
+                                                  $time,
+                                                  $time);
 
             if ($objEvents->numRows < 1) {
                 continue;
@@ -132,24 +132,25 @@ class ContentICal extends ContentElement
                 $vevent = new Vevent();
 
                 if ($objEvents->addTime) {
-                    $vevent->setDtstart(date(DateTimeFactory::$YmdTHis, $objEvents->startTime), [ Vcalendar::VALUE => Vcalendar::DATE_TIME ]);
-                    $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $objEvents->endTime), [ Vcalendar::VALUE => Vcalendar::DATE_TIME ]);
+                    $vevent->setDtstart(date(DateTimeFactory::$YmdTHis, $objEvents->startTime), [Vcalendar::VALUE => Vcalendar::DATE_TIME]);
+                    $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $objEvents->endTime), [Vcalendar::VALUE => Vcalendar::DATE_TIME]);
                 } else {
-                    $vevent->setDtstart(date(DateTimeFactory::$Ymd, $objEvents->startDate), [ Vcalendar::VALUE => Vcalendar::DATE ]);
+                    $vevent->setDtstart(date(DateTimeFactory::$Ymd, $objEvents->startDate), [Vcalendar::VALUE => Vcalendar::DATE]);
                     if (!strlen($objEvents->endDate) || $objEvents->endDate == 0) {
                         $vevent->setDtend(date(DateTimeFactory::$Ymd, $objEvents->startDate + 24 * 60 * 60),
-                                          [ Vcalendar::VALUE => Vcalendar::DATE ]);
+                                          [Vcalendar::VALUE => Vcalendar::DATE]);
                     } else {
                         $vevent->setDtend(date(DateTimeFactory::$Ymd, $objEvents->endDate + 24 * 60 * 60),
-                                          [ Vcalendar::VALUE => Vcalendar::DATE ]);
+                                          [Vcalendar::VALUE => Vcalendar::DATE]);
                     }
                 }
 
                 $ical_prefix = (strlen($this->ical_prefix)) ? $this->ical_prefix : $objEvents->ical_prefix;
                 $vevent->setSummary(html_entity_decode((strlen($ical_prefix) ? $ical_prefix . " " : "") . $objEvents->title,
-                    ENT_QUOTES, 'UTF-8'));
+                                                       ENT_QUOTES, 'UTF-8'));
                 $vevent->setDescription(html_entity_decode(strip_tags(preg_replace('/<br \\/>/', "\n",
-                    $this->replaceInsertTags($objEvents->teaser))), ENT_QUOTES, 'UTF-8'));
+                                                                                   $this->replaceInsertTags($objEvents->teaser))),
+                                                           ENT_QUOTES, 'UTF-8'));
 
                 if ($objEvents->recurring) {
                     $count = 0;
@@ -203,13 +204,13 @@ class ContentICal extends ContentElement
                         $exTStamp = strtotime($skipDate);
                         $exdate = array(
                             date(DateTimeFactory::$YmdHis,
-                                date('Y', $exTStamp) .
-                                date('m', $exTStamp) .
-                                date('d', $exTStamp) .
-                                date('H', $objEvents->startTime) .
-                                date('i', $objEvents->startTime) .
-                                date('s', $objEvents->startTime)
-                            )
+                                 date('Y', $exTStamp) .
+                                 date('m', $exTStamp) .
+                                 date('d', $exTStamp) .
+                                 date('H', $objEvents->startTime) .
+                                 date('i', $objEvents->startTime) .
+                                 date('s', $objEvents->startTime)
+                            ),
                         );
                         $vevent->setExdate($exdate);
                     }

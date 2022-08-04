@@ -17,6 +17,5 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
 /**
  * Configures the Contao Calendar iCal Bundle.
  */
-class CraffftContaoCalendarICalBundle extends Bundle
-{
+class CraffftContaoCalendarICalBundle extends Bundle {
 }

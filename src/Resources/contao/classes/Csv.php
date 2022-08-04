@@ -12,12 +12,10 @@
 
 namespace Contao;
 
-class Csv
-{
+class Csv {
     // take a CSV line (utf-8 encoded) and returns an array
     // 'string1,string2,"string3","the ""string4"""' => array('string1', 'string2', 'string3', 'the "string4"')
-    static public function parseString($string, $separator = ',')
-    {
+    static public function parseString($string, $separator = ',') {
         $values = array();
         $string = str_replace("\r\n", '', $string); // eat the traling new line, if any
 
@@ -60,12 +58,11 @@ class Csv
         return $values;
     }
 
-    static public function escapeString($string)
-    {
+    static public function escapeString($string) {
         $string = str_replace('"', '""', $string);
 
         if (strpos($string, '"') !== false or strpos($string, ',') !== false or strpos($string,
-                "\r") !== false or strpos($string, "\n") !== false
+                                                                                       "\r") !== false or strpos($string, "\n") !== false
         ) {
             $string = '"' . $string . '"';
         }
@@ -77,15 +74,14 @@ class Csv
     // 'string"' => true
     // 'string""' => false
     // 'string"""' => true
-    static public function _hasEndQuote($token)
-    {
+    static public function _hasEndQuote($token) {
         $len = strlen($token);
 
         if ($len == 0) {
             return false;
-        } elseif ($len == 1 and $token == '"') {
+        } else if ($len == 1 and $token == '"') {
             return true;
-        } elseif ($len > 1) {
+        } else if ($len > 1) {
             while ($len > 1 and $token[$len - 1] == '"' and $token[$len - 2] == '"') { // there is an escaped quote at the end
                 $len -= 2; // strip the escaped quote at the end
             }
@@ -93,7 +89,7 @@ class Csv
             if ($len == 0) {
                 return false;
             } // the string was only some escaped quotes
-            elseif ($token[$len - 1] == '"') {
+            else if ($token[$len - 1] == '"') {
                 return true;
             } // the last quote was not escaped
             else {

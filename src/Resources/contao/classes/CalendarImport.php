@@ -25,11 +25,11 @@ use Kigkonsult\Icalcreator\Vevent;
 
 /**
  * Class CalendarImport
+ *
  * @package Contao
  * @property CalendarImport $CalendarImport
  */
-class CalendarImport extends \Backend
-{
+class CalendarImport extends \Backend {
     protected $blnSave = true;
     /** @var Vcalendar */
     protected $cal;
@@ -43,12 +43,11 @@ class CalendarImport extends \Backend
     /** @var string */
     protected $replacementEventTitle = '';
 
-    public function getAllEvents($arrEvents, $arrCalendars, $intStart, $intEnd)
-    {
+    public function getAllEvents($arrEvents, $arrCalendars, $intStart, $intEnd) {
         $arrCalendars = $this->Database->prepare("SELECT id FROM tl_calendar WHERE id IN (" .
                                                  join(',', $arrCalendars) . ") AND ical_source = ?")
-            ->execute('1')
-            ->fetchAllAssoc();
+                                       ->execute('1')
+                                       ->fetchAllAssoc();
 
         foreach ($arrCalendars as $calendar) {
             $this->importCalendarWithID($calendar['id']);
@@ -57,16 +56,14 @@ class CalendarImport extends \Backend
         return $arrEvents;
     }
 
-    public function importFromURL(DataContainer $dc)
-    {
+    public function importFromURL(DataContainer $dc) {
         $this->importCalendarWithID($dc->id);
     }
 
-    public function importAllCalendarsWithICalSource()
-    {
+    public function importAllCalendarsWithICalSource() {
         $arrCalendars = $this->Database->prepare("SELECT * FROM tl_calendar")
-            ->executeUncached()
-            ->fetchAllAssoc();
+                                       ->executeUncached()
+                                       ->fetchAllAssoc();
 
         if (is_array($arrCalendars)) {
             foreach ($arrCalendars as $arrCalendar) {
@@ -75,20 +72,18 @@ class CalendarImport extends \Backend
         }
     }
 
-    protected function importCalendarWithID($id)
-    {
+    protected function importCalendarWithID($id) {
         $arrCalendar = $this->Database->prepare("SELECT * FROM tl_calendar WHERE id = ?")
-            ->executeUncached($id)
-            ->fetchAssoc();
+                                      ->executeUncached($id)
+                                      ->fetchAssoc();
         $this->importCalendarWithData($arrCalendar);
     }
 
-    protected function importCalendarWithData($arrCalendar, $force_import = false)
-    {
+    protected function importCalendarWithData($arrCalendar, $force_import = false) {
         if ($arrCalendar['ical_source']) {
             $arrLastchange = $this->Database->prepare("SELECT MAX(tstamp) lastchange FROM tl_calendar_events WHERE pid = ?")
-                ->executeUncached($arrCalendar['id'])
-                ->fetchAssoc();
+                                            ->executeUncached($arrCalendar['id'])
+                                            ->fetchAssoc();
             $last_change = $arrLastchange['lastchange'];
 
             if ($last_change == 0) {
@@ -97,7 +92,7 @@ class CalendarImport extends \Backend
 
             if (((time() - $last_change > $arrCalendar['ical_cache']) && ($arrCalendar['ical_importing'] != 1 || (time() - $arrCalendar['tstamp']) > 120)) || $force_import) {
                 $this->Database->prepare("UPDATE tl_calendar SET tstamp = ?, ical_importing = ? WHERE id = ?")
-                    ->execute(time(), '1', $arrCalendar['id']);
+                               ->execute(time(), '1', $arrCalendar['id']);
                 \System::log('reading cal', __METHOD__, TL_GENERAL);
                 // create new from ical file
                 \System::log(
@@ -107,24 +102,25 @@ class CalendarImport extends \Backend
                 );
                 $this->import('CalendarImport');
                 $startDate = (strlen($arrCalendar['ical_source_start'])) ? new Date($arrCalendar['ical_source_start'],
-                    $GLOBALS['TL_CONFIG']['dateFormat']) : new Date(time(), $GLOBALS['TL_CONFIG']['dateFormat']);
+                                                                                    $GLOBALS['TL_CONFIG']['dateFormat']) : new Date(time(),
+                                                                                                                                    $GLOBALS['TL_CONFIG']['dateFormat']);
                 $endDate = (strlen($arrCalendar['ical_source_end'])) ? new Date($arrCalendar['ical_source_end'],
-                    $GLOBALS['TL_CONFIG']['dateFormat']) : new Date(time() + $GLOBALS['calendar_ical']['endDateTimeDifferenceInDays'] * 24 * 3600,
-                    $GLOBALS['TL_CONFIG']['dateFormat']);
+                                                                                $GLOBALS['TL_CONFIG']['dateFormat']) : new Date(time() + $GLOBALS['calendar_ical']['endDateTimeDifferenceInDays'] * 24 * 3600,
+                                                                                                                                $GLOBALS['TL_CONFIG']['dateFormat']);
                 $tz = array($arrCalendar['ical_timezone'], $arrCalendar['ical_timezone']);
                 $this->CalendarImport->filterEventTitle = $arrCalendar['ical_filter_event_title'];
                 $this->CalendarImport->patternEventTitle = $arrCalendar['ical_pattern_event_title'];
                 $this->CalendarImport->replacementEventTitle = $arrCalendar['ical_replacement_event_title'];
                 $this->CalendarImport->importFromWebICS($arrCalendar['id'], $arrCalendar['ical_url'], $startDate,
-                    $endDate, $tz, $arrCalendar['ical_proxy'],  $arrCalendar['ical_bnpw'], $arrCalendar['ical_port']);
+                                                        $endDate, $tz, $arrCalendar['ical_proxy'], $arrCalendar['ical_bnpw'],
+                                                        $arrCalendar['ical_port']);
                 $this->Database->prepare("UPDATE tl_calendar SET tstamp = ?, ical_importing = ? WHERE id = ?")
-                    ->execute(time(), '', $arrCalendar['id']);
+                               ->execute(time(), '', $arrCalendar['id']);
             }
         }
     }
 
-    public function importFromWebICS($pid, $url, $startDate, $endDate, $timezone, $proxy, $benutzerpw, $port)
-    {
+    public function importFromWebICS($pid, $url, $startDate, $endDate, $timezone, $proxy, $benutzerpw, $port) {
         $this->cal = new Vcalendar();
         $this->cal->setMethod(Vcalendar::PUBLISH);
         $this->cal->setXprop(Vcalendar::X_WR_CALNAME, $this->strTitle);
@@ -153,20 +149,20 @@ class CalendarImport extends \Backend
     /**
      * @return File|null
      */
-    protected function downloadURLToTempFile($url, $proxy, $benutzerpw, $port)
-    {
+    protected function downloadURLToTempFile($url, $proxy, $benutzerpw, $port) {
         $url = html_entity_decode($url);
 
         if ($this->isCurlInstalled()) {
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            	if (!empty($proxy)) {
+            if (!empty($proxy)) {
 
-            curl_setopt($ch, CURLOPT_PROXY, "$proxy");
-            if (!empty($benutzerpw)) {
-			curl_setopt($ch, CURLOPT_PROXYUSERPWD , "$benutzerpw");		}
-			curl_setopt($ch, CURLOPT_PROXYPORT, "$port");
-			}
+                curl_setopt($ch, CURLOPT_PROXY, "$proxy");
+                if (!empty($benutzerpw)) {
+                    curl_setopt($ch, CURLOPT_PROXYUSERPWD, "$benutzerpw");
+                }
+                curl_setopt($ch, CURLOPT_PROXYPORT, "$port");
+            }
 
             if (preg_match("/^https/", $url)) {
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
@@ -202,13 +198,11 @@ class CalendarImport extends \Backend
         return $objFile;
     }
 
-    private function isCurlInstalled()
-    {
+    private function isCurlInstalled() {
         return (in_array('curl', get_loaded_extensions()));
     }
 
-    protected function importFromCSVFile($prepare = true)
-    {
+    protected function importFromCSVFile($prepare = true) {
         $this->loadDataContainer('tl_calendar_events');
         $dbfields = $this->Database->listFields('tl_calendar_events');
         $fieldnames = array();
@@ -225,7 +219,7 @@ class CalendarImport extends \Backend
             array('startDate', $GLOBALS['TL_LANG']['tl_calendar_events']['startDate'][0]),
             array('endDate', $GLOBALS['TL_LANG']['tl_calendar_events']['endDate'][0]),
             array('details', $GLOBALS['TL_LANG']['tl_calendar_events']['details'][0]),
-            array('teaser', $GLOBALS['TL_LANG']['tl_calendar_events']['teaser'][0])
+            array('teaser', $GLOBALS['TL_LANG']['tl_calendar_events']['teaser'][0]),
         );
 
         if (in_array('location', $fieldnames, true)) {
@@ -262,7 +256,7 @@ class CalendarImport extends \Backend
 
         for ($i = 0; $i < count($header); $i++) {
             $objCSV = $this->getFieldSelector($i, 'csvfield', $header,
-                (is_array($csvvalues)) ? $csvvalues[$i] : $header[$i]);
+                                              (is_array($csvvalues)) ? $csvvalues[$i] : $header[$i]);
             $objCal = $this->getFieldSelector($i, 'calfield', $calfields, $calvalues[$i]);
             array_push($fields, array($objCSV, $objCal));
         }
@@ -305,12 +299,12 @@ class CalendarImport extends \Backend
         } else {
             // save config
             $this->Config->update("\$GLOBALS['TL_CONFIG']['calendar_ical']['csvimport']", serialize(array(
-                $csvvalues,
-                $calvalues,
-                \Input::post('dateFormat'),
-                \Input::post('timeFormat'),
-                \Input::post('encoding')
-            )));
+                                                                                                        $csvvalues,
+                                                                                                        $calvalues,
+                                                                                                        \Input::post('dateFormat'),
+                                                                                                        \Input::post('timeFormat'),
+                                                                                                        \Input::post('encoding'),
+                                                                                                    )));
 
             if ($this->Session->get('csv_deletecalendar') && $this->Session->get('csv_pid')) {
                 $event = \CalendarEventsModel::findByPid($this->Session->get('csv_pid'));
@@ -356,8 +350,8 @@ class CalendarImport extends \Backend
 
                                             if ($res !== false) {
                                                 $arrFields[$value] = mktime($res['tm_hour'], $res['tm_min'],
-                                                    $res['tm_sec'], $res['tm_mon'] + 1, $res['tm_mday'],
-                                                    $res['tm_year'] + 1900);
+                                                                            $res['tm_sec'], $res['tm_mon'] + 1, $res['tm_mday'],
+                                                                            $res['tm_year'] + 1900);
                                             }
                                         } else {
                                             $arrFields[$value] = $this->getTimestampFromDefaultDatetime($data[$foundindex]);
@@ -376,8 +370,8 @@ class CalendarImport extends \Backend
 
                                             if ($res !== false) {
                                                 $arrFields[$value] = mktime($res['tm_hour'], $res['tm_min'],
-                                                    $res['tm_sec'], $res['tm_mon'] + 1, $res['tm_mday'],
-                                                    $res['tm_year'] + 1900);
+                                                                            $res['tm_sec'], $res['tm_mon'] + 1, $res['tm_mday'],
+                                                                            $res['tm_year'] + 1900);
                                             }
                                         } else {
                                             $arrFields[$value] = $this->getTimestampFromDefaultDatetime($data[$foundindex]);
@@ -395,10 +389,10 @@ class CalendarImport extends \Backend
                                         break;
                                 }
 
-                                if ($value === 'title')
-                                {
+                                if ($value === 'title') {
                                     $this->filterEventTitle = $this->Session->get('csv_filterEventTitle');
-                                    if (!empty($this->filterEventTitle) && strpos(specialchars($data[$foundindex]), $this->filterEventTitle) === false) {
+                                    if (!empty($this->filterEventTitle) && strpos(specialchars($data[$foundindex]),
+                                                                                  $this->filterEventTitle) === false) {
                                         continue;
                                     }
                                 }
@@ -487,8 +481,8 @@ class CalendarImport extends \Backend
                         // date is not in range
                     } else {
                         $objInsertStmt = $this->Database->prepare("INSERT INTO tl_calendar_events %s")
-                            ->set($arrFields)
-                            ->execute();
+                                                        ->set($arrFields)
+                                                        ->execute();
 
                         if ($objInsertStmt->affectedRows) {
                             $insertID = $objInsertStmt->insertId;
@@ -511,7 +505,7 @@ class CalendarImport extends \Backend
 
                             $alias = $this->generateAlias($arrFields['title'], $insertID, $this->Session->get('csv_pid'));
                             $this->Database->prepare("UPDATE tl_calendar_events SET alias = ? WHERE id = ?")
-                                ->execute($alias, $insertID);
+                                           ->execute($alias, $insertID);
                         }
                     }
                 } else {
@@ -523,17 +517,16 @@ class CalendarImport extends \Backend
         }
     }
 
-    protected function getTimestampFromDefaultDatetime($datestring)
-    {
+    protected function getTimestampFromDefaultDatetime($datestring) {
         $tstamp = time();
 
         if (preg_match("/(\\d{4})-(\\d{2})-(\\d{2})\\s+(\\d{2}):(\\d{2}):(\\d{2})/", $datestring, $matches)) {
             $tstamp = mktime((int)$matches[4], (int)$matches[5], (int)$matches[6], (int)$matches[2], (int)$matches[3],
-                (int)$matches[1]);
+                             (int)$matches[1]);
         } else {
             if (preg_match("/(\\d{4})-(\\d{2})-(\\d{2})\\s+(\\d{2}):(\\d{2})/", $datestring, $matches)) {
                 $tstamp = mktime((int)$matches[4], (int)$matches[5], 0, (int)$matches[2], (int)$matches[3],
-                    (int)$matches[1]);
+                                 (int)$matches[1]);
             } else {
                 if (preg_match("/(\\d{4})-(\\d{2})-(\\d{2})/", $datestring, $matches)) {
                     $tstamp = mktime(0, 0, 0, (int)$matches[2], (int)$matches[3], (int)$matches[1]);
@@ -548,8 +541,7 @@ class CalendarImport extends \Backend
         return $tstamp;
     }
 
-    protected function getDateFormatWidget($value = null)
-    {
+    protected function getDateFormatWidget($value = null) {
         $widget = new TextField();
 
         $widget->id = 'dateFormat';
@@ -577,8 +569,7 @@ class CalendarImport extends \Backend
         return $widget;
     }
 
-    protected function getTimeFormatWidget($value = null)
-    {
+    protected function getTimeFormatWidget($value = null) {
         $widget = new TextField();
 
         $widget->id = 'timeFormat';
@@ -606,8 +597,7 @@ class CalendarImport extends \Backend
         return $widget;
     }
 
-    protected function getEncodingWidget($value = null)
-    {
+    protected function getEncodingWidget($value = null) {
         $widget = new SelectMenu();
 
         $widget->id = 'encoding';
@@ -622,7 +612,7 @@ class CalendarImport extends \Backend
 
         $arrOptions = array(
             array('value' => 'utf8', 'label' => 'UTF-8'),
-            array('value' => 'latin1', 'label' => 'ISO-8859-1 (Windows)')
+            array('value' => 'latin1', 'label' => 'ISO-8859-1 (Windows)'),
         );
         $widget->options = $arrOptions;
 
@@ -638,8 +628,7 @@ class CalendarImport extends \Backend
         return $widget;
     }
 
-    protected function getFieldSelector($index, $name, $fieldvalues, $value = null)
-    {
+    protected function getFieldSelector($index, $name, $fieldvalues, $value = null) {
         $widget = new SelectMenu();
 
         $widget->id = $name . '[' . $index . ']';
@@ -708,13 +697,13 @@ class CalendarImport extends \Backend
             if (is_array($tz) && strlen($tz[1]) && strcmp($tz[1], $GLOBALS['TL_CONFIG']['timeZone']) != 0) {
                 if ($correctTimezone === null) {
                     return $this->getConfirmationForm($dc, $filename, $startDate->date, $endDate->date, $tz[1],
-                        $GLOBALS['TL_CONFIG']['timeZone'], $deleteCalendar);
+                                                      $GLOBALS['TL_CONFIG']['timeZone'], $deleteCalendar);
                 }
             } else {
                 if (!is_array($tz) || strlen($tz[1]) == 0) {
                     if ($manualTZ === null) {
                         return $this->getConfirmationForm($dc, $filename, $startDate->date, $endDate->date, $tz[1],
-                            $GLOBALS['TL_CONFIG']['timeZone'], $deleteCalendar);
+                                                          $GLOBALS['TL_CONFIG']['timeZone'], $deleteCalendar);
                     }
                 }
             }
@@ -780,8 +769,8 @@ class CalendarImport extends \Backend
         }
 
         $eventArray = $this->cal->selectComponents(date('Y', $startDate->tstamp), date('m', $startDate->tstamp),
-            date('d', $startDate->tstamp), date('Y', $endDate->tstamp), date('m', $endDate->tstamp),
-            date('d', $endDate->tstamp), 'vevent', true);
+                                                   date('d', $startDate->tstamp), date('Y', $endDate->tstamp), date('m', $endDate->tstamp),
+                                                   date('d', $endDate->tstamp), 'vevent', true);
 
         if (is_array($eventArray)) {
             foreach ($eventArray as $vevent) {
@@ -829,7 +818,7 @@ class CalendarImport extends \Backend
                         $arrFields['location'] = $location;
                     } else {
                         $location = preg_replace("/(\\\\r)|(\\\\n)/im", "<br />", $location);
-                        $eventcontent[] = '<p><strong>'.$GLOBALS['TL_LANG']['MSC']['location'].':</strong> '.$location."</p>";
+                        $eventcontent[] = '<p><strong>' . $GLOBALS['TL_LANG']['MSC']['location'] . ':</strong> ' . $location . "</p>";
                     }
                 }
 
@@ -890,7 +879,9 @@ class CalendarImport extends \Backend
                             DateTimeZoneFactory::factory($tz[1])
                         );
 
-                        if (array_key_exists('params', $dtstartRow) && array_key_exists('VALUE', $dtstartRow['params']) && strcmp(strtoupper($dtstartRow['params']['VALUE']), 'DATE') == 0) {
+                        if (array_key_exists('params', $dtstartRow) && array_key_exists('VALUE',
+                                                                                        $dtstartRow['params']) && strcmp(strtoupper($dtstartRow['params']['VALUE']),
+                                                                                                                         'DATE') == 0) {
                             $arrFields['addTime'] = 0;
                         } else {
                             $arrFields['addTime'] = 1;
@@ -966,7 +957,7 @@ class CalendarImport extends \Backend
 
                     if (isset($rrule['WKST']) && is_array($rrule['WKST'])) {
                         $weekdays = ['MO' => 1, 'TU' => 2, 'WE' => 3, 'TH' => 4, 'FR' => 5, 'SA' => 6, 'SU' => 0];
-                        $mapWeekdays = static function(string $value) use ($weekdays): ?int {
+                        $mapWeekdays = static function (string $value) use ($weekdays): ?int {
                             return $weekdays[$value] ?? null;
                         };
                         $arrFields['repeatWeekday'] = serialize(array_map($mapWeekdays, $rrule['WKST']));
@@ -981,8 +972,8 @@ class CalendarImport extends \Backend
 
                 if ($foundevents[$uid] <= 1) {
                     $objInsertStmt = $this->Database->prepare("INSERT INTO tl_calendar_events %s")
-                        ->set($arrFields)
-                        ->execute();
+                                                    ->set($arrFields)
+                                                    ->execute();
 
                     if ($objInsertStmt->affectedRows) {
                         $insertID = $objInsertStmt->insertId;
@@ -1004,7 +995,7 @@ class CalendarImport extends \Backend
 
                         $alias = $this->generateAlias($arrFields['title'], $insertID, $pid);
                         $this->Database->prepare("UPDATE tl_calendar_events SET alias = ? WHERE id = ?")
-                            ->execute($alias, $insertID);
+                                       ->execute($alias, $insertID);
                     }
                 }
             }
@@ -1014,17 +1005,16 @@ class CalendarImport extends \Backend
     /**
      * Auto-generate the event alias if it has not been set yet
      *
-     * @param mixed         $varValue
-     * @param integer       $id
-     * @param integer       $pid
+     * @param mixed   $varValue
+     * @param integer $id
+     * @param integer $pid
      *
      * @return mixed
      *
      * @throws Exception
      */
     private function generateAlias($varValue, $id, $pid) {
-        $aliasExists = function (string $alias) use ($id): bool
-        {
+        $aliasExists = function (string $alias) use ($id): bool {
             return $this->Database->prepare("SELECT id FROM tl_calendar_events WHERE alias=? AND id!=?")->execute($alias, $id)->numRows > 0;
         };
 
@@ -1034,12 +1024,12 @@ class CalendarImport extends \Backend
 
     public function getConfirmationForm(
         DataContainer $dc,
-        $icssource,
-        $startDate,
-        $endDate,
-        $tzimport,
-        $tzsystem,
-        $deleteCalendar
+                      $icssource,
+                      $startDate,
+                      $endDate,
+                      $tzimport,
+                      $tzsystem,
+                      $deleteCalendar
     ) {
         $this->Template = new BackendTemplate('be_import_calendar_confirmation');
 
@@ -1072,8 +1062,7 @@ class CalendarImport extends \Backend
         return $this->Template->parse();
     }
 
-    public function importCalendar(DataContainer $dc)
-    {
+    public function importCalendar(DataContainer $dc) {
         if (\Input::get('key') != 'import') {
             return '';
         }
@@ -1165,7 +1154,7 @@ class CalendarImport extends \Backend
                     $file = new \File($arrFiles[0], true);
                     if (strcmp(strtolower($file->extension), 'ics') == 0) {
                         $this->importFromICSFile($file->path, $dc, $startDate, $endDate, null, null, $deleteCalendar,
-                            $timeshift);
+                                                 $timeshift);
                     } else {
                         if (strcmp(strtolower($file->extension), 'csv') == 0) {
                             $this->Session->set('csv_pid', $dc->id);
@@ -1198,7 +1187,7 @@ class CalendarImport extends \Backend
                 }
 
                 $this->importFromICSFile($filename, $dc, $startDate, $endDate, $correctTimezone, $timezone,
-                    $deleteCalendar, $timeshift);
+                                         $deleteCalendar, $timeshift);
             } else {
                 if (\Input::post('FORM_SUBMIT') == 'tl_csv_headers') {
                     if ($this->blnSave && (strlen(\Input::post('import')))) {
@@ -1215,11 +1204,11 @@ class CalendarImport extends \Backend
 
     /**
      * Return the file tree widget as object
+     *
      * @param mixed
      * @return object
      */
-    protected function getFileTreeWidget($value = null)
-    {
+    protected function getFileTreeWidget($value = null) {
         $widget = new FileTree();
 
         $widget->id = 'icssource';
@@ -1252,11 +1241,11 @@ class CalendarImport extends \Backend
 
     /**
      * Return the start date widget as object
+     *
      * @param mixed
      * @return object
      */
-    protected function getStartDateWidget($value = null)
-    {
+    protected function getStartDateWidget($value = null) {
         $widget = new TextField();
 
         $widget->id = 'startDate';
@@ -1288,11 +1277,11 @@ class CalendarImport extends \Backend
 
     /**
      * Return the end date widget as object
+     *
      * @param mixed
      * @return object
      */
-    protected function getEndDateWidget($value = null)
-    {
+    protected function getEndDateWidget($value = null) {
         $widget = new TextField();
 
         $widget->id = 'endDate';
@@ -1323,11 +1312,11 @@ class CalendarImport extends \Backend
 
     /**
      * Return the time shift widget as object
+     *
      * @param mixed
      * @return object
      */
-    protected function getTimeShiftWidget($value = 0)
-    {
+    protected function getTimeShiftWidget($value = 0) {
         $widget = new TextField();
 
         $widget->id = 'timeshift';
@@ -1357,11 +1346,11 @@ class CalendarImport extends \Backend
 
     /**
      * Return the delete calendar widget as object
+     *
      * @param mixed
      * @return object
      */
-    protected function getDeleteWidget($value = null)
-    {
+    protected function getDeleteWidget($value = null) {
         $widget = new CheckBox();
 
         $widget->id = 'deleteCalendar';
@@ -1370,8 +1359,8 @@ class CalendarImport extends \Backend
         $widget->options = array(
             array(
                 'value' => '1',
-                'label' => $GLOBALS['TL_LANG']['tl_calendar_events']['importDeleteCalendar'][0]
-            )
+                'label' => $GLOBALS['TL_LANG']['tl_calendar_events']['importDeleteCalendar'][0],
+            ),
         );
         $widget->value = $value;
 
@@ -1393,11 +1382,11 @@ class CalendarImport extends \Backend
 
     /**
      * Return the correct timezone widget as object
+     *
      * @param mixed
      * @return object
      */
-    protected function getCorrectTimezoneWidget($value = null)
-    {
+    protected function getCorrectTimezoneWidget($value = null) {
         $widget = new CheckBox();
 
         $widget->id = 'correctTimezone';
@@ -1406,8 +1395,8 @@ class CalendarImport extends \Backend
         $widget->options = array(
             array(
                 'value' => 1,
-                'label' => $GLOBALS['TL_LANG']['tl_calendar_events']['correctTimezone'][0]
-            )
+                'label' => $GLOBALS['TL_LANG']['tl_calendar_events']['correctTimezone'][0],
+            ),
         );
 
         if ($GLOBALS['TL_CONFIG']['showHelp'] && strlen($GLOBALS['TL_LANG']['tl_calendar_events']['correctTimezone'][1])) {
@@ -1428,11 +1417,11 @@ class CalendarImport extends \Backend
 
     /**
      * Return the status widget as object
+     *
      * @param mixed
      * @return object
      */
-    protected function getTimezoneWidget($value = null)
-    {
+    protected function getTimezoneWidget($value = null) {
         $widget = new SelectMenu();
 
         $widget->id = 'timezone';
@@ -1474,11 +1463,11 @@ class CalendarImport extends \Backend
 
     /**
      * Return the filter widget as object
+     *
      * @param mixed
      * @return object
      */
-    protected function getFilterWidget($value = "")
-    {
+    protected function getFilterWidget($value = "") {
         $widget = new TextField();
 
         $widget->id = 'filterEventTitle';
@@ -1509,16 +1498,15 @@ class CalendarImport extends \Backend
     }
 
     /**
-     * @param array $arrFields
-     * @param array $rrule
-     * @param array $repeatEach
+     * @param array  $arrFields
+     * @param array  $rrule
+     * @param array  $repeatEach
      * @param string $timezone
-     * @param int $timeshift
+     * @param int    $timeshift
      * @return int
      * @throws Exception
      */
-    private function getRepeatEnd($arrFields, $rrule, $repeatEach, $timezone, $timeshift = 0)
-    {
+    private function getRepeatEnd($arrFields, $rrule, $repeatEach, $timezone, $timeshift = 0) {
         if (($until = $rrule[IcalInterface::UNTIL] ?? null) instanceof \DateTime) {
             // convert UNTIL date to current timezone
             $until = new \DateTime(
@@ -1541,7 +1529,7 @@ class CalendarImport extends \Backend
             $arg = $repeatEach['value'] * $arrFields['recurrences'];
             $unit = $repeatEach['unit'];
 
-            $strtotime = '+ '.$arg.' '.$unit;
+            $strtotime = '+ ' . $arg . ' ' . $unit;
 
             return (int)strtotime($strtotime, $arrFields['endTime']);
         }
@@ -1550,13 +1538,12 @@ class CalendarImport extends \Backend
     }
 
     /**
-     * @param array $arrFields
+     * @param array  $arrFields
      * @param Vevent $vevent
      * @param string $timezone
-     * @param int $timeshift
+     * @param int    $timeshift
      */
-    private function handleRecurringExceptions(&$arrFields, $vevent, $timezone, $timeshift)
-    {
+    private function handleRecurringExceptions(&$arrFields, $vevent, $timezone, $timeshift) {
         if (!array_key_exists('useExceptions', $arrFields)
             && !array_key_exists('repeatExceptions', $arrFields)
             && !array_key_exists('exceptionList', $arrFields)) {

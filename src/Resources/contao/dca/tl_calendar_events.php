@@ -17,23 +17,21 @@ $GLOBALS['TL_DCA']['tl_calendar_events']['config']['onsubmit_callback'][] = arra
 
 $GLOBALS['TL_DCA']['tl_calendar_events']['list']['global_operations']['export'] =
     array(
-        'label'               => &$GLOBALS['TL_LANG']['MSC']['import_calendar'],
-        'href'                => 'key=import',
-        'class'               => 'header_import header_icon',
-        'attributes'          => 'onclick="Backend.getScrollOffset();"'
+        'label' => &$GLOBALS['TL_LANG']['MSC']['import_calendar'],
+        'href' => 'key=import',
+        'class' => 'header_import header_icon',
+        'attributes' => 'onclick="Backend.getScrollOffset();"',
     );
 
 $GLOBALS['TL_DCA']['tl_calendar_events']['fields']['icssource'] = array
 (
-    'label'                   => &$GLOBALS['TL_LANG']['tl_content']['source'],
-    'eval'                    => array('fieldType'=>'radio', 'files'=>true, 'filesOnly'=>true, 'extensions'=>'ics,csv')
+    'label' => &$GLOBALS['TL_LANG']['tl_content']['source'],
+    'eval' => array('fieldType' => 'radio', 'files' => true, 'filesOnly' => true, 'extensions' => 'ics,csv'),
 );
 
 
-class tl_calendar_events_ical extends Backend
-{
-    public function generateICal(DataContainer $dc)
-    {
+class tl_calendar_events_ical extends Backend {
+    public function generateICal(DataContainer $dc) {
         if (!$dc->id) {
             return;
         }

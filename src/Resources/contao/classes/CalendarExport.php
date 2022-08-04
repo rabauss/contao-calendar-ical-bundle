@@ -16,17 +16,16 @@ use Kigkonsult\Icalcreator\Util\DateTimeFactory;
 use Kigkonsult\Icalcreator\Vcalendar;
 use Kigkonsult\Icalcreator\Vevent;
 
-class CalendarExport extends \Backend
-{
+class CalendarExport extends \Backend {
     /**
      * Update a particular RSS feed
+     *
      * @param integer
      */
-    public function exportCalendar($intId)
-    {
+    public function exportCalendar($intId) {
         $objCalendar = $this->Database->prepare("SELECT * FROM tl_calendar WHERE id=? AND make_ical=?")
-            ->limit(1)
-            ->execute($intId, 1);
+                                      ->limit(1)
+                                      ->execute($intId, 1);
 
         if ($objCalendar->numRows < 1) {
             return;
@@ -48,8 +47,7 @@ class CalendarExport extends \Backend
     /**
      * Delete old files and generate all feeds
      */
-    public function generateSubscriptions()
-    {
+    public function generateSubscriptions() {
         $this->removeOldSubscriptions();
         $objCalendar = $this->Database->prepare("SELECT * FROM tl_calendar WHERE make_ical=?")->execute(1);
 
@@ -64,17 +62,17 @@ class CalendarExport extends \Backend
 
     /**
      * Generate an XML file and save it to the root directory
+     *
      * @param array
      */
-    protected function generateFiles($arrArchive)
-    {
+    protected function generateFiles($arrArchive) {
         $this->arrEvents = array();
 
         $startdate = (strlen($arrArchive['ical_start'])) ? $arrArchive['ical_start'] : time();
         $enddate = (strlen($arrArchive['ical_end'])) ? $arrArchive['ical_end'] : time() + $GLOBALS['calendar_ical']['endDateTimeDifferenceInDays'] * 24 * 3600;
         $filename = strlen($arrArchive['ical_alias']) ? $arrArchive['ical_alias'] : 'calendar' . $arrArchive['id'];
         $ical = $this->getAllEvents(array($arrArchive['id']), $startdate, $enddate, $arrArchive['title'],
-            $arrArchive['ical_description'], $filename, $arrArchive['ical_prefix']);
+                                    $arrArchive['ical_description'], $filename, $arrArchive['ical_prefix']);
         $content = $ical->createCalendar();
         $shareDir = \System::getContainer()->getParameter('contao.web_dir') . '/share';
         $objFile = new \File(\StringUtil::stripRootDir($shareDir) . '/' . $filename . '.ics');
@@ -85,8 +83,7 @@ class CalendarExport extends \Backend
     /**
      * Remove old ics files from the root directory
      */
-    public function removeOldSubscriptions()
-    {
+    public function removeOldSubscriptions() {
         $arrFeeds = array();
         $objFeeds = $this->Database->prepare("SELECT id, ical_alias FROM tl_calendar WHERE make_ical=?")->execute(1);
 
@@ -169,31 +166,35 @@ class CalendarExport extends \Backend
                 $vevent = new Vevent();
 
                 if ($objEvents->addTime) {
-                    $vevent->setDtstart(date(DateTimeFactory::$YmdTHis, $objEvents->startTime), [ Vcalendar::VALUE => Vcalendar::DATE_TIME ]);
+                    $vevent->setDtstart(date(DateTimeFactory::$YmdTHis, $objEvents->startTime), [Vcalendar::VALUE => Vcalendar::DATE_TIME]);
                     if (!strlen($objEvents->ignoreEndTime) || $objEvents->ignoreEndTime == 0) {
                         if ($objEvents->startTime < $objEvents->endTime) {
-                            $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $objEvents->endTime), [Vcalendar::VALUE => Vcalendar::DATE_TIME]);
+                            $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $objEvents->endTime),
+                                              [Vcalendar::VALUE => Vcalendar::DATE_TIME]);
                         } else {
-                            $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $objEvents->startTime + 60 * 60), [ Vcalendar::VALUE => Vcalendar::DATE_TIME ]);
+                            $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $objEvents->startTime + 60 * 60),
+                                              [Vcalendar::VALUE => Vcalendar::DATE_TIME]);
                         }
                     } else {
-                        $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $objEvents->startTime), [ Vcalendar::VALUE => Vcalendar::DATE_TIME ]);
+                        $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $objEvents->startTime),
+                                          [Vcalendar::VALUE => Vcalendar::DATE_TIME]);
                     }
                 } else {
-                    $vevent->setDtstart(date(DateTimeFactory::$Ymd, $objEvents->startDate), [ Vcalendar::VALUE => Vcalendar::DATE ]);
+                    $vevent->setDtstart(date(DateTimeFactory::$Ymd, $objEvents->startDate), [Vcalendar::VALUE => Vcalendar::DATE]);
                     if (!strlen($objEvents->endDate) || $objEvents->endDate == 0) {
                         $vevent->setDtend(date(DateTimeFactory::$Ymd, $objEvents->startDate + 24 * 60 * 60),
-                                          [ Vcalendar::VALUE => Vcalendar::DATE ]);
+                                          [Vcalendar::VALUE => Vcalendar::DATE]);
                     } else {
                         $vevent->setDtend(date(DateTimeFactory::$Ymd, $objEvents->endDate + 24 * 60 * 60),
-                                          [ Vcalendar::VALUE => Vcalendar::DATE ]);
+                                          [Vcalendar::VALUE => Vcalendar::DATE]);
                     }
                 }
 
                 $vevent->setSummary(html_entity_decode((strlen($title_prefix) ? $title_prefix . " " : "") . $objEvents->title,
-                        ENT_QUOTES, 'UTF-8'));
+                                                       ENT_QUOTES, 'UTF-8'));
                 $vevent->setDescription(html_entity_decode(strip_tags(preg_replace('/<br \\/>/', "\n",
-                    $this->replaceInsertTags($objEvents->teaser))), ENT_QUOTES, 'UTF-8'));
+                                                                                   $this->replaceInsertTags($objEvents->teaser))),
+                                                           ENT_QUOTES, 'UTF-8'));
 
                 if (!empty($objEvents->location)) {
                     $vevent->setLocation(trim(html_entity_decode($objEvents->location, ENT_QUOTES, 'UTF-8')));
@@ -270,13 +271,13 @@ class CalendarExport extends \Backend
                         $exTStamp = strtotime($skipDate);
                         $exdate = array(
                             date(DateTimeFactory::$YmdHis,
-                                date('Y', $exTStamp) .
-                                date('m', $exTStamp) .
-                                date('d', $exTStamp) .
-                                date('H', $objEvents->startTime) .
-                                date('i', $objEvents->startTime) .
-                                date('s', $objEvents->startTime)
-                            )
+                                 date('Y', $exTStamp) .
+                                 date('m', $exTStamp) .
+                                 date('d', $exTStamp) .
+                                 date('H', $objEvents->startTime) .
+                                 date('i', $objEvents->startTime) .
+                                 date('s', $objEvents->startTime)
+                            ),
                         );
                         $vevent->setExdate($exdate);
                     }
