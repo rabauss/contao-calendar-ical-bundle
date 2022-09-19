@@ -862,10 +862,18 @@ class CalendarImport extends \Backend {
                         if ($dtstartRow->hasParamKey(IcalInterface::TZID)) {
                             $timezone = $dtstartRow->getParams(IcalInterface::TZID);
                         } else {
-                            $dtstart = new \DateTime(
-                                $dtstart->format(DateTimeFactory::$YmdHis),
-                                DateTimeZoneFactory::factory($tz[1])
-                            );
+                            if ($dtstart->getTimezone()) {
+                                $timezone = $dtstart->getTimezone()->getName();
+                                $dtstart = new \DateTime(
+                                    $dtstart->format(DateTimeFactory::$YmdHis),
+                                    $dtstart->getTimezone()
+                                );
+                            } else {
+                                $dtstart = new \DateTime(
+                                    $dtstart->format(DateTimeFactory::$YmdHis),
+                                    DateTimeZoneFactory::factory($tz[1])
+                                );
+                            }
                         }
 
                         if (!$dtstartRow->hasParamValue(IcalInterface::DATE)) {
@@ -874,10 +882,18 @@ class CalendarImport extends \Backend {
                             $arrFields['addTime'] = 0;
                         }
                     } else {
-                        $dtstart = new \DateTime(
-                            $dtstart->format(DateTimeFactory::$YmdHis),
-                            DateTimeZoneFactory::factory($tz[1])
-                        );
+                        if ($dtstart->getTimezone()) {
+                            $timezone = $dtstart->getTimezone()->getName();
+                            $dtstart = new \DateTime(
+                                $dtstart->format(DateTimeFactory::$YmdHis),
+                                $dtstart->getTimezone()
+                            );
+                        } else {
+                            $dtstart = new \DateTime(
+                                $dtstart->format(DateTimeFactory::$YmdHis),
+                                DateTimeZoneFactory::factory($tz[1])
+                            );
+                        }
 
                         if (array_key_exists('params', $dtstartRow) && array_key_exists('VALUE',
                                                                                         $dtstartRow['params']) && strcmp(strtoupper($dtstartRow['params']['VALUE']),
@@ -895,10 +911,18 @@ class CalendarImport extends \Backend {
                         if ($dtendRow->hasParamKey(IcalInterface::TZID)) {
                             $timezone = $dtendRow->getParams(IcalInterface::TZID);
                         } else {
-                            $dtend = new \DateTime(
-                                $dtend->format(DateTimeFactory::$YmdHis),
-                                DateTimeZoneFactory::factory($tz[1])
-                            );
+                            if ($dtend->getTimezone()) {
+                                $timezone = $dtend->getTimezone()->getName();
+                                $dtend = new \DateTime(
+                                    $dtend->format(DateTimeFactory::$YmdHis),
+                                    $dtend->getTimezone()
+                                );
+                            } else {
+                                $dtend = new \DateTime(
+                                    $dtend->format(DateTimeFactory::$YmdHis),
+                                    DateTimeZoneFactory::factory($tz[1])
+                                );
+                            }
                         }
 
                         if ($arrFields['addTime'] == 1) {
@@ -909,10 +933,18 @@ class CalendarImport extends \Backend {
                             $arrFields['endTime'] = (clone $dtend)->modify('- 1 second')->getTimestamp();
                         }
                     } else {
-                        $dtend = new \DateTime(
-                            $dtend->format(DateTimeFactory::$YmdHis),
-                            DateTimeZoneFactory::factory($tz[1])
-                        );
+                        if ($dtend->getTimezone()) {
+                            $timezone = $dtend->getTimezone()->getName();
+                            $dtend = new \DateTime(
+                                $dtend->format(DateTimeFactory::$YmdHis),
+                                $dtend->getTimezone()
+                            );
+                        } else {
+                            $dtend = new \DateTime(
+                                $dtend->format(DateTimeFactory::$YmdHis),
+                                DateTimeZoneFactory::factory($tz[1])
+                            );
+                        }
 
                         if ($arrFields['addTime'] == 1) {
                             $arrFields['endDate'] = $dtend->getTimestamp();
