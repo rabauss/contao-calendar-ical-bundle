@@ -929,8 +929,11 @@ class CalendarImport extends \Backend {
                             $arrFields['endDate'] = $dtend->getTimestamp();
                             $arrFields['endTime'] = $dtend->getTimestamp();
                         } else {
-                            $arrFields['endDate'] = (clone $dtend)->modify('- 1 day')->getTimestamp();
-                            $arrFields['endTime'] = (clone $dtend)->modify('- 1 second')->getTimestamp();
+                            $endDate = (clone $dtend)->modify('- 1 day')->getTimestamp();
+                            $endTime = (clone $dtend)->modify('- 1 second')->getTimestamp();
+
+                            $arrFields['endDate'] = $endDate;
+                            $arrFields['endTime'] = $endTime <= $endDate ? $endTime : $endDate;
                         }
                     } else {
                         if ($dtend->getTimezone()) {
@@ -950,8 +953,11 @@ class CalendarImport extends \Backend {
                             $arrFields['endDate'] = $dtend->getTimestamp();
                             $arrFields['endTime'] = $dtend->getTimestamp();
                         } else {
-                            $arrFields['endDate'] = (clone $dtend)->modify('- 1 day')->getTimestamp();
-                            $arrFields['endTime'] = (clone $dtend)->modify('- 1 second')->getTimestamp();
+                            $endDate = (clone $dtend)->modify('- 1 day')->getTimestamp();
+                            $endTime = (clone $dtend)->modify('- 1 second')->getTimestamp();
+
+                            $arrFields['endDate'] = $endDate;
+                            $arrFields['endTime'] = $endTime <= $endDate ? $endTime : $endDate;
                         }
                     }
                 }
