@@ -1009,6 +1009,10 @@ class CalendarImport extends \Backend {
                 $foundevents[$uid]++;
 
                 if ($foundevents[$uid] <= 1) {
+                    if ($arrFields['singleSRC'] == "") {
+                        $arrFields['singleSRC'] = null;
+                    }
+
                     $objInsertStmt = $this->Database->prepare("INSERT INTO tl_calendar_events %s")
                                                     ->set($arrFields)
                                                     ->execute();
