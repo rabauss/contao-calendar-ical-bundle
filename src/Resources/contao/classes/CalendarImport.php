@@ -283,7 +283,7 @@ class CalendarImport extends \Backend {
             $this->Template->preview = $preview;
             $this->Template->encoding = $this->getEncodingWidget($encoding);
 
-            if (function_exists('strptime')) {
+            if (function_exists('date_parse_from_format')) {
                 $this->Template->dateFormat = $this->getDateFormatWidget($dateFormat);
                 $this->Template->timeFormat = $this->getTimeFormatWidget($timeFormat);
             }
@@ -345,13 +345,13 @@ class CalendarImport extends \Backend {
                             if ($foundindex !== false) {
                                 switch ($value) {
                                     case 'startDate':
-                                        if (function_exists('strptime')) {
-                                            $res = strptime($data[$foundindex], \Input::post('dateFormat'));
+                                        if (function_exists('date_parse_from_format')) {
+                                            $res = date_parse_from_format(\Input::post('dateFormat'), $data[$foundindex]);
 
                                             if ($res !== false) {
-                                                $arrFields[$value] = mktime($res['tm_hour'], $res['tm_min'],
-                                                                            $res['tm_sec'], $res['tm_mon'] + 1, $res['tm_mday'],
-                                                                            $res['tm_year'] + 1900);
+                                                $arrFields[$value] = mktime($res['hour'], $res['minute'],
+                                                                            $res['second'], $res['month'], $res['day'],
+                                                                            $res['year']);
                                             }
                                         } else {
                                             $arrFields[$value] = $this->getTimestampFromDefaultDatetime($data[$foundindex]);
@@ -365,13 +365,13 @@ class CalendarImport extends \Backend {
                                         }
                                         break;
                                     case 'endDate':
-                                        if (function_exists('strptime')) {
-                                            $res = strptime($data[$foundindex], \Input::post('dateFormat'));
+                                        if (function_exists('date_parse_from_format')) {
+                                            $res = date_parse_from_format(\Input::post('dateFormat'), $data[$foundindex]);
 
                                             if ($res !== false) {
-                                                $arrFields[$value] = mktime($res['tm_hour'], $res['tm_min'],
-                                                                            $res['tm_sec'], $res['tm_mon'] + 1, $res['tm_mday'],
-                                                                            $res['tm_year'] + 1900);
+                                                $arrFields[$value] = mktime($res['hour'], $res['minute'],
+                                                                            $res['second'], $res['month'], $res['day'],
+                                                                            $res['year']);
                                             }
                                         } else {
                                             $arrFields[$value] = $this->getTimestampFromDefaultDatetime($data[$foundindex]);
@@ -408,11 +408,11 @@ class CalendarImport extends \Backend {
                             if ($foundindex !== false) {
                                 switch ($value) {
                                     case 'startTime':
-                                        if (function_exists('strptime')) {
-                                            $res = strptime($data[$foundindex], \Input::post('timeFormat'));
+                                        if (function_exists('date_parse_from_format')) {
+                                            $res = date_parse_from_format(\Input::post('timeFormat'), $data[$foundindex]);
 
                                             if ($res !== false) {
-                                                $arrFields[$value] = $arrFields['startDate'] + $res['tm_hour'] * 60 * 60 + $res['tm_min'] * 60 + $res['tm_sec'];
+                                                $arrFields[$value] = $arrFields['startDate'] + $res['hour'] * 60 * 60 + $res['minute'] * 60 + $res['second'];
                                                 $arrFields['endTime'] = $arrFields[$value];
                                             }
                                         } else {
@@ -422,11 +422,11 @@ class CalendarImport extends \Backend {
                                         }
                                         break;
                                     case 'endTime':
-                                        if (function_exists('strptime')) {
-                                            $res = strptime($data[$foundindex], \Input::post('timeFormat'));
+                                        if (function_exists('date_parse_from_format')) {
+                                            $res = date_parse_from_format(\Input::post('timeFormat'), $data[$foundindex]);
 
                                             if ($res !== false) {
-                                                $arrFields[$value] = $arrFields['endDate'] + $res['tm_hour'] * 60 * 60 + $res['tm_min'] * 60 + $res['tm_sec'];
+                                                $arrFields[$value] = $arrFields['endDate'] + $res['hour'] * 60 * 60 + $res['minute'] * 60 + $res['second'];
                                             }
                                         } else {
                                             if (preg_match("/(\\d+):(\\d+)/", $data[$foundindex], $matches)) {
