@@ -862,7 +862,7 @@ class CalendarImport extends \Backend {
                         if ($dtstartRow->hasParamKey(IcalInterface::TZID)) {
                             $timezone = $dtstartRow->getParams(IcalInterface::TZID);
                         } else {
-                            if ($dtstart->getTimezone()) {
+                            if ($dtstart->getTimezone() && $dtstart->getTimezone()->getName() == $tz[1]) {
                                 $timezone = $dtstart->getTimezone()->getName();
                                 $dtstart = new \DateTime(
                                     $dtstart->format(DateTimeFactory::$YmdHis),
@@ -882,7 +882,7 @@ class CalendarImport extends \Backend {
                             $arrFields['addTime'] = 0;
                         }
                     } else {
-                        if ($dtstart->getTimezone()) {
+                        if ($dtstart->getTimezone() && $dtstart->getTimezone()->getName() == $tz[1]) {
                             $timezone = $dtstart->getTimezone()->getName();
                             $dtstart = new \DateTime(
                                 $dtstart->format(DateTimeFactory::$YmdHis),
@@ -911,7 +911,7 @@ class CalendarImport extends \Backend {
                         if ($dtendRow->hasParamKey(IcalInterface::TZID)) {
                             $timezone = $dtendRow->getParams(IcalInterface::TZID);
                         } else {
-                            if ($dtend->getTimezone()) {
+                            if ($dtend->getTimezone() && $dtend->getTimezone()->getName() == $tz[1]) {
                                 $timezone = $dtend->getTimezone()->getName();
                                 $dtend = new \DateTime(
                                     $dtend->format(DateTimeFactory::$YmdHis),
@@ -936,7 +936,7 @@ class CalendarImport extends \Backend {
                             $arrFields['endTime'] = $endTime <= $endDate ? $endTime : $endDate;
                         }
                     } else {
-                        if ($dtend->getTimezone()) {
+                        if ($dtend->getTimezone() && $dtend->getTimezone()->getName() == $tz[1]) {
                             $timezone = $dtend->getTimezone()->getName();
                             $dtend = new \DateTime(
                                 $dtend->format(DateTimeFactory::$YmdHis),
