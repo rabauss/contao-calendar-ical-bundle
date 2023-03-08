@@ -45,7 +45,7 @@ class ContentICal extends ContentElement {
         if (strlen(\Input::get('ical'))) {
             $startdate = (strlen($this->ical_start)) ? $this->ical_start : time();
             $enddate = (strlen($this->ical_end)) ? $this->ical_end : time() + 365 * 24 * 3600;
-            $this->getAllEvents(preg_split('/,/', \Input::get('ical')), $startdate, $enddate);
+            $this->getAllEvents(explode(',', urldecode(\Input::get('ical'))), $startdate, $enddate);
             $this->ical->returnCalendar(); // redirect calendar file to browser
 
             return;
