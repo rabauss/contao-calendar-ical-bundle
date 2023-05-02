@@ -727,15 +727,12 @@ class CalendarImport extends \Backend {
         $this->cal->sort();
         $this->loadDataContainer('tl_calendar_events');
         $fields = $this->Database->listFields('tl_calendar_events');
+        $fieldNames = array();
         $arrFields = array();
         $defaultFields = array();
         foreach ($fields as $fieldarr) {
             if (strcmp($fieldarr['name'], 'id') != 0 && strcmp($fieldarr['type'], 'index') != 0) {
-                if (strlen($fieldarr['default'])) {
-                    $defaultFields[$fieldarr['name']] = $fieldarr['default'];
-                } else {
-                    $defaultFields[$fieldarr['name']] = '';
-                }
+                $fieldNames[] = $fieldarr['name'];
             }
         }
 
@@ -813,7 +810,7 @@ class CalendarImport extends \Backend {
 
                 // calendar_events_plus fields
                 if (!empty($location)) {
-                    if (array_key_exists('location', $arrFields)) {
+                    if (array_key_exists('location', $fieldNames)) {
                         $location = preg_replace("/(\\\\r)|(\\\\n)/im", "\n", $location);
                         $arrFields['location'] = $location;
                     } else {
@@ -822,7 +819,7 @@ class CalendarImport extends \Backend {
                     }
                 }
 
-                if (array_key_exists('cep_participants', $arrFields) && is_array($vevent->attendee)) {
+                if (array_key_exists('cep_participants', $fieldNames) && is_array($vevent->attendee)) {
                     $attendees = array();
                     foreach ($vevent->attendee as $attendee) {
                         if (!empty($attendee['params']['CN'])) {
@@ -835,7 +832,7 @@ class CalendarImport extends \Backend {
                     }
                 }
 
-                if (array_key_exists('location_contact', $arrFields)) {
+                if (array_key_exists('location_contact', $fieldNames)) {
                     $contact = $vevent->getContact();
                     if (is_array($contact)) {
                         $contacts = array();
@@ -1009,7 +1006,7 @@ class CalendarImport extends \Backend {
                 $foundevents[$uid]++;
 
                 if ($foundevents[$uid] <= 1) {
-                    if ($arrFields['singleSRC'] == "") {
+                    if (array_key_exists('singleSRC', $arrFields) && $arrFields['singleSRC'] == "") {
                         $arrFields['singleSRC'] = null;
                     }
 
