@@ -127,6 +127,17 @@ class ContentICal extends ContentElement {
             if ($objEvents->numRows < 1) {
                 continue;
             }
+            
+            //HOOK: modify the result set
+            if (isset($GLOBALS['TL_HOOKS']['icalGetAllEvents']) && \is_array($GLOBALS['TL_HOOKS']['icalGetAllEvents']))
+            {
+                foreach ($GLOBALS['TL_HOOKS']['icalGetAllEvents'] as $callback)
+                {
+                    $this->import($callback[0]);
+                    $arrEvents = $this->{$callback[0]}->{$callback[1]}($objEvents->fetchAllAssoc(), $arrCalendars, $intStart, $intEnd, $this);
+                    $objEvents = new Result($arrEvents, '');
+                }
+            }
 
             while ($objEvents->next()) {
                 $vevent = new Vevent();
