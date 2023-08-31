@@ -691,7 +691,7 @@ class CalendarImport extends \Backend {
             \Message::addError($e->getMessage());
             $this->redirect(str_replace('&key=import', '', \Environment::get('request')));
         }
-        $tz = $this->cal->getProperty(Vcalendar::X_WR_TIMEZONE);
+        $tz = $this->cal->getXprop(Vcalendar::X_WR_TIMEZONE);
 
         if ($timeshift == 0) {
             if (is_array($tz) && strlen($tz[1]) && strcmp($tz[1], $GLOBALS['TL_CONFIG']['timeZone']) != 0) {
@@ -702,7 +702,7 @@ class CalendarImport extends \Backend {
             } else {
                 if (!is_array($tz) || strlen($tz[1]) == 0) {
                     if ($manualTZ === null) {
-                        return $this->getConfirmationForm($dc, $filename, $startDate->date, $endDate->date, $tz[1],
+                        return $this->getConfirmationForm($dc, $filename, $startDate->date, $endDate->date, null,
                                                           $GLOBALS['TL_CONFIG']['timeZone'], $deleteCalendar);
                     }
                 }
@@ -724,7 +724,9 @@ class CalendarImport extends \Backend {
         $deleteCalendar = false,
         $timeshift = 0
     ) {
-        $this->cal->sort();
+        // $this->cal->sort() was previously in the code. This is quite useless because without arguments this methods
+        // sorts by UID which doesn't give us any benefit.
+        //$this->cal->sort();
         $this->loadDataContainer('tl_calendar_events');
         $fields = $this->Database->listFields('tl_calendar_events');
         $fieldNames = array();
@@ -793,7 +795,7 @@ class CalendarImport extends \Backend {
 
                 $title = $summary;
                 if (!empty($this->patternEventTitle) && !empty($this->replacementEventTitle)) {
-                    $title = preg_replace($this->patternEventTitle, $this->replacementEventTitle, $title);
+                    $title = preg_replace($this->patternEventTitle, $this->replacementEventTitle, $summary);
                 }
 
                 // set values from vevent
@@ -1005,6 +1007,8 @@ class CalendarImport extends \Backend {
                 }
                 $foundevents[$uid]++;
 
+                $arrFields['description'] = $uid;
+
                 if ($foundevents[$uid] <= 1) {
                     if (array_key_exists('singleSRC', $arrFields) && $arrFields['singleSRC'] == "") {
                         $arrFields['singleSRC'] = null;
@@ -1117,6 +1121,7 @@ class CalendarImport extends \Backend {
         $objUploader = new $class();
 
         $this->loadLanguageFile("tl_calendar_events");
+        $this->loadLanguageFile("tl_files");
         $this->Template = new BackendTemplate('be_import_calendar');
 
         $class = $this->User->uploader;
