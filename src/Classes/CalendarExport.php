@@ -1,136 +1,139 @@
 <?php
 
+declare(strict_types=1);
+
 /*
- * This file is part of the Contao Calendar iCal Bundle.
+ * This file is part of cgoit\contao-calendar-ical-php8-bundle for Contao Open Source CMS.
  *
- * (c) Helmut Schottmüller 2009-2013 <https://github.com/hschottm>
- * (c) Daniel Kiesel 2017 <https://github.com/iCodr8>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * @copyright  Copyright (c) 2023, cgoIT
+ * @author     cgoIT <https://cgo-it.de>
+ * @license    LGPL-3.0-or-later
  */
 
-namespace Contao;
+namespace Craffft\ContaoCalendarICalBundle\Classes;
 
+use Contao\Backend;
+use Contao\File;
+use Contao\Input;
+use Contao\StringUtil;
+use Contao\System;
 use Kigkonsult\Icalcreator\Util\DateTimeFactory;
 use Kigkonsult\Icalcreator\Vcalendar;
 use Kigkonsult\Icalcreator\Vevent;
 
-class CalendarExport extends \Backend {
+class CalendarExport extends Backend
+{
     /**
-     * Update a particular RSS feed
+     * Update a particular RSS feed.
      *
-     * @param integer
+     * @param int $intId
      */
-    public function exportCalendar($intId) {
-        $objCalendar = $this->Database->prepare("SELECT * FROM tl_calendar WHERE id=? AND make_ical=?")
-                                      ->limit(1)
-                                      ->execute($intId, 1);
+    public function exportCalendar($intId): void
+    {
+        $objCalendar = $this->Database->prepare('SELECT * FROM tl_calendar WHERE id=? AND make_ical=?')
+            ->limit(1)
+            ->execute($intId, 1)
+        ;
 
         if ($objCalendar->numRows < 1) {
             return;
         }
 
-        $filename = strlen($objCalendar->ical_alias) ? $objCalendar->ical_alias : 'calendar' . $objCalendar->id;
+        $filename = \strlen($objCalendar->ical_alias) ? $objCalendar->ical_alias : 'calendar'.$objCalendar->id;
 
         // Delete ics file
-        if (\Input::get('act') == 'delete') {
+        if ('delete' === Input::get('act')) {
             $this->import('Files');
-            $this->Files->delete($filename . '.ics');
+            $this->Files->delete($filename.'.ics');
         } // Update ics file
         else {
             $this->generateSubscriptions();
         }
     }
 
-
     /**
-     * Delete old files and generate all feeds
+     * Delete old files and generate all feeds.
      */
-    public function generateSubscriptions() {
+    public function generateSubscriptions(): void
+    {
         $this->removeOldSubscriptions();
-        $objCalendar = $this->Database->prepare("SELECT * FROM tl_calendar WHERE make_ical=?")->execute(1);
+        $objCalendar = $this->Database->prepare('SELECT * FROM tl_calendar WHERE make_ical=?')->execute(1);
 
         while ($objCalendar->next()) {
-            $filename = strlen($objCalendar->ical_alias) ? $objCalendar->ical_alias : 'calendar' . $objCalendar->id;
+            $filename = \strlen($objCalendar->ical_alias) ? $objCalendar->ical_alias : 'calendar'.$objCalendar->id;
 
             $this->generateFiles($objCalendar->row());
-            \System::log('Generated ical subscription "' . $filename . '.ics"', __METHOD__, TL_CRON);
+            System::log('Generated ical subscription "'.$filename.'.ics"', __METHOD__, TL_CRON);
         }
     }
 
-
     /**
-     * Generate an XML file and save it to the root directory
-     *
-     * @param array
+     * Remove old ics files from the root directory.
      */
-    protected function generateFiles($arrArchive) {
-        $this->arrEvents = array();
-
-        $startdate = (strlen($arrArchive['ical_start'])) ? $arrArchive['ical_start'] : time();
-        $enddate = (strlen($arrArchive['ical_end'])) ? $arrArchive['ical_end'] : time() + $GLOBALS['calendar_ical']['endDateTimeDifferenceInDays'] * 24 * 3600;
-        $filename = strlen($arrArchive['ical_alias']) ? $arrArchive['ical_alias'] : 'calendar' . $arrArchive['id'];
-        $ical = $this->getAllEvents(array($arrArchive['id']), $startdate, $enddate, $arrArchive['title'],
-                                    $arrArchive['ical_description'], $filename, $arrArchive['ical_prefix']);
-        $content = $ical->createCalendar();
-        $shareDir = \System::getContainer()->getParameter('contao.web_dir') . '/share';
-        $objFile = new \File(\StringUtil::stripRootDir($shareDir) . '/' . $filename . '.ics');
-        $objFile->write($content);
-        $objFile->close();
-    }
-
-    /**
-     * Remove old ics files from the root directory
-     */
-    public function removeOldSubscriptions() {
-        $arrFeeds = array();
-        $objFeeds = $this->Database->prepare("SELECT id, ical_alias FROM tl_calendar WHERE make_ical=?")->execute(1);
+    public function removeOldSubscriptions()
+    {
+        $arrFeeds = [];
+        $objFeeds = $this->Database->prepare('SELECT id, ical_alias FROM tl_calendar WHERE make_ical=?')->execute(1);
 
         while ($objFeeds->next()) {
-            $arrFeeds[] = strlen($objFeeds->ical_alias) ? $objFeeds->ical_alias : 'calendar' . $objFeeds->id;
+            $arrFeeds[] = \strlen($objFeeds->ical_alias) ? $objFeeds->ical_alias : 'calendar'.$objFeeds->id;
         }
 
         // Make sure dcaconfig.php is loaded TEST
         // include(TL_ROOT . '/system/config/dcaconfig.php');
 
-        $shareDir = \System::getContainer()->getParameter('contao.web_dir') . '/share';
+        $shareDir = System::getContainer()->getParameter('contao.web_dir').'/share';
+
         // Delete old files
         foreach (scan($shareDir) as $file) {
-            if (is_dir($shareDir . $file)) {
+            if (is_dir($shareDir.$file)) {
                 continue;
             }
 
-            if (is_array($GLOBALS['TL_CONFIG']['rootFiles']) && in_array($file, $GLOBALS['TL_CONFIG']['rootFiles'])) {
+            if (\is_array($GLOBALS['TL_CONFIG']['rootFiles']) && \in_array($file, $GLOBALS['TL_CONFIG']['rootFiles'], true)) {
                 continue;
             }
 
-            $objFile = new \File(\StringUtil::stripRootDir($shareDir) . '/' . $file);
+            $objFile = new File(StringUtil::stripRootDir($shareDir).'/'.$file);
 
             if (
-                $objFile->extension === 'ics'
-                && !in_array($objFile->filename, $arrFeeds)
+                'ics' === $objFile->extension
+                && !\in_array($objFile->filename, $arrFeeds, true)
                 && !preg_match('/^sitemap/i', $objFile->filename)
             ) {
-                \System::log('file ' . $objFile->filename, __METHOD__, TL_CRON);
+                System::log('file '.$objFile->filename, __METHOD__, TL_CRON);
                 $objFile->delete();
             }
         }
 
-        return array();
+        return [];
     }
 
-    protected function getAllEvents(
-        $arrCalendars,
-        $intStart,
-        $intEnd,
-        $title,
-        $description,
-        $filename = "",
-        $title_prefix
-    ) {
-        if (!is_array($arrCalendars)) {
-            return array();
+    /**
+     * Generate an XML file and save it to the root directory.
+     *
+     * @param array $arrArchive
+     */
+    protected function generateFiles($arrArchive): void
+    {
+        $this->arrEvents = [];
+
+        $startdate = \strlen($arrArchive['ical_start']) ? $arrArchive['ical_start'] : time();
+        $enddate = \strlen($arrArchive['ical_end']) ? $arrArchive['ical_end'] : time() + $GLOBALS['calendar_ical']['endDateTimeDifferenceInDays'] * 24 * 3600;
+        $filename = \strlen($arrArchive['ical_alias']) ? $arrArchive['ical_alias'] : 'calendar'.$arrArchive['id'];
+        $ical = $this->getAllEvents([$arrArchive['id']], $startdate, $enddate, $arrArchive['title'],
+            $arrArchive['ical_description'], $filename, $arrArchive['ical_prefix']);
+        $content = $ical->createCalendar();
+        $shareDir = System::getContainer()->getParameter('contao.web_dir').'/share';
+        $objFile = new File(StringUtil::stripRootDir($shareDir).'/'.$filename.'.ics');
+        $objFile->write($content);
+        $objFile->close();
+    }
+
+    protected function getAllEvents($arrCalendars, $intStart, $intEnd, $title, $description, $filename, $title_prefix)
+    {
+        if (!\is_array($arrCalendars)) {
+            return [];
         }
 
         $ical = new Vcalendar();
@@ -155,8 +158,9 @@ class CalendarExport extends \Backend {
                     $intEnd,
                     $intStart,
                     $time,
-                    $time
-                );
+                    $time,
+                )
+            ;
 
             if ($objEvents->numRows < 1) {
                 continue;
@@ -167,48 +171,48 @@ class CalendarExport extends \Backend {
 
                 if ($objEvents->addTime) {
                     $vevent->setDtstart(date(DateTimeFactory::$YmdTHis, $objEvents->startTime), [Vcalendar::VALUE => Vcalendar::DATE_TIME]);
-                    if (!strlen($objEvents->ignoreEndTime) || $objEvents->ignoreEndTime == 0) {
+                    if (!\strlen($objEvents->ignoreEndTime) || 0 === $objEvents->ignoreEndTime) {
                         if ($objEvents->startTime < $objEvents->endTime) {
                             $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $objEvents->endTime),
-                                              [Vcalendar::VALUE => Vcalendar::DATE_TIME]);
+                                [Vcalendar::VALUE => Vcalendar::DATE_TIME]);
                         } else {
                             $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $objEvents->startTime + 60 * 60),
-                                              [Vcalendar::VALUE => Vcalendar::DATE_TIME]);
+                                [Vcalendar::VALUE => Vcalendar::DATE_TIME]);
                         }
                     } else {
                         $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $objEvents->startTime),
-                                          [Vcalendar::VALUE => Vcalendar::DATE_TIME]);
+                            [Vcalendar::VALUE => Vcalendar::DATE_TIME]);
                     }
                 } else {
                     $vevent->setDtstart(date(DateTimeFactory::$Ymd, $objEvents->startDate), [Vcalendar::VALUE => Vcalendar::DATE]);
-                    if (!strlen($objEvents->endDate) || $objEvents->endDate == 0) {
+                    if (!\strlen($objEvents->endDate) || 0 === $objEvents->endDate) {
                         $vevent->setDtend(date(DateTimeFactory::$Ymd, $objEvents->startDate + 24 * 60 * 60),
-                                          [Vcalendar::VALUE => Vcalendar::DATE]);
+                            [Vcalendar::VALUE => Vcalendar::DATE]);
                     } else {
                         $vevent->setDtend(date(DateTimeFactory::$Ymd, $objEvents->endDate + 24 * 60 * 60),
-                                          [Vcalendar::VALUE => Vcalendar::DATE]);
+                            [Vcalendar::VALUE => Vcalendar::DATE]);
                     }
                 }
 
-                $vevent->setSummary(html_entity_decode((strlen($title_prefix) ? $title_prefix . " " : "") . $objEvents->title,
-                                                       ENT_QUOTES, 'UTF-8'));
+                $vevent->setSummary(html_entity_decode((\strlen($title_prefix) ? $title_prefix.' ' : '').$objEvents->title,
+                    ENT_QUOTES, 'UTF-8'));
                 $vevent->setDescription(html_entity_decode(strip_tags(preg_replace('/<br \\/>/', "\n",
-                                                                                   $this->replaceInsertTags($objEvents->teaser))),
-                                                           ENT_QUOTES, 'UTF-8'));
+                    $this->replaceInsertTags($objEvents->teaser))),
+                    ENT_QUOTES, 'UTF-8'));
 
                 if (!empty($objEvents->location)) {
                     $vevent->setLocation(trim(html_entity_decode($objEvents->location, ENT_QUOTES, 'UTF-8')));
                 }
 
                 if (!empty($objEvents->cep_participants)) {
-                    $attendees = preg_split("/,/", $objEvents->cep_participants);
-                    if (count($attendees)) {
+                    $attendees = preg_split('/,/', $objEvents->cep_participants);
+                    if (\count($attendees)) {
                         foreach ($attendees as $attendee) {
                             $attendee = trim($attendee);
-                            if (strpos($attendee, "@") !== false) {
+                            if (str_contains($attendee, '@')) {
                                 $vevent->setAttendee($attendee);
                             } else {
-                                $vevent->setAttendee($attendee, array('CN' => $attendee));
+                                $vevent->setAttendee($attendee, ['CN' => $attendee]);
                             }
                         }
                     }
@@ -220,18 +224,9 @@ class CalendarExport extends \Backend {
                 }
 
                 if ($objEvents->recurring) {
-                    $count = 0;
-                    $arrRepeat = deserialize($objEvents->repeatEach);
+                    $arrRepeat = StringUtil::deserialize($objEvents->repeatEach, true);
                     $arg = $arrRepeat['value'];
-                    $unit = $arrRepeat['unit'];
 
-                    if ($arg == 1) {
-                        $unit = substr($unit, 0, -1);
-                    }
-
-                    $strtotime = '+ ' . $arg . ' ' . $unit;
-                    $newstart = strtotime($strtotime, $objEvents->startTime);
-                    $newend = strtotime($strtotime, $objEvents->endTime);
                     $freq = 'YEARLY';
 
                     switch ($arrRepeat['unit']) {
@@ -249,7 +244,7 @@ class CalendarExport extends \Backend {
                             break;
                     }
 
-                    $rrule = array('FREQ' => $freq);
+                    $rrule = ['FREQ' => $freq];
 
                     if ($objEvents->recurrences > 0) {
                         $rrule['count'] = $objEvents->recurrences;
@@ -266,19 +261,20 @@ class CalendarExport extends \Backend {
                 * begin module event_recurrences handling
                 */
                 if ($objEvents->repeatExecptions) {
-                    $arrSkipDates = deserialize($objEvents->repeatExecptions);
+                    $arrSkipDates = StringUtil::deserialize($objEvents->repeatExecptions, true);
+
                     foreach ($arrSkipDates as $skipDate) {
                         $exTStamp = strtotime($skipDate);
-                        $exdate = array(
+                        $exdate = [
                             date(DateTimeFactory::$YmdHis,
-                                 date('Y', $exTStamp) .
-                                 date('m', $exTStamp) .
-                                 date('d', $exTStamp) .
-                                 date('H', $objEvents->startTime) .
-                                 date('i', $objEvents->startTime) .
-                                 date('s', $objEvents->startTime)
+                                date('Y', $exTStamp).
+                                date('m', $exTStamp).
+                                date('d', $exTStamp).
+                                date('H', $objEvents->startTime).
+                                date('i', $objEvents->startTime).
+                                date('s', $objEvents->startTime),
                             ),
-                        );
+                        ];
                         $vevent->setExdate($exdate);
                     }
                 }

@@ -1,28 +1,35 @@
 <?php
 
+declare(strict_types=1);
+
 /*
- * This file is part of the Contao Calendar iCal Bundle.
+ * This file is part of cgoit\contao-calendar-ical-php8-bundle for Contao Open Source CMS.
  *
- * (c) Helmut Schottmüller 2009-2013 <https://github.com/hschottm>
- * (c) Daniel Kiesel 2017 <https://github.com/iCodr8>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * @copyright  Copyright (c) 2023, cgoIT
+ * @author     cgoIT <https://cgo-it.de>
+ * @license    LGPL-3.0-or-later
  */
 
-namespace Contao;
+namespace Craffft\ContaoCalendarICalBundle\Classes;
 
-class CsvReader implements \Iterator {
+class CsvReader implements \Iterator
+{
+    protected $fileHandle;
 
-    protected $fileHandle = null;
-    protected $position = null;
-    protected $filename = null;
-    protected $currentLine = null;
-    protected $currentArray = null;
+    protected $position;
+
+    protected $filename;
+
+    protected $currentLine;
+
+    protected $currentArray;
+
     protected $separator = ',';
+
     protected $encoding = 'utf8';
 
-    public function __construct($filename, $separator = ',', $encoding = 'utf8') {
+    public function __construct($filename, $separator = ',', $encoding = 'utf8')
+    {
         $this->separator = $separator;
         $this->fileHandle = fopen($filename, 'r');
         if (!$this->fileHandle) {
@@ -34,20 +41,23 @@ class CsvReader implements \Iterator {
         $this->_readLine();
     }
 
-    public function __destruct() {
+    public function __destruct()
+    {
         $this->close();
     }
 
     // You should not have to call it unless you need to
     // explicitly free the file descriptor
-    public function close() {
+    public function close(): void
+    {
         if ($this->fileHandle) {
             fclose($this->fileHandle);
             $this->fileHandle = null;
         }
     }
 
-    public function rewind() {
+    public function rewind(): void
+    {
         if ($this->fileHandle) {
             $this->position = 0;
             rewind($this->fileHandle);
@@ -56,33 +66,38 @@ class CsvReader implements \Iterator {
         $this->_readLine();
     }
 
-    public function current() {
+    public function current()
+    {
         return $this->currentArray;
     }
 
-    public function key() {
+    public function key()
+    {
         return $this->position;
     }
 
-    public function next() {
-        $this->position++;
+    public function next(): void
+    {
+        ++$this->position;
         $this->_readLine();
     }
 
-    public function valid() {
-        return $this->currentArray !== null;
+    public function valid()
+    {
+        return null !== $this->currentArray;
     }
 
-    protected function _readLine() {
+    protected function _readLine(): void
+    {
         if (!feof($this->fileHandle)) {
             $this->currentLine = trim(fgets($this->fileHandle));
         } else {
             $this->currentLine = null;
         }
-        if (strcmp($this->encoding, 'utf8') != 0 && null != $this->currentLine) {
+        if (0 !== strcmp($this->encoding, 'utf8') && null !== $this->currentLine) {
             $this->currentLine = utf8_encode($this->currentLine);
         }
-        if ($this->currentLine != '') {
+        if ('' !== $this->currentLine) {
             $this->currentArray = Csv::parseString($this->currentLine, $this->separator);
         } else {
             $this->currentArray = null;
