@@ -18,8 +18,10 @@ class CsvParser
 
     protected $reader;
 
-    public function __construct(protected $filename, protected $encoding = 'utf8')
-    {
+    public function __construct(
+        protected $filename,
+        protected $encoding = 'utf8',
+    ) {
         $this->separator = $this->determineSeparator();
         $this->reader = new CsvReader($filename, $this->separator, $this->encoding);
     }

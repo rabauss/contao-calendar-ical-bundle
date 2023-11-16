@@ -1,0 +1,11 @@
+<!-- indexer::stop -->
+<div class="<?= $this->class; ?> block"<?= $this->cssID; ?><?php if ($this->style): ?> style="<?= $this->style; ?>"<?php endif; ?>>
+  <?php if ($this->headline): ?>
+
+  <<?= $this->hl; ?>><?= $this->headline; ?></<?= $this->hl; ?>>
+<?php endif; ?>
+
+<a class="ical" href="<?= $this->href; ?>" title="<?= $this->title; ?>"><?= $this->link; ?></a>
+
+</div>
+<!-- indexer::continue -->

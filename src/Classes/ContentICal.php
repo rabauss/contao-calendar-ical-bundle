@@ -48,8 +48,8 @@ class ContentICal extends ContentElement
             return $objTemplate->parse();
         }
 
-        static::loadLanguageFile('tl_content');
-        $this->strTitle = \strlen($this->linkTitle) ? $this->linkTitle : $GLOBALS['TL_LANG']['tl_content']['ical_title'];
+        static::loadLanguageFile('contao\dca\tl_content');
+        $this->strTitle = \strlen($this->linkTitle) ? $this->linkTitle : $GLOBALS['TL_LANG']['contao\dca\tl_content']['ical_title'];
 
         if (\strlen(Input::get('ical'))) {
             $startdate = \strlen((string) $this->ical_start) ? $this->ical_start : time();
@@ -104,7 +104,7 @@ class ContentICal extends ContentElement
         $arrCalendars = StringUtil::deserialize($this->ical_calendar, true);
         $this->Template->href = static::addToUrl('ical='.
                                                 implode(',', $arrCalendars).'&title='.urlencode((string) $this->strTitle));
-        $this->Template->title = $GLOBALS['TL_LANG']['tl_content']['ical_title'];
+        $this->Template->title = $GLOBALS['TL_LANG']['contao\dca\tl_content']['ical_title'];
     }
 
     /**

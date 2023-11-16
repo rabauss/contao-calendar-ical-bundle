@@ -14,6 +14,7 @@ namespace Craffft\ContaoCalendarICalBundle\Classes;
 
 use Contao\Backend;
 use Contao\File;
+use Contao\Folder;
 use Contao\Input;
 use Contao\StringUtil;
 use Contao\System;
@@ -85,7 +86,7 @@ class CalendarExport extends Backend
         $shareDir = System::getContainer()->getParameter('contao.web_dir').'/share';
 
         // Delete old files
-        foreach (\Contao\Folder::scan($shareDir) as $file) {
+        foreach (Folder::scan($shareDir) as $file) {
             if (is_dir($shareDir.$file)) {
                 continue;
             }

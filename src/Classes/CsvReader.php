@@ -24,8 +24,11 @@ class CsvReader implements \Iterator
 
     protected $currentArray;
 
-    public function __construct($filename, protected $separator = ',', protected $encoding = 'utf8')
-    {
+    public function __construct(
+        $filename,
+        protected $separator = ',',
+        protected $encoding = 'utf8',
+    ) {
         $this->fileHandle = fopen($filename, 'r');
         if (!$this->fileHandle) {
             return;
