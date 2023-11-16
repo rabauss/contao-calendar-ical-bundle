@@ -48,20 +48,20 @@ class ContentICal extends ContentElement
             return $objTemplate->parse();
         }
 
-        $this->loadLanguageFile('tl_content');
+        static::loadLanguageFile('tl_content');
         $this->strTitle = \strlen($this->linkTitle) ? $this->linkTitle : $GLOBALS['TL_LANG']['tl_content']['ical_title'];
 
         if (\strlen(Input::get('ical'))) {
-            $startdate = \strlen($this->ical_start) ? $this->ical_start : time();
-            $enddate = \strlen($this->ical_end) ? $this->ical_end : time() + 365 * 24 * 3600;
+            $startdate = \strlen((string) $this->ical_start) ? $this->ical_start : time();
+            $enddate = \strlen((string) $this->ical_end) ? $this->ical_end : time() + 365 * 24 * 3600;
             $this->getAllEvents(explode(',', urldecode(Input::get('ical'))), $startdate, $enddate);
             $this->ical->returnCalendar(); // redirect calendar file to browser
 
             return;
         }
 
-        $intStart = \strlen($this->ical_start) ? $this->ical_start : time();
-        $intEnd = \strlen($this->ical_end) ? $this->ical_end : time() + 365 * 24 * 3600;
+        $intStart = \strlen((string) $this->ical_start) ? $this->ical_start : time();
+        $intEnd = \strlen((string) $this->ical_end) ? $this->ical_end : time() + 365 * 24 * 3600;
         $time = time();
         $nrOfCalendars = 0;
         $arrcalendars = StringUtil::deserialize($this->ical_calendar, true);
@@ -102,8 +102,8 @@ class ContentICal extends ContentElement
     {
         $this->Template->link = $this->strTitle;
         $arrCalendars = StringUtil::deserialize($this->ical_calendar, true);
-        $this->Template->href = $this->addToUrl('ical='.
-                                                implode(',', $arrCalendars).'&title='.urlencode($this->strTitle));
+        $this->Template->href = static::addToUrl('ical='.
+                                                implode(',', $arrCalendars).'&title='.urlencode((string) $this->strTitle));
         $this->Template->title = $GLOBALS['TL_LANG']['tl_content']['ical_title'];
     }
 
@@ -158,7 +158,7 @@ class ContentICal extends ContentElement
                     $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $objEvents->endTime), [Vcalendar::VALUE => Vcalendar::DATE_TIME]);
                 } else {
                     $vevent->setDtstart(date(DateTimeFactory::$Ymd, $objEvents->startDate), [Vcalendar::VALUE => Vcalendar::DATE]);
-                    if (!\strlen($objEvents->endDate) || 0 === $objEvents->endDate) {
+                    if (!\strlen((string) $objEvents->endDate) || 0 === $objEvents->endDate) {
                         $vevent->setDtend(date(DateTimeFactory::$Ymd, $objEvents->startDate + 24 * 60 * 60),
                             [Vcalendar::VALUE => Vcalendar::DATE]);
                     } else {
@@ -167,11 +167,11 @@ class ContentICal extends ContentElement
                     }
                 }
 
-                $ical_prefix = \strlen($this->ical_prefix) ? $this->ical_prefix : $objEvents->ical_prefix;
-                $vevent->setSummary(html_entity_decode((\strlen($ical_prefix) ? $ical_prefix.' ' : '').$objEvents->title,
+                $ical_prefix = \strlen((string) $this->ical_prefix) ? $this->ical_prefix : $objEvents->ical_prefix;
+                $vevent->setSummary(html_entity_decode((\strlen((string) $ical_prefix) ? $ical_prefix.' ' : '').$objEvents->title,
                     ENT_QUOTES, 'UTF-8'));
                 $vevent->setDescription(html_entity_decode(strip_tags(preg_replace('/<br \\/>/', "\n",
-                    $this->replaceInsertTags($objEvents->teaser))),
+                    (string) $this->replaceInsertTags($objEvents->teaser))),
                     ENT_QUOTES, 'UTF-8'));
 
                 if ($objEvents->recurring) {
@@ -215,7 +215,7 @@ class ContentICal extends ContentElement
                     $arrSkipDates = StringUtil::deserialize($objEvents->repeatExecptions);
 
                     foreach ($arrSkipDates as $skipDate) {
-                        $exTStamp = strtotime($skipDate);
+                        $exTStamp = strtotime((string) $skipDate);
                         $exdate = [
                             date(DateTimeFactory::$YmdHis,
                                 date('Y', $exTStamp).

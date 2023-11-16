@@ -19,12 +19,12 @@ use Contao\TemplateLoader;
 ClassLoader::addClasses(
     [
         // Classes
-        'Craffft\ContaoCalendarICalBundle\Classes\CalendarExport' => 'vendor/cgoit/contao-calendar-ical-php8-bundle/src/Classes/CalendarExport.php',
-        'Craffft\ContaoCalendarICalBundle\Classes\CalendarImport' => 'vendor/cgoit/contao-calendar-ical-php8-bundle/src/Classes/CalendarImport.php',
-        'Craffft\ContaoCalendarICalBundle\Classes\ContentICal' => 'vendor/cgoit/contao-calendar-ical-php8-bundle/src/Classes/ContentICal.php',
-        'Craffft\ContaoCalendarICalBundle\Classes\Csv' => 'vendor/cgoit/contao-calendar-ical-php8-bundle/src/Classes/Csv.php',
-        'Craffft\ContaoCalendarICalBundle\Classes\CsvParser' => 'vendor/cgoit/contao-calendar-ical-php8-bundle/src/Classes/CsvParser.php',
-        'Craffft\ContaoCalendarICalBundle\Classes\CsvReader' => 'vendor/cgoit/contao-calendar-ical-php8-bundle/src/Classes/CsvReader.php',
+        \Craffft\ContaoCalendarICalBundle\Classes\CalendarExport::class => 'vendor/cgoit/contao-calendar-ical-php8-bundle/src/Classes/CalendarExport.php',
+        \Craffft\ContaoCalendarICalBundle\Classes\CalendarImport::class => 'vendor/cgoit/contao-calendar-ical-php8-bundle/src/Classes/CalendarImport.php',
+        \Craffft\ContaoCalendarICalBundle\Classes\ContentICal::class => 'vendor/cgoit/contao-calendar-ical-php8-bundle/src/Classes/ContentICal.php',
+        \Craffft\ContaoCalendarICalBundle\Classes\Csv::class => 'vendor/cgoit/contao-calendar-ical-php8-bundle/src/Classes/Csv.php',
+        \Craffft\ContaoCalendarICalBundle\Classes\CsvParser::class => 'vendor/cgoit/contao-calendar-ical-php8-bundle/src/Classes/CsvParser.php',
+        \Craffft\ContaoCalendarICalBundle\Classes\CsvReader::class => 'vendor/cgoit/contao-calendar-ical-php8-bundle/src/Classes/CsvReader.php',
     ]);
 
 /*

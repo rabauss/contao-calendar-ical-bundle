@@ -21,7 +21,7 @@ class Plugin implements BundlePluginInterface
     public function getBundles(ParserInterface $parser)
     {
         return [
-            BundleConfig::create('Craffft\ContaoCalendarICalBundle\CraffftContaoCalendarICalBundle')
+            BundleConfig::create(\Craffft\ContaoCalendarICalBundle\CraffftContaoCalendarICalBundle::class)
                 ->setLoadAfter(['Contao\CalendarBundle\ContaoCalendarBundle'])
                 ->setReplace(['contao-calendar-ical-bundle']),
         ];

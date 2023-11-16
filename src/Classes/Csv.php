@@ -21,7 +21,7 @@ class Csv
     public static function parseString($string, $separator = ',')
     {
         $values = [];
-        $string = str_replace("\r\n", '', $string); // eat the traling new line, if any
+        $string = str_replace("\r\n", '', (string) $string); // eat the traling new line, if any
 
         if ('' === $string) {
             return $values;
@@ -64,7 +64,7 @@ class Csv
 
     public static function escapeString($string)
     {
-        $string = str_replace('"', '""', $string);
+        $string = str_replace('"', '""', (string) $string);
 
         if (
             str_contains($string, '"') || str_contains($string, ',') || str_contains($string,
@@ -82,7 +82,7 @@ class Csv
     // 'string"""' => true
     public static function _hasEndQuote($token)
     {
-        $len = \strlen($token);
+        $len = \strlen((string) $token);
 
         if (0 === $len) {
             return false;

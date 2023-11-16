@@ -39,7 +39,7 @@ class CalendarExport extends Backend
             return;
         }
 
-        $filename = \strlen($objCalendar->ical_alias) ? $objCalendar->ical_alias : 'calendar'.$objCalendar->id;
+        $filename = \strlen((string) $objCalendar->ical_alias) ? $objCalendar->ical_alias : 'calendar'.$objCalendar->id;
 
         // Delete ics file
         if ('delete' === Input::get('act')) {
@@ -60,7 +60,7 @@ class CalendarExport extends Backend
         $objCalendar = $this->Database->prepare('SELECT * FROM tl_calendar WHERE make_ical=?')->execute(1);
 
         while ($objCalendar->next()) {
-            $filename = \strlen($objCalendar->ical_alias) ? $objCalendar->ical_alias : 'calendar'.$objCalendar->id;
+            $filename = \strlen((string) $objCalendar->ical_alias) ? $objCalendar->ical_alias : 'calendar'.$objCalendar->id;
 
             $this->generateFiles($objCalendar->row());
             System::log('Generated ical subscription "'.$filename.'.ics"', __METHOD__, TL_CRON);
@@ -76,7 +76,7 @@ class CalendarExport extends Backend
         $objFeeds = $this->Database->prepare('SELECT id, ical_alias FROM tl_calendar WHERE make_ical=?')->execute(1);
 
         while ($objFeeds->next()) {
-            $arrFeeds[] = \strlen($objFeeds->ical_alias) ? $objFeeds->ical_alias : 'calendar'.$objFeeds->id;
+            $arrFeeds[] = \strlen((string) $objFeeds->ical_alias) ? $objFeeds->ical_alias : 'calendar'.$objFeeds->id;
         }
 
         // Make sure dcaconfig.php is loaded TEST
@@ -85,7 +85,7 @@ class CalendarExport extends Backend
         $shareDir = System::getContainer()->getParameter('contao.web_dir').'/share';
 
         // Delete old files
-        foreach (scan($shareDir) as $file) {
+        foreach (\Contao\Folder::scan($shareDir) as $file) {
             if (is_dir($shareDir.$file)) {
                 continue;
             }
@@ -118,9 +118,9 @@ class CalendarExport extends Backend
     {
         $this->arrEvents = [];
 
-        $startdate = \strlen($arrArchive['ical_start']) ? $arrArchive['ical_start'] : time();
-        $enddate = \strlen($arrArchive['ical_end']) ? $arrArchive['ical_end'] : time() + $GLOBALS['calendar_ical']['endDateTimeDifferenceInDays'] * 24 * 3600;
-        $filename = \strlen($arrArchive['ical_alias']) ? $arrArchive['ical_alias'] : 'calendar'.$arrArchive['id'];
+        $startdate = \strlen((string) $arrArchive['ical_start']) ? $arrArchive['ical_start'] : time();
+        $enddate = \strlen((string) $arrArchive['ical_end']) ? $arrArchive['ical_end'] : time() + $GLOBALS['calendar_ical']['endDateTimeDifferenceInDays'] * 24 * 3600;
+        $filename = \strlen((string) $arrArchive['ical_alias']) ? $arrArchive['ical_alias'] : 'calendar'.$arrArchive['id'];
         $ical = $this->getAllEvents([$arrArchive['id']], $startdate, $enddate, $arrArchive['title'],
             $arrArchive['ical_description'], $filename, $arrArchive['ical_prefix']);
         $content = $ical->createCalendar();
@@ -171,7 +171,7 @@ class CalendarExport extends Backend
 
                 if ($objEvents->addTime) {
                     $vevent->setDtstart(date(DateTimeFactory::$YmdTHis, $objEvents->startTime), [Vcalendar::VALUE => Vcalendar::DATE_TIME]);
-                    if (!\strlen($objEvents->ignoreEndTime) || 0 === $objEvents->ignoreEndTime) {
+                    if (!\strlen((string) $objEvents->ignoreEndTime) || 0 === $objEvents->ignoreEndTime) {
                         if ($objEvents->startTime < $objEvents->endTime) {
                             $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $objEvents->endTime),
                                 [Vcalendar::VALUE => Vcalendar::DATE_TIME]);
@@ -185,7 +185,7 @@ class CalendarExport extends Backend
                     }
                 } else {
                     $vevent->setDtstart(date(DateTimeFactory::$Ymd, $objEvents->startDate), [Vcalendar::VALUE => Vcalendar::DATE]);
-                    if (!\strlen($objEvents->endDate) || 0 === $objEvents->endDate) {
+                    if (!\strlen((string) $objEvents->endDate) || 0 === $objEvents->endDate) {
                         $vevent->setDtend(date(DateTimeFactory::$Ymd, $objEvents->startDate + 24 * 60 * 60),
                             [Vcalendar::VALUE => Vcalendar::DATE]);
                     } else {
@@ -194,21 +194,21 @@ class CalendarExport extends Backend
                     }
                 }
 
-                $vevent->setSummary(html_entity_decode((\strlen($title_prefix) ? $title_prefix.' ' : '').$objEvents->title,
+                $vevent->setSummary(html_entity_decode((\strlen((string) $title_prefix) ? $title_prefix.' ' : '').$objEvents->title,
                     ENT_QUOTES, 'UTF-8'));
                 $vevent->setDescription(html_entity_decode(strip_tags(preg_replace('/<br \\/>/', "\n",
-                    $this->replaceInsertTags($objEvents->teaser))),
+                    (string) $this->replaceInsertTags($objEvents->teaser))),
                     ENT_QUOTES, 'UTF-8'));
 
                 if (!empty($objEvents->location)) {
-                    $vevent->setLocation(trim(html_entity_decode($objEvents->location, ENT_QUOTES, 'UTF-8')));
+                    $vevent->setLocation(trim(html_entity_decode((string) $objEvents->location, ENT_QUOTES, 'UTF-8')));
                 }
 
                 if (!empty($objEvents->cep_participants)) {
-                    $attendees = preg_split('/,/', $objEvents->cep_participants);
-                    if (\count($attendees)) {
+                    $attendees = preg_split('/,/', (string) $objEvents->cep_participants);
+                    if (is_countable($attendees) ? \count($attendees) : 0) {
                         foreach ($attendees as $attendee) {
-                            $attendee = trim($attendee);
+                            $attendee = trim((string) $attendee);
                             if (str_contains($attendee, '@')) {
                                 $vevent->setAttendee($attendee);
                             } else {
@@ -219,7 +219,7 @@ class CalendarExport extends Backend
                 }
 
                 if (!empty($objEvents->location_contact)) {
-                    $contact = trim($objEvents->location_contact);
+                    $contact = trim((string) $objEvents->location_contact);
                     $vevent->setContact($contact);
                 }
 
@@ -264,7 +264,7 @@ class CalendarExport extends Backend
                     $arrSkipDates = StringUtil::deserialize($objEvents->repeatExecptions, true);
 
                     foreach ($arrSkipDates as $skipDate) {
-                        $exTStamp = strtotime($skipDate);
+                        $exTStamp = strtotime((string) $skipDate);
                         $exdate = [
                             date(DateTimeFactory::$YmdHis,
                                 date('Y', $exTStamp).

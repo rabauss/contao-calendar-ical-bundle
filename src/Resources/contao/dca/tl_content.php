@@ -56,14 +56,13 @@ $GLOBALS['TL_DCA']['tl_content']['fields']['ical_end'] =
     'sql' => "varchar(12) NOT NULL default ''",
 ];
 
-class tl_content extends Backend
+class tl_content extends \Contao\Backend
 {
     /**
      * Import the back end user object.
      */
     public function __construct()
     {
-        parent::__construct();
         $this->import('BackendUser', 'User');
     }
 

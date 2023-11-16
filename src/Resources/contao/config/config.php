@@ -24,7 +24,7 @@ $GLOBALS['BE_MOD']['content']['calendar']['stylesheet'] = 'bundles/craffftcontao
 /*
  * Cron jobs
  */
-$GLOBALS['TL_CRON']['daily'][] = [CalendarExport::class, 'generateSubscriptions'];
+$GLOBALS['TL_CRON']['daily'][] = (new CalendarExport())->generateSubscriptions(...);
 
 /*
  * Add 'ical' to the URL keywords to prevent problems with URL manipulating modules like folderurl
@@ -32,10 +32,10 @@ $GLOBALS['TL_CRON']['daily'][] = [CalendarExport::class, 'generateSubscriptions'
 if (!array_key_exists('urlKeywords', $GLOBALS['TL_CONFIG'])) {
     $GLOBALS['TL_CONFIG'] += ['urlKeywords' => ''];
 }
-$GLOBALS['TL_CONFIG']['urlKeywords'] .= (strlen(trim($GLOBALS['TL_CONFIG']['urlKeywords'])) ? ',' : '').'ical';
+$GLOBALS['TL_CONFIG']['urlKeywords'] .= (strlen(trim((string) $GLOBALS['TL_CONFIG']['urlKeywords'])) ? ',' : '').'ical';
 
-$GLOBALS['TL_HOOKS']['removeOldFeeds'][] = [CalendarExport::class, 'removeOldSubscriptions'];
-$GLOBALS['TL_HOOKS']['getAllEvents'][] = [CalendarImport::class, 'getAllEvents'];
+$GLOBALS['TL_HOOKS']['removeOldFeeds'][] = (new CalendarExport())->removeOldSubscriptions(...);
+$GLOBALS['TL_HOOKS']['getAllEvents'][] = (new CalendarImport())->getAllEvents(...);
 
 /*
  * Module variables

@@ -129,7 +129,7 @@ class CalendarImport extends Backend
     {
         $this->Template = new BackendTemplate('be_import_calendar_confirmation');
 
-        if (\strlen($tzimport)) {
+        if (\strlen((string) $tzimport)) {
             $this->Template->confirmationText = sprintf(
                 $GLOBALS['TL_LANG']['tl_calendar_events']['confirmationTimezone'],
                 $tzsystem,
@@ -149,11 +149,11 @@ class CalendarImport extends Backend
         $this->Template->icssource = $icssource;
         $this->Template->deleteCalendar = $deleteCalendar;
         $this->Template->filterEventTitle = $this->filterEventTitle;
-        $this->Template->hrefBack = ampersand(str_replace('&key=import', '', Environment::get('request')));
+        $this->Template->hrefBack = \Contao\StringUtil::ampersand(str_replace('&key=import', '', (string) Environment::get('request')));
         $this->Template->goBack = $GLOBALS['TL_LANG']['MSC']['goBack'];
         $this->Template->headline = $GLOBALS['TL_LANG']['MSC']['import_calendar'][0];
-        $this->Template->request = ampersand(Environment::get('request'));
-        $this->Template->submit = specialchars($GLOBALS['TL_LANG']['tl_calendar_events']['proceed'][0]);
+        $this->Template->request = \Contao\StringUtil::ampersand(Environment::get('request'));
+        $this->Template->submit = \Contao\StringUtil::specialchars($GLOBALS['TL_LANG']['tl_calendar_events']['proceed'][0]);
 
         return $this->Template->parse();
     }
@@ -174,8 +174,8 @@ class CalendarImport extends Backend
 
         $objUploader = new $class();
 
-        $this->loadLanguageFile('tl_calendar_events');
-        $this->loadLanguageFile('tl_files');
+        static::loadLanguageFile('tl_calendar_events');
+        static::loadLanguageFile('tl_files');
         $this->Template = new BackendTemplate('be_import_calendar');
 
         $class = $this->User->uploader;
@@ -202,11 +202,11 @@ class CalendarImport extends Backend
         $this->Template->max_file_size = $GLOBALS['TL_CONFIG']['maxFileSize'];
         $this->Template->message = Message::generate();
 
-        $this->Template->hrefBack = ampersand(str_replace('&key=import', '', Environment::get('request')));
+        $this->Template->hrefBack = \Contao\StringUtil::ampersand(str_replace('&key=import', '', (string) Environment::get('request')));
         $this->Template->goBack = $GLOBALS['TL_LANG']['MSC']['goBack'];
         $this->Template->headline = $GLOBALS['TL_LANG']['MSC']['import_calendar'][0];
-        $this->Template->request = ampersand(Environment::get('request'), 'ENCODE_AMPERSANDS');
-        $this->Template->submit = specialchars($GLOBALS['TL_LANG']['tl_calendar_events']['import'][0]);
+        $this->Template->request = \Contao\StringUtil::ampersand(Environment::get('request'), 'ENCODE_AMPERSANDS');
+        $this->Template->submit = \Contao\StringUtil::specialchars($GLOBALS['TL_LANG']['tl_calendar_events']['import'][0]);
 
         // Create import form
         if ('tl_import_calendar' === Input::post('FORM_SUBMIT') && $this->blnSave) {
@@ -214,7 +214,7 @@ class CalendarImport extends Backend
 
             if (empty($arrUploaded)) {
                 Message::addError($GLOBALS['TL_LANG']['ERR']['all_fields']);
-                $this->reload();
+                static::reload();
             }
 
             $arrFiles = [];
@@ -222,11 +222,11 @@ class CalendarImport extends Backend
             foreach ($arrUploaded as $strFile) {
                 // Skip folders
                 if (is_dir(TL_ROOT.'/'.$strFile)) {
-                    Message::addError(sprintf($GLOBALS['TL_LANG']['ERR']['importFolder'], basename($strFile)));
+                    Message::addError(sprintf($GLOBALS['TL_LANG']['ERR']['importFolder'], basename((string) $strFile)));
                     continue;
                 }
 
-                $objFile = new \File($strFile, true);
+                $objFile = new \Contao\File($strFile, true);
 
                 if ('ics' !== $objFile->extension && 'csv' !== $objFile->extension) {
                     Message::addError(sprintf($GLOBALS['TL_LANG']['ERR']['filetype'], $objFile->extension));
@@ -238,23 +238,23 @@ class CalendarImport extends Backend
 
             if (empty($arrFiles)) {
                 Message::addError($GLOBALS['TL_LANG']['ERR']['all_fields']);
-                $this->reload();
+                static::reload();
             } else {
                 if (\count($arrFiles) > 1) {
                     Message::addError($GLOBALS['TL_LANG']['ERR']['only_one_file']);
-                    $this->reload();
+                    static::reload();
                 } else {
                     $startDate = new Date($this->Template->startDate->value, $GLOBALS['TL_CONFIG']['dateFormat']);
                     $endDate = new Date($this->Template->endDate->value, $GLOBALS['TL_CONFIG']['dateFormat']);
                     $deleteCalendar = $this->Template->deleteCalendar->value;
                     $this->filterEventTitle = $this->Template->filterEventTitle->value;
                     $timeshift = $this->Template->timeshift->value;
-                    $file = new \File($arrFiles[0], true);
-                    if (0 === strcmp(strtolower($file->extension), 'ics')) {
+                    $file = new \Contao\File($arrFiles[0], true);
+                    if (0 === strcmp(strtolower((string) $file->extension), 'ics')) {
                         $this->importFromICSFile($file->path, $dc, $startDate, $endDate, null, null, $deleteCalendar,
                             $timeshift);
                     } else {
-                        if (0 === strcmp(strtolower($file->extension), 'csv')) {
+                        if (0 === strcmp(strtolower((string) $file->extension), 'csv')) {
                             $this->Session->set('csv_pid', $dc->id);
                             $this->Session->set('csv_timeshift', $this->Template->timeshift->value);
                             $this->Session->set('csv_startdate', $this->Template->startDate->value);
@@ -329,18 +329,18 @@ class CalendarImport extends Backend
                     ->execute(time(), '1', $arrCalendar['id'])
                 ;
 
-                \System::log('reading cal', __METHOD__, TL_GENERAL);
+                \Contao\System::log('reading cal', __METHOD__, TL_GENERAL);
                 // create new from ical file
-                \System::log(
+                \Contao\System::log(
                     'Reload iCal Web Calendar '.$arrCalendar['title'].' ('.$arrCalendar['id'].'): Triggered by '.time().' - '.$last_change.' = '.(time() - $arrLastchange['lastchange']).' > '.$arrCalendar['ical_cache'],
                     __METHOD__,
                     TL_GENERAL,
                 );
                 $this->import('CalendarImport');
-                $startDate = \strlen($arrCalendar['ical_source_start']) ? new Date($arrCalendar['ical_source_start'],
+                $startDate = \strlen((string) $arrCalendar['ical_source_start']) ? new Date($arrCalendar['ical_source_start'],
                     $GLOBALS['TL_CONFIG']['dateFormat']) : new Date(time(),
                         $GLOBALS['TL_CONFIG']['dateFormat']);
-                $endDate = \strlen($arrCalendar['ical_source_end']) ? new Date($arrCalendar['ical_source_end'],
+                $endDate = \strlen((string) $arrCalendar['ical_source_end']) ? new Date($arrCalendar['ical_source_end'],
                     $GLOBALS['TL_CONFIG']['dateFormat']) : new Date(time() + $GLOBALS['calendar_ical']['endDateTimeDifferenceInDays'] * 24 * 3600,
                         $GLOBALS['TL_CONFIG']['dateFormat']);
                 $tz = [$arrCalendar['ical_timezone'], $arrCalendar['ical_timezone']];
@@ -357,12 +357,9 @@ class CalendarImport extends Backend
         }
     }
 
-    /**
-     * @return File|null
-     */
-    protected function downloadURLToTempFile($url, $proxy, $benutzerpw, $port)
+    protected function downloadURLToTempFile($url, $proxy, $benutzerpw, $port): ?\Contao\File
     {
-        $url = html_entity_decode($url);
+        $url = html_entity_decode((string) $url);
 
         if ($this->isCurlInstalled()) {
             $ch = curl_init($url);
@@ -411,7 +408,7 @@ class CalendarImport extends Backend
 
     protected function importFromCSVFile($prepare = true)
     {
-        $this->loadDataContainer('tl_calendar_events');
+        static::loadDataContainer('tl_calendar_events');
         $dbfields = $this->Database->listFields('tl_calendar_events');
         $fieldnames = [];
 
@@ -448,7 +445,7 @@ class CalendarImport extends Backend
         $encoding = Input::post('encoding');
 
         if (!\is_array($csvvalues)) {
-            $sessiondata = deserialize($GLOBALS['TL_CONFIG']['calendar_ical']['csvimport'], true);
+            $sessiondata = \Contao\StringUtil::deserialize($GLOBALS['TL_CONFIG']['calendar_ical']['csvimport'], true);
             if (\is_array($sessiondata) && 5 === \count($sessiondata)) {
                 $csvvalues = $sessiondata[0];
                 $calvalues = $sessiondata[1];
@@ -459,10 +456,10 @@ class CalendarImport extends Backend
         }
 
         $data = TL_ROOT.'/'.$this->Session->get('csv_filename');
-        $parser = new CsvParser($data, \strlen($encoding) > 0 ? $encoding : 'utf8');
+        $parser = new CsvParser($data, \strlen((string) $encoding) > 0 ? $encoding : 'utf8');
         $header = $parser->extractHeader();
 
-        for ($i = 0; $i < \count($header); ++$i) {
+        for ($i = 0; $i < (is_countable($header) ? \count($header) : 0); ++$i) {
             $objCSV = $this->getFieldSelector($i, 'csvfield', $header,
                 \is_array($csvvalues) ? $csvvalues[$i] : $header[$i]);
             $objCal = $this->getFieldSelector($i, 'calfield', $calfields, $calvalues[$i]);
@@ -471,17 +468,17 @@ class CalendarImport extends Backend
 
         if ($prepare) {
             $preview = $parser->getDataArray(5);
-            $this->Template = new \BackendTemplate('be_import_calendar_csv_headers');
+            $this->Template = new \Contao\BackendTemplate('be_import_calendar_csv_headers');
             $this->Template->lngFields = $GLOBALS['TL_LANG']['tl_calendar_events']['fields'];
             $this->Template->lngPreview = $GLOBALS['TL_LANG']['tl_calendar_events']['preview'];
             $this->Template->check = $GLOBALS['TL_LANG']['tl_calendar_events']['check'];
             $this->Template->header = $header;
 
-            if (\count($preview)) {
+            if (is_countable($preview) ? \count($preview) : 0) {
                 foreach ($preview as $idx => $line) {
                     if (\is_array($line)) {
                         foreach ($line as $key => $value) {
-                            $preview[$idx][$key] = specialchars($value);
+                            $preview[$idx][$key] = \Contao\StringUtil::specialchars($value);
                         }
                     }
                 }
@@ -495,11 +492,11 @@ class CalendarImport extends Backend
                 $this->Template->timeFormat = $this->getTimeFormatWidget($timeFormat);
             }
 
-            $this->Template->hrefBack = ampersand(str_replace('&key=import', '', Environment::get('request')));
+            $this->Template->hrefBack = \Contao\StringUtil::ampersand(str_replace('&key=import', '', (string) Environment::get('request')));
             $this->Template->goBack = $GLOBALS['TL_LANG']['MSC']['goBack'];
             $this->Template->headline = $GLOBALS['TL_LANG']['MSC']['import_calendar'][0];
-            $this->Template->request = ampersand(Environment::get('request'), 'ENCODE_AMPERSANDS');
-            $this->Template->submit = specialchars($GLOBALS['TL_LANG']['tl_calendar_events']['proceed'][0]);
+            $this->Template->request = \Contao\StringUtil::ampersand(Environment::get('request'), 'ENCODE_AMPERSANDS');
+            $this->Template->submit = \Contao\StringUtil::specialchars($GLOBALS['TL_LANG']['tl_calendar_events']['proceed'][0]);
             $this->Template->fields = $fields;
 
             return $this->Template->parse();
@@ -514,12 +511,12 @@ class CalendarImport extends Backend
         ]));
 
         if ($this->Session->get('csv_deletecalendar') && $this->Session->get('csv_pid')) {
-            $event = \CalendarEventsModel::findByPid($this->Session->get('csv_pid'));
+            $event = \Contao\CalendarEventsModel::findByPid($this->Session->get('csv_pid'));
             if ($event) {
                 while ($event->next()) {
                     $arrColumns = ['ptable=? AND pid=?'];
                     $arrValues = ['tl_calendar_events', $event->id];
-                    $content = \ContentModel::findBy($arrColumns, $arrValues);
+                    $content = \Contao\ContentModel::findBy($arrColumns, $arrValues);
                     if ($content) {
                         while ($content->next()) {
                             $content->delete();
@@ -545,7 +542,7 @@ class CalendarImport extends Backend
                 $arrFields['author'] = $this->User->id ?: 0;
 
                 foreach ($calvalues as $idx => $value) {
-                    if (\strlen($value)) {
+                    if (\strlen((string) $value)) {
                         $indexfield = $csvvalues[$idx];
                         $foundindex = array_search($indexfield, $header, true);
 
@@ -587,11 +584,11 @@ class CalendarImport extends Backend
                                     $arrFields['endTime'] = $arrFields['endDate'];
                                     break;
                                 case 'details':
-                                    array_push($eventcontent, specialchars($data[$foundindex]));
+                                    array_push($eventcontent, \Contao\StringUtil::specialchars($data[$foundindex]));
                                     break;
                                 default:
-                                    if (\strlen($data[$foundindex])) {
-                                        $arrFields[$value] = specialchars($data[$foundindex]);
+                                    if (\strlen((string) $data[$foundindex])) {
+                                        $arrFields[$value] = \Contao\StringUtil::specialchars($data[$foundindex]);
                                     }
                                     break;
                             }
@@ -599,8 +596,8 @@ class CalendarImport extends Backend
                             if ('title' === $value) {
                                 $this->filterEventTitle = $this->Session->get('csv_filterEventTitle');
                                 if (
-                                    !empty($this->filterEventTitle) && !str_contains(specialchars($data[$foundindex]),
-                                        $this->filterEventTitle)
+                                    !empty($this->filterEventTitle) && !str_contains((string) \Contao\StringUtil::specialchars($data[$foundindex]),
+                                        (string) $this->filterEventTitle)
                                 ) {
                                     continue;
                                 }
@@ -610,7 +607,7 @@ class CalendarImport extends Backend
                 }
 
                 foreach ($calvalues as $idx => $value) {
-                    if (\strlen($value)) {
+                    if (\strlen((string) $value)) {
                         $indexfield = $csvvalues[$idx];
                         $foundindex = array_search($indexfield, $header, true);
 
@@ -625,7 +622,7 @@ class CalendarImport extends Backend
                                             $arrFields['endTime'] = $arrFields[$value];
                                         }
                                     } else {
-                                        if (preg_match('/(\\d+):(\\d+)/', $data[$foundindex], $matches)) {
+                                        if (preg_match('/(\\d+):(\\d+)/', (string) $data[$foundindex], $matches)) {
                                             $arrFields[$value] = $arrFields['startDate'] + (int) $matches[1] * 60 * 60 + (int) $matches[2] * 60;
                                         }
                                     }
@@ -638,7 +635,7 @@ class CalendarImport extends Backend
                                             $arrFields[$value] = $arrFields['endDate'] + $res['hour'] * 60 * 60 + $res['minute'] * 60 + $res['second'];
                                         }
                                     } else {
-                                        if (preg_match('/(\\d+):(\\d+)/', $data[$foundindex], $matches)) {
+                                        if (preg_match('/(\\d+):(\\d+)/', (string) $data[$foundindex], $matches)) {
                                             $arrFields[$value] = $arrFields['startDate'] + (int) $matches[1] * 60 * 60 + (int) $matches[2] * 60;
                                         }
                                     }
@@ -686,7 +683,7 @@ class CalendarImport extends Backend
                     $arrFields['source'] = 'default';
                 }
 
-                if ($arrFields['endDate'] < $startDate->tstamp || (\strlen($this->Session->get('csv_enddate')) && ($arrFields['startDate'] > $endDate->tstamp))) {
+                if ($arrFields['endDate'] < $startDate->tstamp || (\strlen((string) $this->Session->get('csv_enddate')) && ($arrFields['startDate'] > $endDate->tstamp))) {
                     // date is not in range
                 } else {
                     $objInsertStmt = $this->Database->prepare('INSERT INTO tl_calendar_events %s')
@@ -701,7 +698,7 @@ class CalendarImport extends Backend
                             $step = 128;
 
                             foreach ($eventcontent as $content) {
-                                $cm = new \ContentModel();
+                                $cm = new \Contao\ContentModel();
                                 $cm->tstamp = time();
                                 $cm->pid = $insertID;
                                 $cm->ptable = 'tl_calendar_events';
@@ -724,26 +721,26 @@ class CalendarImport extends Backend
             }
         }
 
-        $this->redirect(str_replace('&key=import', '', Environment::get('request')));
+        static::redirect(str_replace('&key=import', '', (string) Environment::get('request')));
     }
 
     protected function getTimestampFromDefaultDatetime($datestring)
     {
         $tstamp = time();
 
-        if (preg_match('/(\\d{4})-(\\d{2})-(\\d{2})\\s+(\\d{2}):(\\d{2}):(\\d{2})/', $datestring, $matches)) {
+        if (preg_match('/(\\d{4})-(\\d{2})-(\\d{2})\\s+(\\d{2}):(\\d{2}):(\\d{2})/', (string) $datestring, $matches)) {
             $tstamp = mktime((int) $matches[4], (int) $matches[5], (int) $matches[6], (int) $matches[2], (int) $matches[3],
                 (int) $matches[1]);
         } else {
-            if (preg_match('/(\\d{4})-(\\d{2})-(\\d{2})\\s+(\\d{2}):(\\d{2})/', $datestring, $matches)) {
+            if (preg_match('/(\\d{4})-(\\d{2})-(\\d{2})\\s+(\\d{2}):(\\d{2})/', (string) $datestring, $matches)) {
                 $tstamp = mktime((int) $matches[4], (int) $matches[5], 0, (int) $matches[2], (int) $matches[3],
                     (int) $matches[1]);
             } else {
-                if (preg_match('/(\\d{4})-(\\d{2})-(\\d{2})/', $datestring, $matches)) {
+                if (preg_match('/(\\d{4})-(\\d{2})-(\\d{2})/', (string) $datestring, $matches)) {
                     $tstamp = mktime(0, 0, 0, (int) $matches[2], (int) $matches[3], (int) $matches[1]);
                 } else {
-                    if (false !== strtotime($datestring)) {
-                        $tstamp = strtotime($datestring);
+                    if (false !== strtotime((string) $datestring)) {
+                        $tstamp = strtotime((string) $datestring);
                     }
                 }
             }
@@ -761,11 +758,11 @@ class CalendarImport extends Backend
         $widget->mandatory = true;
         $widget->required = true;
         $widget->maxlength = 20;
-        $widget->value = \strlen($value) ? $value : $GLOBALS['TL_LANG']['tl_calendar_events']['dateFormat'];
+        $widget->value = \strlen((string) $value) ? $value : $GLOBALS['TL_LANG']['tl_calendar_events']['dateFormat'];
 
         $widget->label = $GLOBALS['TL_LANG']['tl_calendar_events']['importDateFormat'][0];
 
-        if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen($GLOBALS['TL_LANG']['tl_calendar_events']['importDateFormat'][1])) {
+        if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen((string) $GLOBALS['TL_LANG']['tl_calendar_events']['importDateFormat'][1])) {
             $widget->help = $GLOBALS['TL_LANG']['tl_calendar_events']['importDateFormat'][1];
         }
 
@@ -790,11 +787,11 @@ class CalendarImport extends Backend
         $widget->mandatory = true;
         $widget->required = true;
         $widget->maxlength = 20;
-        $widget->value = \strlen($value) ? $value : $GLOBALS['TL_LANG']['tl_calendar_events']['timeFormat'];
+        $widget->value = \strlen((string) $value) ? $value : $GLOBALS['TL_LANG']['tl_calendar_events']['timeFormat'];
 
         $widget->label = $GLOBALS['TL_LANG']['tl_calendar_events']['importTimeFormat'][0];
 
-        if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen($GLOBALS['TL_LANG']['tl_calendar_events']['importTimeFormat'][1])) {
+        if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen((string) $GLOBALS['TL_LANG']['tl_calendar_events']['importTimeFormat'][1])) {
             $widget->help = $GLOBALS['TL_LANG']['tl_calendar_events']['importTimeFormat'][1];
         }
 
@@ -820,7 +817,7 @@ class CalendarImport extends Backend
         $widget->value = $value;
         $widget->label = $GLOBALS['TL_LANG']['tl_calendar_events']['encoding'][0];
 
-        if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen($GLOBALS['TL_LANG']['tl_calendar_events']['encoding'][1])) {
+        if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen((string) $GLOBALS['TL_LANG']['tl_calendar_events']['encoding'][1])) {
             $widget->help = $GLOBALS['TL_LANG']['tl_calendar_events']['encoding'][1];
         }
 
@@ -896,12 +893,12 @@ class CalendarImport extends Backend
             $this->cal->parse($content);
         } catch (\Exception $e) {
             Message::addError($e->getMessage());
-            $this->redirect(str_replace('&key=import', '', Environment::get('request')));
+            static::redirect(str_replace('&key=import', '', (string) Environment::get('request')));
         }
         $tz = $this->cal->getXprop(Vcalendar::X_WR_TIMEZONE);
 
         if (0 === $timeshift) {
-            if (\is_array($tz) && \strlen($tz[1]) && 0 !== strcmp($tz[1], $GLOBALS['TL_CONFIG']['timeZone'])) {
+            if (\is_array($tz) && \strlen((string) $tz[1]) && 0 !== strcmp((string) $tz[1], (string) $GLOBALS['TL_CONFIG']['timeZone'])) {
                 if (null === $correctTimezone) {
                     return $this->getConfirmationForm($dc, $filename, $startDate->date, $endDate->date, $tz[1],
                         $GLOBALS['TL_CONFIG']['timeZone'], $deleteCalendar);
@@ -914,12 +911,12 @@ class CalendarImport extends Backend
                     }
                 }
             }
-            if (\strlen($manualTZ)) {
+            if (\strlen((string) $manualTZ)) {
                 $tz[1] = $manualTZ;
             }
         }
         $this->importFromICS($pid, $startDate, $endDate, $correctTimezone, $tz, $deleteCalendar, $timeshift);
-        $this->redirect(str_replace('&key=import', '', Environment::get('request')));
+        static::redirect(str_replace('&key=import', '', (string) Environment::get('request')));
     }
 
     protected function importFromICS($pid, $startDate, $endDate, $correctTimezone, $tz, $deleteCalendar = false, $timeshift = 0): void
@@ -927,14 +924,14 @@ class CalendarImport extends Backend
         // $this->cal->sort() was previously in the code. This is quite useless because without arguments this methods
         // sorts by UID which doesn't give us any benefit.
         // $this->cal->sort();
-        $this->loadDataContainer('tl_calendar_events');
+        static::loadDataContainer('tl_calendar_events');
         $fields = $this->Database->listFields('tl_calendar_events');
         $fieldNames = [];
         $arrFields = [];
         $defaultFields = [];
 
         foreach ($fields as $fieldarr) {
-            if (0 !== strcmp($fieldarr['name'], 'id') && 0 !== strcmp($fieldarr['type'], 'index')) {
+            if (0 !== strcmp((string) $fieldarr['name'], 'id') && 0 !== strcmp((string) $fieldarr['type'], 'index')) {
                 $fieldNames[] = $fieldarr['name'];
             }
         }
@@ -950,12 +947,12 @@ class CalendarImport extends Backend
         $foundevents = [];
 
         if ($deleteCalendar && $pid) {
-            $event = \CalendarEventsModel::findByPid($pid);
+            $event = \Contao\CalendarEventsModel::findByPid($pid);
             if ($event) {
                 while ($event->next()) {
                     $arrColumns = ['ptable=? AND pid=?'];
                     $arrValues = ['tl_calendar_events', $event->id];
-                    $content = \ContentModel::findBy($arrColumns, $arrValues);
+                    $content = \Contao\ContentModel::findBy($arrColumns, $arrValues);
 
                     if ($content) {
                         while ($content->next()) {
@@ -1099,7 +1096,7 @@ class CalendarImport extends Backend
 
                         if (
                             \array_key_exists('params', $dtstartRow) && \array_key_exists('VALUE',
-                                $dtstartRow['params']) && 0 === strcmp(strtoupper($dtstartRow['params']['VALUE']),
+                                $dtstartRow['params']) && 0 === strcmp(strtoupper((string) $dtstartRow['params']['VALUE']),
                                     'DATE')
                         ) {
                             $arrFields['addTime'] = 0;
@@ -1272,7 +1269,7 @@ class CalendarImport extends Backend
 
         $widget->label = $GLOBALS['TL_LANG']['tl_calendar_events']['icssource'][0];
 
-        if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen($GLOBALS['TL_LANG']['tl_calendar_events']['icssource'][1])) {
+        if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen((string) $GLOBALS['TL_LANG']['tl_calendar_events']['icssource'][1])) {
             $widget->help = $GLOBALS['TL_LANG']['tl_calendar_events']['icssource'][1];
         }
 
@@ -1308,7 +1305,7 @@ class CalendarImport extends Backend
 
         $widget->label = $GLOBALS['TL_LANG']['tl_calendar_events']['importStartDate'][0];
 
-        if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen($GLOBALS['TL_LANG']['tl_calendar_events']['importStartDate'][1])) {
+        if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen((string) $GLOBALS['TL_LANG']['tl_calendar_events']['importStartDate'][1])) {
             $widget->help = $GLOBALS['TL_LANG']['tl_calendar_events']['importStartDate'][1];
         }
 
@@ -1343,7 +1340,7 @@ class CalendarImport extends Backend
 
         $widget->label = $GLOBALS['TL_LANG']['tl_calendar_events']['importEndDate'][0];
 
-        if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen($GLOBALS['TL_LANG']['tl_calendar_events']['importEndDate'][1])) {
+        if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen((string) $GLOBALS['TL_LANG']['tl_calendar_events']['importEndDate'][1])) {
             $widget->help = $GLOBALS['TL_LANG']['tl_calendar_events']['importEndDate'][1];
         }
 
@@ -1377,7 +1374,7 @@ class CalendarImport extends Backend
 
         $widget->label = $GLOBALS['TL_LANG']['tl_calendar_events']['importTimeShift'][0];
 
-        if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen($GLOBALS['TL_LANG']['tl_calendar_events']['importTimeShift'][1])) {
+        if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen((string) $GLOBALS['TL_LANG']['tl_calendar_events']['importTimeShift'][1])) {
             $widget->help = $GLOBALS['TL_LANG']['tl_calendar_events']['importTimeShift'][1];
         }
 
@@ -1413,7 +1410,7 @@ class CalendarImport extends Backend
         ];
         $widget->value = $value;
 
-        if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen($GLOBALS['TL_LANG']['tl_calendar_events']['importDeleteCalendar'][1])) {
+        if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen((string) $GLOBALS['TL_LANG']['tl_calendar_events']['importDeleteCalendar'][1])) {
             $widget->help = $GLOBALS['TL_LANG']['tl_calendar_events']['importDeleteCalendar'][1];
         }
 
@@ -1448,7 +1445,7 @@ class CalendarImport extends Backend
             ],
         ];
 
-        if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen($GLOBALS['TL_LANG']['tl_calendar_events']['correctTimezone'][1])) {
+        if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen((string) $GLOBALS['TL_LANG']['tl_calendar_events']['correctTimezone'][1])) {
             $widget->help = $GLOBALS['TL_LANG']['tl_calendar_events']['correctTimezone'][1];
         }
 
@@ -1480,7 +1477,7 @@ class CalendarImport extends Backend
 
         $widget->label = $GLOBALS['TL_LANG']['tl_calendar_events']['timezone'][0];
 
-        if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen($GLOBALS['TL_LANG']['tl_calendar_events']['timezone'][1])) {
+        if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen((string) $GLOBALS['TL_LANG']['tl_calendar_events']['timezone'][1])) {
             $widget->help = $GLOBALS['TL_LANG']['tl_calendar_events']['timezone'][1];
         }
 
@@ -1530,7 +1527,7 @@ class CalendarImport extends Backend
 
         if (
             $GLOBALS['TL_CONFIG']['showHelp'] && \strlen(
-                $GLOBALS['TL_LANG']['tl_calendar_events']['importFilterEventTitle'][1],
+                (string) $GLOBALS['TL_LANG']['tl_calendar_events']['importFilterEventTitle'][1],
             )
         ) {
             $widget->help = $GLOBALS['TL_LANG']['tl_calendar_events']['importFilterEventTitle'][1];
@@ -1566,7 +1563,7 @@ class CalendarImport extends Backend
         $aliasExists = fn (string $alias): bool => $this->Database->prepare('SELECT id FROM tl_calendar_events WHERE alias=? AND id!=?')->execute($alias, $id)->numRows > 0;
 
         // Generate the alias if there is none
-        return \System::getContainer()->get('contao.slug')->generate($varValue, \CalendarModel::findByPk($pid)->jumpTo, $aliasExists);
+        return \Contao\System::getContainer()->get('contao.slug')->generate($varValue, \Contao\CalendarModel::findByPk($pid)->jumpTo, $aliasExists);
     }
 
     /**
@@ -1598,7 +1595,7 @@ class CalendarImport extends Backend
         }
 
         if (0 === (int) $arrFields['recurrences']) {
-            return (int) min(4294967295, PHP_INT_MAX);
+            return (int) min(4_294_967_295, PHP_INT_MAX);
         }
 
         if (isset($repeatEach['unit'], $repeatEach['value'])) {

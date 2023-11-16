@@ -14,19 +14,13 @@ namespace Craffft\ContaoCalendarICalBundle\Classes;
 
 class CsvParser
 {
-    protected $filename;
-
     protected $separator;
-
-    protected $encoding;
 
     protected $reader;
 
-    public function __construct($filename, $encoding = 'utf8')
+    public function __construct(protected $filename, protected $encoding = 'utf8')
     {
-        $this->filename = $filename;
         $this->separator = $this->determineSeparator();
-        $this->encoding = $encoding;
         $this->reader = new CsvReader($filename, $this->separator, $this->encoding);
     }
 

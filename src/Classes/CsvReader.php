@@ -24,20 +24,14 @@ class CsvReader implements \Iterator
 
     protected $currentArray;
 
-    protected $separator = ',';
-
-    protected $encoding = 'utf8';
-
-    public function __construct($filename, $separator = ',', $encoding = 'utf8')
+    public function __construct($filename, protected $separator = ',', protected $encoding = 'utf8')
     {
-        $this->separator = $separator;
         $this->fileHandle = fopen($filename, 'r');
         if (!$this->fileHandle) {
             return;
         }
         $this->filename = $filename;
         $this->position = 0;
-        $this->encoding = $encoding;
         $this->_readLine();
     }
 
@@ -94,7 +88,7 @@ class CsvReader implements \Iterator
         } else {
             $this->currentLine = null;
         }
-        if (0 !== strcmp($this->encoding, 'utf8') && null !== $this->currentLine) {
+        if (0 !== strcmp((string) $this->encoding, 'utf8') && null !== $this->currentLine) {
             $this->currentLine = utf8_encode($this->currentLine);
         }
         if ('' !== $this->currentLine) {

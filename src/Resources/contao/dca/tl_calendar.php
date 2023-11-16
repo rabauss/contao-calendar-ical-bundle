@@ -217,7 +217,7 @@ $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_importing'] =
     'sql' => "char(1) NOT NULL default ''",
 ];
 
-class tl_calendar extends Backend
+class tl_calendar extends \Contao\Backend
 {
     public function getTZ()
     {
@@ -229,7 +229,7 @@ class tl_calendar extends Backend
      *
      * @param object $dc
      */
-    public function generate_ical(DataContainer $dc): void
+    public function generate_ical(\Contao\DataContainer $dc): void
     {
         if (!$dc->id) {
             return;

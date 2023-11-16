@@ -32,9 +32,9 @@ $GLOBALS['TL_DCA']['tl_calendar_events']['fields']['icssource'] =
     'eval' => ['fieldType' => 'radio', 'files' => true, 'filesOnly' => true, 'extensions' => 'ics,csv'],
 ];
 
-class tl_calendar_events extends Backend
+class tl_calendar_events extends \Contao\Backend
 {
-    public function generateICal(DataContainer $dc): void
+    public function generateICal(\Contao\DataContainer $dc): void
     {
         if (!$dc->id) {
             return;
