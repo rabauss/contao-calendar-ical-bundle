@@ -4,12 +4,13 @@ services:
       autowire: true
       public: false
       bind:
-          $calendarExport: '@\Cgoit\ContaoCalendarICalBundle\Classes\CalendarExport'
-          $calendarImport: '@\Cgoit\ContaoCalendarICalBundle\Classes\CalendarImport'
+          $calendarExport: '@Cgoit\ContaoCalendarIcalBundle\Classes\CalendarExport'
+          $calendarImport: '@Cgoit\ContaoCalendarIcalBundle\Classes\CalendarImport'
+          $timezoneUtil: '@Cgoit\ContaoCalendarIcalBundle\Util\TimezoneUtil'
           $projectDir: '%kernel.project_dir%'
           $db: '@database_connection'
           $slug: '@contao.slug'
           $insertTagParser: '@contao.insert_tag.parser'
 
-   Cgoit\ContaoCalendarICalBundle\:
+   Cgoit\ContaoCalendarIcalBundle\:
       resource: ../src/*

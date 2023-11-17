@@ -10,13 +10,17 @@ declare(strict_types=1);
  * @license    LGPL-3.0-or-later
  */
 
-namespace Cgoit\ContaoCalendarICalBundle;
+namespace Cgoit\ContaoCalendarIcalBundle;
 
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 /**
  * Configures the Contao Calendar iCal Bundle.
  */
-class CgoitContaoCalendarICalBundle extends Bundle
+class CgoitContaoCalendarIcalBundle extends Bundle
 {
+    public function getPath(): string
+    {
+        return \dirname(__DIR__);
+    }
 }

@@ -12,14 +12,14 @@ declare(strict_types=1);
 
 namespace Cgoit\ContaoCalendarIcalBundle\EventListener\DataContainer;
 
-use Cgoit\ContaoCalendarIcalBundle\Classes\CalendarExport;
+use Cgoit\ContaoCalendarIcalBundle\Classes\CalendarImport;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsCallback;
 use Contao\DataContainer;
 
-#[AsCallback(table: 'tl_calendar', target: 'config.onload')]
-class CalendarLoadListener
+#[AsCallback(table: 'tl_calendar', target: 'config.onsubmit')]
+class CalendarSubmitListener
 {
-    public function __construct(private readonly CalendarExport $calendarExport)
+    public function __construct(private readonly CalendarImport $calendarImport)
     {
     }
 
@@ -32,6 +32,6 @@ class CalendarLoadListener
             return;
         }
 
-        $this->calendarExport->exportCalendar($dc->id);
+        $this->calendarImport->importFromURL($dc);
     }
 }

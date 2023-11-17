@@ -49,12 +49,12 @@
   },
   "autoload": {
     "psr-4": {
-      "Cgoit\\ContaoCalendarICalBundle\\": "src/"
+      "Cgoit\\ContaoCalendarIcalBundle\\": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-       "Cgoit\\ContaoCalendarICalBundle\\Tests\\": "tests/"
+       "Cgoit\\ContaoCalendarIcalBundle\\Tests\\": "tests/"
     }
   },
     "config": {
@@ -66,7 +66,7 @@
         }
     },
   "extra": {
-    "contao-manager-plugin": "Cgoit\\ContaoCalendarICalBundle\\ContaoManager\\Plugin"
+    "contao-manager-plugin": "Cgoit\\ContaoCalendarIcalBundle\\ContaoManager\\Plugin"
   },
     "scripts": {
         "all": [

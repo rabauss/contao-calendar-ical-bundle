@@ -10,9 +10,9 @@ declare(strict_types=1);
  * @license    LGPL-3.0-or-later
  */
 
-namespace Cgoit\ContaoCalendarICalBundle\EventListener;
+namespace Cgoit\ContaoCalendarIcalBundle\EventListener;
 
-use Cgoit\ContaoCalendarICalBundle\Classes\CalendarImport;
+use Cgoit\ContaoCalendarIcalBundle\Classes\CalendarImport;
 use Contao\CalendarModel;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsHook;
 use Contao\Module;

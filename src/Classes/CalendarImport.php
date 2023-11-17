@@ -10,8 +10,9 @@ declare(strict_types=1);
  * @license    LGPL-3.0-or-later
  */
 
-namespace Cgoit\ContaoCalendarICalBundle\Classes;
+namespace Cgoit\ContaoCalendarIcalBundle\Classes;
 
+use Cgoit\ContaoCalendarIcalBundle\Util\TimezoneUtil;
 use Contao\Backend;
 use Contao\BackendTemplate;
 use Contao\CalendarEventsModel;
@@ -60,6 +61,7 @@ class CalendarImport extends Backend
         private readonly Connection $db,
         private readonly string $projectDir,
         private readonly Slug $slug,
+        private readonly TimezoneUtil $timezoneUtil,
     ) {
     }
 
@@ -1475,7 +1477,7 @@ class CalendarImport extends Backend
             $widget->help = $GLOBALS['TL_LANG']['tl_calendar_events']['timezone'][1];
         }
 
-        $arrOptions = [];
+        $arrOptions = $this->timezoneUtil->getTimezones();
 
         foreach (\DateTimeZone::listIdentifiers() as $identifier) {
             $parts = explode('/', $identifier, 2);

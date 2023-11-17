@@ -12,17 +12,24 @@ declare(strict_types=1);
 
 namespace contao\dca;
 
-$GLOBALS['TL_DCA']['tl_calendar']['config']['onsubmit_callback'][] = ['CalendarImport', 'importFromURL'];
+use Contao\CoreBundle\DataContainer\PaletteManipulator;
 
-$GLOBALS['TL_DCA']['tl_calendar']['palettes']['default'] = $GLOBALS['TL_DCA']['tl_calendar']['palettes']['default'].';{ical_legend:hide},make_ical,ical_source';
-$GLOBALS['TL_DCA']['tl_calendar']['palettes']['__selector__'][] = 'make_ical';
-$GLOBALS['TL_DCA']['tl_calendar']['palettes']['__selector__'][] = 'ical_source';
+PaletteManipulator::create()->addLegend('ical_legend', 'comments_legend', PaletteManipulator::POSITION_AFTER)
+    ->addField('make_ical', 'ical_legend', PaletteManipulator::POSITION_APPEND)
+    ->addField('ical_source', 'ical_legend', PaletteManipulator::POSITION_APPEND)
+    ->applyToPalette('default', 'tl_calendar')
+;
+
+$GLOBALS['TL_DCA']['tl_calendar']['palettes']['__selector__'] = array_merge(
+    ['make_ical', 'ical_source'],
+    $GLOBALS['TL_DCA']['tl_calendar']['palettes']['__selector__'],
+);
+
 $GLOBALS['TL_DCA']['tl_calendar']['subpalettes']['make_ical'] = 'ical_alias,ical_prefix,ical_description,ical_start,ical_end';
 $GLOBALS['TL_DCA']['tl_calendar']['subpalettes']['ical_source'] = 'ical_url,ical_proxy,ical_bnpw,ical_port,ical_filter_event_title,ical_pattern_event_title,ical_replacement_event_title,ical_timezone,ical_cache,ical_source_start,ical_source_end';
 
 $GLOBALS['TL_DCA']['tl_calendar']['fields']['make_ical'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['make_ical'],
         'exclude' => true,
         'filter' => true,
         'inputType' => 'checkbox',
@@ -32,19 +39,16 @@ $GLOBALS['TL_DCA']['tl_calendar']['fields']['make_ical'] =
 
 $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_timezone'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_timezone'],
         'default' => 0,
         'exclude' => true,
         'filter' => true,
         'inputType' => 'select',
-        'options_callback' => ['tl_calendar_ical', 'getTZ'],
-        'eval' => ['doNotCopy' => true, 'tl_class' => 'w50'],
+        'eval' => ['mandatory' => true, 'chosen' => true, 'includeBlankOption' => true, 'doNotCopy' => true, 'tl_class' => 'w50'],
         'sql' => "varchar(128) NOT NULL default ''",
     ];
 
 $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_source'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_source'],
         'exclude' => true,
         'filter' => true,
         'inputType' => 'checkbox',
@@ -54,7 +58,6 @@ $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_source'] =
 
 $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_alias'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_alias'],
         'exclude' => true,
         'search' => true,
         'inputType' => 'text',
@@ -64,7 +67,6 @@ $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_alias'] =
 
 $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_prefix'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_prefix'],
         'exclude' => true,
         'search' => true,
         'inputType' => 'text',
@@ -74,7 +76,6 @@ $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_prefix'] =
 
 $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_description'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_description'],
         'exclude' => true,
         'search' => true,
         'inputType' => 'textarea',
@@ -84,17 +85,15 @@ $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_description'] =
 
 $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_url'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_url'],
         'exclude' => true,
         'search' => true,
         'inputType' => 'text',
-        'eval' => ['tl_class' => 'long'],
+        'eval' => ['mandatory' => true, 'tl_class' => 'long'],
         'sql' => 'text NULL',
     ];
 
 $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_proxy'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_proxy'],
         'exclude' => true,
         'search' => true,
         'inputType' => 'text',
@@ -104,7 +103,6 @@ $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_proxy'] =
 
 $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_bnpw'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_bnpw'],
         'exclude' => true,
         'search' => true,
         'inputType' => 'text',
@@ -114,7 +112,6 @@ $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_bnpw'] =
 
 $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_port'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_port'],
         'exclude' => true,
         'search' => true,
         'inputType' => 'text',
@@ -124,7 +121,6 @@ $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_port'] =
 
 $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_filter_event_title'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_filter_event_title'],
         'exclude' => true,
         'filter' => true,
         'inputType' => 'text',
@@ -134,7 +130,6 @@ $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_filter_event_title'] =
 
 $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_pattern_event_title'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_pattern_event_title'],
         'exclude' => true,
         'filter' => true,
         'inputType' => 'text',
@@ -144,7 +139,6 @@ $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_pattern_event_title'] =
 
 $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_replacement_event_title'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_replacement_event_title'],
         'exclude' => true,
         'filter' => true,
         'inputType' => 'text',
@@ -154,36 +148,33 @@ $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_replacement_event_title'] =
 
 $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_cache'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_cache'],
         'default' => 86400,
         'exclude' => true,
         'search' => true,
         'inputType' => 'text',
-        'eval' => ['rgxp' => 'digit', 'tl_class' => 'w50'],
+        'eval' => ['mandatory' => true, 'rgxp' => 'digit', 'tl_class' => 'w50'],
         'sql' => "int(10) unsigned NOT NULL default '86400'",
     ];
 
 $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_start'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_start'],
         'default' => time(),
         'exclude' => true,
         'filter' => true,
         'flag' => 8,
         'inputType' => 'text',
-        'eval' => ['mandatory' => false, 'maxlength' => 10, 'rgxp' => 'date', 'datepicker' => $this->getDatePickerString(), 'tl_class' => 'clr w50 wizard'],
+        'eval' => ['mandatory' => false, 'maxlength' => 10, 'rgxp' => 'date', 'datepicker' => true, 'tl_class' => 'clr w50 wizard'],
         'sql' => "varchar(12) NOT NULL default ''",
     ];
 
 $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_end'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_end'],
         'default' => time() + 365 * 24 * 3600,
         'exclude' => true,
         'filter' => true,
         'flag' => 8,
         'inputType' => 'text',
-        'eval' => ['mandatory' => false, 'maxlength' => 10, 'rgxp' => 'date', 'datepicker' => $this->getDatePickerString(), 'tl_class' => 'w50 wizard'],
+        'eval' => ['mandatory' => false, 'maxlength' => 10, 'rgxp' => 'date', 'datepicker' => true, 'tl_class' => 'w50 wizard'],
         'sql' => "varchar(12) NOT NULL default ''",
     ];
 
@@ -195,7 +186,7 @@ $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_source_start'] =
         'filter' => true,
         'flag' => 8,
         'inputType' => 'text',
-        'eval' => ['mandatory' => false, 'maxlength' => 10, 'rgxp' => 'date', 'datepicker' => $this->getDatePickerString(), 'tl_class' => 'clr w50 wizard'],
+        'eval' => ['mandatory' => false, 'maxlength' => 10, 'rgxp' => 'date', 'datepicker' => true, 'tl_class' => 'clr w50 wizard'],
         'sql' => "varchar(12) NOT NULL default ''",
     ];
 
@@ -207,7 +198,7 @@ $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_source_end'] =
         'filter' => true,
         'flag' => 8,
         'inputType' => 'text',
-        'eval' => ['mandatory' => false, 'maxlength' => 10, 'rgxp' => 'date', 'datepicker' => $this->getDatePickerString(), 'tl_class' => 'w50 wizard'],
+        'eval' => ['mandatory' => false, 'maxlength' => 10, 'rgxp' => 'date', 'datepicker' => true, 'tl_class' => 'w50 wizard'],
         'sql' => "varchar(12) NOT NULL default ''",
     ];
 

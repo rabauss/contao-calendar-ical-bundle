@@ -10,9 +10,9 @@ declare(strict_types=1);
  * @license    LGPL-3.0-or-later
  */
 
-namespace Craffft\ContaoCalendarICalBundle\Cron;
+namespace Cgoit\ContaoCalendarIcalBundle\Cron;
 
-use Cgoit\ContaoCalendarICalBundle\Classes\CalendarExport;
+use Cgoit\ContaoCalendarIcalBundle\Classes\CalendarExport;
 use Contao\CalendarModel;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsCronJob;
 use Contao\System;

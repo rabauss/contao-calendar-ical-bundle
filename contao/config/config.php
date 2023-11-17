@@ -15,7 +15,7 @@ declare(strict_types=1);
  */
 $GLOBALS['TL_CTE']['files']['ical'] = 'ContentICal';
 
-$GLOBALS['BE_MOD']['content']['calendar']['import'] = ['@\Cgoit\ContaoCalendarICalBundle\Classes\CalendarImport', 'importCalendar'];
+$GLOBALS['BE_MOD']['content']['calendar']['import'] = ['@\Cgoit\ContaoCalendarIcalBundle\Classes\CalendarImport', 'importCalendar'];
 $GLOBALS['BE_MOD']['content']['calendar']['stylesheet'] = 'bundles/cgoitcontaocalendarical/calendar-ical.css';
 
 /*

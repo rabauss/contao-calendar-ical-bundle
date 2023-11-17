@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace contao\dca;
 
-use Cgoit\ContaoCalendarICalBundle\Classes\CalendarExport;
+use Cgoit\ContaoCalendarIcalBundle\Classes\CalendarExport;
 use Contao\Backend;
 use Contao\CalendarEventsModel;
 use Contao\DataContainer;

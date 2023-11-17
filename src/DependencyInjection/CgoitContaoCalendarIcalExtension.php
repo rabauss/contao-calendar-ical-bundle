@@ -10,14 +10,14 @@ declare(strict_types=1);
  * @license    LGPL-3.0-or-later
  */
 
-namespace Cgoit\ContaoCalendarICalBundle\DependencyInjection;
+namespace Cgoit\ContaoCalendarIcalBundle\DependencyInjection;
 
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
-class CgoitCalendarIcalExtension extends Extension
+class CgoitContaoCalendarIcalExtension extends Extension
 {
     /**
      * @param array<mixed> $configs

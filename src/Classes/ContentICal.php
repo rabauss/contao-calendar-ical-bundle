@@ -10,7 +10,7 @@ declare(strict_types=1);
  * @license    LGPL-3.0-or-later
  */
 
-namespace Cgoit\ContaoCalendarICalBundle\Classes;
+namespace Cgoit\ContaoCalendarIcalBundle\Classes;
 
 use Contao\BackendTemplate;
 use Contao\ContentElement;
