@@ -10,13 +10,15 @@ declare(strict_types=1);
  * @license    LGPL-3.0-or-later
  */
 
-namespace Craffft\ContaoCalendarICalBundle\Classes;
+namespace Cgoit\ContaoCalendarICalBundle\Classes;
 
 use Contao\BackendTemplate;
 use Contao\ContentElement;
+use Contao\CoreBundle\InsertTag\InsertTagParser;
+use Contao\Database\Result;
 use Contao\Input;
-use Contao\Result;
 use Contao\StringUtil;
+use Contao\System;
 use Kigkonsult\Icalcreator\Util\DateTimeFactory;
 use Kigkonsult\Icalcreator\Vcalendar;
 use Kigkonsult\Icalcreator\Vevent;
@@ -30,66 +32,77 @@ class ContentICal extends ContentElement
      */
     protected $strTemplate = 'ce_ical';
 
-    protected $strTitle = '';
+    protected string $strTitle = '';
 
-    protected $ical;
+    protected Vcalendar $ical;
+
+    protected InsertTagParser $insertTagParser;
+
+    public function __construct($objElement, $strColumn = 'main')
+    {
+        parent::__construct($objElement, $strColumn);
+        $this->insertTagParser = System::getContainer()->get('contao.insert_tag.parser');
+    }
 
     /**
      * Return if the file does not exist.
-     *
-     * @return string
      */
-    public function generate()
+    public function generate(): string
     {
-        if (TL_MODE === 'BE') {
+        $request = System::getContainer()->get('request_stack')->getCurrentRequest();
+
+        if ($request && System::getContainer()->get('contao.routing.scope_matcher')->isBackendRequest($request)) {
             $objTemplate = new BackendTemplate('be_wildcard');
             $objTemplate->wildcard = '### ICAL ###';
+            $objTemplate->title = $this->strTitle;
+            $objTemplate->id = $this->id;
 
             return $objTemplate->parse();
         }
 
-        static::loadLanguageFile('contao\dca\tl_content');
-        $this->strTitle = \strlen($this->linkTitle) ? $this->linkTitle : $GLOBALS['TL_LANG']['contao\dca\tl_content']['ical_title'];
+        static::loadLanguageFile('tl_content');
+        $this->strTitle = !empty($this->linkTitle) ? $this->linkTitle : $GLOBALS['TL_LANG']['tl_content']['ical_title'];
 
-        if (\strlen(Input::get('ical'))) {
-            $startdate = \strlen((string) $this->ical_start) ? $this->ical_start : time();
-            $enddate = \strlen((string) $this->ical_end) ? $this->ical_end : time() + 365 * 24 * 3600;
+        if (!empty(Input::get('ical'))) {
+            $startdate = !empty((string) $this->ical_start) ? $this->ical_start : time();
+            $enddate = !empty((string) $this->ical_end) ? $this->ical_end : time() + 365 * 24 * 3600;
             $this->getAllEvents(explode(',', urldecode(Input::get('ical'))), $startdate, $enddate);
             $this->ical->returnCalendar(); // redirect calendar file to browser
+        } else {
+            $intStart = !empty((string) $this->ical_start) ? $this->ical_start : time();
+            $intEnd = !empty((string) $this->ical_end) ? $this->ical_end : time() + 365 * 24 * 3600;
+            $time = time();
+            $nrOfCalendars = 0;
+            $arrcalendars = StringUtil::deserialize($this->ical_calendar, true);
 
-            return;
-        }
+            $request = System::getContainer()->get('request_stack')->getCurrentRequest();
+            $backendUserLoggedIn = $request && System::getContainer()->get('contao.routing.scope_matcher')->isBackendRequest($request);
 
-        $intStart = \strlen((string) $this->ical_start) ? $this->ical_start : time();
-        $intEnd = \strlen((string) $this->ical_end) ? $this->ical_end : time() + 365 * 24 * 3600;
-        $time = time();
-        $nrOfCalendars = 0;
-        $arrcalendars = StringUtil::deserialize($this->ical_calendar, true);
+            if (\is_array($arrcalendars)) {
+                foreach ($arrcalendars as $id) {
+                    $objEvents = $this->Database->prepare('SELECT *, (SELECT title FROM tl_calendar WHERE id=?) AS calendar FROM tl_calendar_events WHERE pid=? AND ((startTime>=? AND startTime<=?) OR (endTime>=? AND endTime<=?) OR (startTime<=? AND endTime>=?) OR (recurring=1 AND (recurrences=0 OR repeatEnd>=?)))'.(!$backendUserLoggedIn ? " AND (start='' OR start<?) AND (stop='' OR stop>?) AND published=1" : '').' ORDER BY startTime')
+                        ->execute(
+                            $id,
+                            $id,
+                            $intStart,
+                            $intEnd,
+                            $intStart,
+                            $intEnd,
+                            $intStart,
+                            $intEnd,
+                            $intStart,
+                            $time,
+                            $time,
+                        )
+                    ;
 
-        if (\is_array($arrcalendars)) {
-            foreach ($arrcalendars as $id) {
-                $objEvents = $this->Database->prepare('SELECT *, (SELECT title FROM tl_calendar WHERE id=?) AS calendar FROM tl_calendar_events WHERE pid=? AND ((startTime>=? AND startTime<=?) OR (endTime>=? AND endTime<=?) OR (startTime<=? AND endTime>=?) OR (recurring=1 AND (recurrences=0 OR repeatEnd>=?)))'.(!BE_USER_LOGGED_IN ? " AND (start='' OR start<?) AND (stop='' OR stop>?) AND published=1" : '').' ORDER BY startTime')
-                    ->execute(
-                        $id,
-                        $id,
-                        $intStart,
-                        $intEnd,
-                        $intStart,
-                        $intEnd,
-                        $intStart,
-                        $intEnd,
-                        $intStart,
-                        $time,
-                        $time,
-                    )
-                ;
-
-                $nrOfCalendars += $objEvents->numRows;
+                    $nrOfCalendars += $objEvents->numRows;
+                }
             }
-        }
 
-        if ($nrOfCalendars < 1) {
-            return;
+            if ($nrOfCalendars < 1) {
+                return '';
+            }
         }
 
         return parent::generate();
@@ -104,20 +117,18 @@ class ContentICal extends ContentElement
         $arrCalendars = StringUtil::deserialize($this->ical_calendar, true);
         $this->Template->href = static::addToUrl('ical='.
                                                 implode(',', $arrCalendars).'&title='.urlencode((string) $this->strTitle));
-        $this->Template->title = $GLOBALS['TL_LANG']['contao\dca\tl_content']['ical_title'];
+        $this->Template->title = $GLOBALS['TL_LANG']['tl_content']['ical_title'];
     }
 
     /**
      * Get all events of a certain period.
      *
-     * @param array $arrCalendars
-     * @param int   $intStart
-     * @param int   $intEnd
+     * @param array<mixed> $arrCalendars
      */
-    protected function getAllEvents($arrCalendars, $intStart, $intEnd)
+    protected function getAllEvents(array $arrCalendars, int $intStart, int $intEnd): void
     {
-        if (!\is_array($arrCalendars)) {
-            return [];
+        if (empty($arrCalendars)) {
+            return;
         }
 
         $this->ical = new Vcalendar();
@@ -129,9 +140,12 @@ class ContentICal extends ContentElement
         $this->ical->setXprop(Vcalendar::X_WR_TIMEZONE, $GLOBALS['TL_CONFIG']['timeZone']);
         $time = time();
 
+        $request = System::getContainer()->get('request_stack')->getCurrentRequest();
+        $backendUserLoggedIn = $request && System::getContainer()->get('contao.routing.scope_matcher')->isBackendRequest($request);
+
         foreach ($arrCalendars as $id) {
             // Get events of the current period
-            $objEvents = $this->Database->prepare('SELECT *, (SELECT title FROM tl_calendar WHERE id=?) AS calendar, (SELECT ical_prefix FROM tl_calendar WHERE id=?) AS ical_prefix FROM tl_calendar_events WHERE pid=? AND ((startTime>=? AND startTime<=?) OR (endTime>=? AND endTime<=?) OR (startTime<=? AND endTime>=?) OR (recurring=1 AND (recurrences=0 OR repeatEnd>=?)))'.(!BE_USER_LOGGED_IN ? " AND (start='' OR start<?) AND (stop='' OR stop>?) AND published=1" : '').' ORDER BY startTime')
+            $objEvents = $this->Database->prepare('SELECT *, (SELECT title FROM tl_calendar WHERE id=?) AS calendar, (SELECT ical_prefix FROM tl_calendar WHERE id=?) AS ical_prefix FROM tl_calendar_events WHERE pid=? AND ((startTime>=? AND startTime<=?) OR (endTime>=? AND endTime<=?) OR (startTime<=? AND endTime>=?) OR (recurring=1 AND (recurrences=0 OR repeatEnd>=?)))'.(!$backendUserLoggedIn ? " AND (start='' OR start<?) AND (stop='' OR stop>?) AND published=1" : '').' ORDER BY startTime')
                 ->execute($id, $id, $id, $intStart, $intEnd, $intStart, $intEnd, $intStart, $intEnd, $intStart,
                     $time,
                     $time)
@@ -171,7 +185,7 @@ class ContentICal extends ContentElement
                 $vevent->setSummary(html_entity_decode((\strlen((string) $ical_prefix) ? $ical_prefix.' ' : '').$objEvents->title,
                     ENT_QUOTES, 'UTF-8'));
                 $vevent->setDescription(html_entity_decode(strip_tags(preg_replace('/<br \\/>/', "\n",
-                    (string) $this->replaceInsertTags($objEvents->teaser))),
+                    (string) $this->insertTagParser->replaceInline($objEvents->teaser))),
                     ENT_QUOTES, 'UTF-8'));
 
                 if ($objEvents->recurring) {
@@ -217,7 +231,7 @@ class ContentICal extends ContentElement
                     foreach ($arrSkipDates as $skipDate) {
                         $exTStamp = strtotime((string) $skipDate);
                         $exdate = [
-                            date(DateTimeFactory::$YmdHis,
+                            \DateTime::createFromFormat(DateTimeFactory::$YmdHis,
                                 date('Y', $exTStamp).
                                 date('m', $exTStamp).
                                 date('d', $exTStamp).

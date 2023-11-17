@@ -10,20 +10,21 @@ declare(strict_types=1);
  * @license    LGPL-3.0-or-later
  */
 
-namespace Craffft\ContaoCalendarICalBundle\ContaoManager;
+namespace Cgoit\ContaoCalendarICalBundle\ContaoManager;
 
+use Cgoit\ContaoCalendarICalBundle\CgoitContaoCalendarICalBundle;
+use Contao\CalendarBundle\ContaoCalendarBundle;
 use Contao\ManagerPlugin\Bundle\BundlePluginInterface;
 use Contao\ManagerPlugin\Bundle\Config\BundleConfig;
 use Contao\ManagerPlugin\Bundle\Parser\ParserInterface;
-use Craffft\ContaoCalendarICalBundle\CraffftContaoCalendarICalBundle;
 
 class Plugin implements BundlePluginInterface
 {
     public function getBundles(ParserInterface $parser)
     {
         return [
-            BundleConfig::create(CraffftContaoCalendarICalBundle::class)
-                ->setLoadAfter(['Contao\CalendarBundle\ContaoCalendarBundle'])
+            BundleConfig::create(CgoitContaoCalendarICalBundle::class)
+                ->setLoadAfter([ContaoCalendarBundle::class])
                 ->setReplace(['contao-calendar-ical-bundle']),
         ];
     }

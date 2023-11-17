@@ -12,17 +12,17 @@ declare(strict_types=1);
 
 namespace contao\dca;
 
+use Cgoit\ContaoCalendarICalBundle\Classes\CalendarExport;
 use Contao\Backend;
 use Contao\CalendarEventsModel;
 use Contao\DataContainer;
-use Craffft\ContaoCalendarICalBundle\Classes\CalendarExport;
 
 /*
  * Table tl_calendar_events
  */
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar_events']['config']['onsubmit_callback'][] = ['tl_calendar_events_ical', 'generateICal'];
+$GLOBALS['TL_DCA']['tl_calendar_events']['config']['onsubmit_callback'][] = ['tl_calendar_events_ical', 'generateICal'];
 
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar_events']['list']['global_operations']['export'] =
+$GLOBALS['TL_DCA']['tl_calendar_events']['list']['global_operations']['export'] =
     [
         'label' => &$GLOBALS['TL_LANG']['MSC']['import_calendar'],
         'href' => 'key=import',
@@ -30,9 +30,9 @@ $GLOBALS['TL_DCA']['contao\dca\tl_calendar_events']['list']['global_operations']
         'attributes' => 'onclick="Backend.getScrollOffset();"',
     ];
 
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar_events']['fields']['icssource'] =
+$GLOBALS['TL_DCA']['tl_calendar_events']['fields']['icssource'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['contao\dca\tl_content']['source'],
+        'label' => &$GLOBALS['TL_LANG']['tl_content']['source'],
         'eval' => ['fieldType' => 'radio', 'files' => true, 'filesOnly' => true, 'extensions' => 'ics,csv'],
     ];
 

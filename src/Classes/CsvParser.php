@@ -10,30 +10,36 @@ declare(strict_types=1);
  * @license    LGPL-3.0-or-later
  */
 
-namespace Craffft\ContaoCalendarICalBundle\Classes;
+namespace Cgoit\ContaoCalendarICalBundle\Classes;
 
 class CsvParser
 {
-    protected $separator;
+    protected string $separator;
 
-    protected $reader;
+    protected CsvReader $reader;
 
     public function __construct(
-        protected $filename,
-        protected $encoding = 'utf8',
+        protected string $filename,
+        protected string $encoding = 'utf8',
     ) {
         $this->separator = $this->determineSeparator();
         $this->reader = new CsvReader($filename, $this->separator, $this->encoding);
     }
 
-    public function extractHeader()
+    /**
+     * @return array<mixed>
+     */
+    public function extractHeader(): array
     {
         $this->reader->rewind();
 
         return $this->reader->current();
     }
 
-    public function getDataArray($lines = 1)
+    /**
+     * @return array<mixed>|bool
+     */
+    public function getDataArray(int $lines = 1): array|bool
     {
         if (1 === $lines) {
             $this->reader->next();
@@ -59,7 +65,7 @@ class CsvParser
         return false;
     }
 
-    protected function determineSeparator()
+    protected function determineSeparator(): string|null
     {
         $separators = [',', ';'];
         $file = fopen($this->filename, 'r');

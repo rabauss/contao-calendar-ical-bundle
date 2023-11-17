@@ -1,0 +1,15 @@
+services:
+   _defaults:
+      autoconfigure: true
+      autowire: true
+      public: false
+      bind:
+          $calendarExport: '@\Cgoit\ContaoCalendarICalBundle\Classes\CalendarExport'
+          $calendarImport: '@\Cgoit\ContaoCalendarICalBundle\Classes\CalendarImport'
+          $projectDir: '%kernel.project_dir%'
+          $db: '@database_connection'
+          $slug: '@contao.slug'
+          $insertTagParser: '@contao.insert_tag.parser'
+
+   Cgoit\ContaoCalendarICalBundle\:
+      resource: ../src/*

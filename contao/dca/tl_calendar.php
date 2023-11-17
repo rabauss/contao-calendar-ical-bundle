@@ -12,22 +12,17 @@ declare(strict_types=1);
 
 namespace contao\dca;
 
-use Contao\Backend;
-use Contao\DataContainer;
-use Craffft\ContaoCalendarICalBundle\Classes\CalendarExport;
+$GLOBALS['TL_DCA']['tl_calendar']['config']['onsubmit_callback'][] = ['CalendarImport', 'importFromURL'];
 
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['config']['onload_callback'][] = ['tl_calendar_ical', 'generate_ical'];
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['config']['onsubmit_callback'][] = ['CalendarImport', 'importFromURL'];
+$GLOBALS['TL_DCA']['tl_calendar']['palettes']['default'] = $GLOBALS['TL_DCA']['tl_calendar']['palettes']['default'].';{ical_legend:hide},make_ical,ical_source';
+$GLOBALS['TL_DCA']['tl_calendar']['palettes']['__selector__'][] = 'make_ical';
+$GLOBALS['TL_DCA']['tl_calendar']['palettes']['__selector__'][] = 'ical_source';
+$GLOBALS['TL_DCA']['tl_calendar']['subpalettes']['make_ical'] = 'ical_alias,ical_prefix,ical_description,ical_start,ical_end';
+$GLOBALS['TL_DCA']['tl_calendar']['subpalettes']['ical_source'] = 'ical_url,ical_proxy,ical_bnpw,ical_port,ical_filter_event_title,ical_pattern_event_title,ical_replacement_event_title,ical_timezone,ical_cache,ical_source_start,ical_source_end';
 
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['palettes']['default'] = $GLOBALS['TL_DCA']['contao\dca\tl_calendar']['palettes']['default'].';{ical_legend:hide},make_ical,ical_source';
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['palettes']['__selector__'][] = 'make_ical';
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['palettes']['__selector__'][] = 'ical_source';
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['subpalettes']['make_ical'] = 'ical_alias,ical_prefix,ical_description,ical_start,ical_end';
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['subpalettes']['ical_source'] = 'ical_url,ical_proxy,ical_bnpw,ical_port,ical_filter_event_title,ical_pattern_event_title,ical_replacement_event_title,ical_timezone,ical_cache,ical_source_start,ical_source_end';
-
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['make_ical'] =
+$GLOBALS['TL_DCA']['tl_calendar']['fields']['make_ical'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['contao\dca\tl_calendar']['make_ical'],
+        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['make_ical'],
         'exclude' => true,
         'filter' => true,
         'inputType' => 'checkbox',
@@ -35,9 +30,9 @@ $GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['make_ical'] =
         'sql' => "char(1) NOT NULL default ''",
     ];
 
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_timezone'] =
+$GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_timezone'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['contao\dca\tl_calendar']['ical_timezone'],
+        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_timezone'],
         'default' => 0,
         'exclude' => true,
         'filter' => true,
@@ -47,9 +42,9 @@ $GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_timezone'] =
         'sql' => "varchar(128) NOT NULL default ''",
     ];
 
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_source'] =
+$GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_source'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['contao\dca\tl_calendar']['ical_source'],
+        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_source'],
         'exclude' => true,
         'filter' => true,
         'inputType' => 'checkbox',
@@ -57,9 +52,9 @@ $GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_source'] =
         'sql' => "char(1) NOT NULL default ''",
     ];
 
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_alias'] =
+$GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_alias'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['contao\dca\tl_calendar']['ical_alias'],
+        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_alias'],
         'exclude' => true,
         'search' => true,
         'inputType' => 'text',
@@ -67,9 +62,9 @@ $GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_alias'] =
         'sql' => "varbinary(128) NOT NULL default ''",
     ];
 
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_prefix'] =
+$GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_prefix'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['contao\dca\tl_calendar']['ical_prefix'],
+        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_prefix'],
         'exclude' => true,
         'search' => true,
         'inputType' => 'text',
@@ -77,9 +72,9 @@ $GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_prefix'] =
         'sql' => "varchar(128) NOT NULL default ''",
     ];
 
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_description'] =
+$GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_description'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['contao\dca\tl_calendar']['ical_description'],
+        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_description'],
         'exclude' => true,
         'search' => true,
         'inputType' => 'textarea',
@@ -87,9 +82,9 @@ $GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_description'] =
         'sql' => 'text NULL',
     ];
 
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_url'] =
+$GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_url'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['contao\dca\tl_calendar']['ical_url'],
+        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_url'],
         'exclude' => true,
         'search' => true,
         'inputType' => 'text',
@@ -97,9 +92,9 @@ $GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_url'] =
         'sql' => 'text NULL',
     ];
 
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_proxy'] =
+$GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_proxy'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['contao\dca\tl_calendar']['ical_proxy'],
+        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_proxy'],
         'exclude' => true,
         'search' => true,
         'inputType' => 'text',
@@ -107,9 +102,9 @@ $GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_proxy'] =
         'sql' => "varchar(255) NOT NULL default ''",
     ];
 
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_bnpw'] =
+$GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_bnpw'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['contao\dca\tl_calendar']['ical_bnpw'],
+        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_bnpw'],
         'exclude' => true,
         'search' => true,
         'inputType' => 'text',
@@ -117,9 +112,9 @@ $GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_bnpw'] =
         'sql' => "varchar(255) NOT NULL default ''",
     ];
 
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_port'] =
+$GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_port'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['contao\dca\tl_calendar']['ical_port'],
+        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_port'],
         'exclude' => true,
         'search' => true,
         'inputType' => 'text',
@@ -127,9 +122,9 @@ $GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_port'] =
         'sql' => 'varchar(32) NULL',
     ];
 
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_filter_event_title'] =
+$GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_filter_event_title'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['contao\dca\tl_calendar']['ical_filter_event_title'],
+        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_filter_event_title'],
         'exclude' => true,
         'filter' => true,
         'inputType' => 'text',
@@ -137,9 +132,9 @@ $GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_filter_event_title'
         'sql' => "varchar(255) NOT NULL default ''",
     ];
 
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_pattern_event_title'] =
+$GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_pattern_event_title'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['contao\dca\tl_calendar']['ical_pattern_event_title'],
+        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_pattern_event_title'],
         'exclude' => true,
         'filter' => true,
         'inputType' => 'text',
@@ -147,9 +142,9 @@ $GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_pattern_event_title
         'sql' => "varchar(255) NOT NULL default ''",
     ];
 
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_replacement_event_title'] =
+$GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_replacement_event_title'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['contao\dca\tl_calendar']['ical_replacement_event_title'],
+        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_replacement_event_title'],
         'exclude' => true,
         'filter' => true,
         'inputType' => 'text',
@@ -157,9 +152,9 @@ $GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_replacement_event_t
         'sql' => "varchar(255) NOT NULL default ''",
     ];
 
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_cache'] =
+$GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_cache'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['contao\dca\tl_calendar']['ical_cache'],
+        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_cache'],
         'default' => 86400,
         'exclude' => true,
         'search' => true,
@@ -168,9 +163,9 @@ $GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_cache'] =
         'sql' => "int(10) unsigned NOT NULL default '86400'",
     ];
 
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_start'] =
+$GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_start'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['contao\dca\tl_calendar']['ical_start'],
+        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_start'],
         'default' => time(),
         'exclude' => true,
         'filter' => true,
@@ -180,9 +175,9 @@ $GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_start'] =
         'sql' => "varchar(12) NOT NULL default ''",
     ];
 
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_end'] =
+$GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_end'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['contao\dca\tl_calendar']['ical_end'],
+        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_end'],
         'default' => time() + 365 * 24 * 3600,
         'exclude' => true,
         'filter' => true,
@@ -192,9 +187,9 @@ $GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_end'] =
         'sql' => "varchar(12) NOT NULL default ''",
     ];
 
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_source_start'] =
+$GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_source_start'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['contao\dca\tl_calendar']['ical_start'],
+        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_start'],
         'default' => time(),
         'exclude' => true,
         'filter' => true,
@@ -204,9 +199,9 @@ $GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_source_start'] =
         'sql' => "varchar(12) NOT NULL default ''",
     ];
 
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_source_end'] =
+$GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_source_end'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['contao\dca\tl_calendar']['ical_end'],
+        'label' => &$GLOBALS['TL_LANG']['tl_calendar']['ical_end'],
         'default' => time() + 365 * 24 * 3600,
         'exclude' => true,
         'filter' => true,
@@ -216,30 +211,7 @@ $GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_source_end'] =
         'sql' => "varchar(12) NOT NULL default ''",
     ];
 
-$GLOBALS['TL_DCA']['contao\dca\tl_calendar']['fields']['ical_importing'] =
+$GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_importing'] =
     [
         'sql' => "char(1) NOT NULL default ''",
     ];
-
-class tl_calendar extends Backend
-{
-    public function getTZ()
-    {
-        return $this->getTimezones();
-    }
-
-    /**
-     * Update the RSS feed.
-     *
-     * @param object $dc
-     */
-    public function generate_ical(DataContainer $dc): void
-    {
-        if (!$dc->id) {
-            return;
-        }
-
-        $this->import(CalendarExport::class);
-        $this->CalendarExport->exportCalendar($dc->id);
-    }
-}

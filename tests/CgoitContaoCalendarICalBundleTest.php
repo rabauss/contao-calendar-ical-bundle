@@ -10,16 +10,16 @@ declare(strict_types=1);
  * @license    LGPL-3.0-or-later
  */
 
-namespace Craffft\ContaoCalendarICalBundle;
+namespace Cgoit\ContaoCalendarICalBundle;
 
 use PHPUnit\Framework\TestCase;
 
-class CraffftContaoCalendarICalBundleTest extends TestCase
+class CgoitContaoCalendarICalBundleTest extends TestCase
 {
     public function testCanBeInstantiated(): void
     {
-        $bundle = new CraffftContaoCalendarICalBundle();
+        $bundle = new CgoitContaoCalendarICalBundle();
 
-        $this->assertInstanceOf(CraffftContaoCalendarICalBundle::class, $bundle);
+        $this->assertInstanceOf(CgoitContaoCalendarICalBundle::class, $bundle);
     }
 }

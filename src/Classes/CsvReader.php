@@ -10,24 +10,28 @@ declare(strict_types=1);
  * @license    LGPL-3.0-or-later
  */
 
-namespace Craffft\ContaoCalendarICalBundle\Classes;
+namespace Cgoit\ContaoCalendarICalBundle\Classes;
 
+/**
+ * @implements \Iterator<int, array>
+ */
 class CsvReader implements \Iterator
 {
-    protected $fileHandle;
+    protected mixed $fileHandle;
 
-    protected $position;
+    protected int $position;
 
-    protected $filename;
+    protected string $filename;
 
-    protected $currentLine;
+    protected string|null $currentLine = null;
 
-    protected $currentArray;
+    /** @var array<mixed>|null */
+    protected array|null $currentArray = null;
 
     public function __construct(
-        $filename,
-        protected $separator = ',',
-        protected $encoding = 'utf8',
+        string $filename,
+        protected string $separator = ',',
+        protected string $encoding = 'utf8',
     ) {
         $this->fileHandle = fopen($filename, 'r');
         if (!$this->fileHandle) {
@@ -63,12 +67,15 @@ class CsvReader implements \Iterator
         $this->_readLine();
     }
 
-    public function current()
+    /**
+     * @return array<mixed>
+     */
+    public function current(): array
     {
         return $this->currentArray;
     }
 
-    public function key()
+    public function key(): int
     {
         return $this->position;
     }
@@ -79,7 +86,7 @@ class CsvReader implements \Iterator
         $this->_readLine();
     }
 
-    public function valid()
+    public function valid(): bool
     {
         return null !== $this->currentArray;
     }

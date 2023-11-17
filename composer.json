@@ -32,6 +32,7 @@
   "require": {
     "php": "^8.1 || ^8.2",
     "contao/core-bundle": "^4.13 || ^5.2",
+    "contao/calendar-bundle": "^4.13 || ^5.2",
     "kigkonsult/icalcreator": "~2"
   },
   "require-dev": {
@@ -48,12 +49,12 @@
   },
   "autoload": {
     "psr-4": {
-      "Craffft\\ContaoCalendarICalBundle\\": "src/"
+      "Cgoit\\ContaoCalendarICalBundle\\": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-       "Craffft\\ContaoCalendarICalBundle\\Tests\\": "tests/"
+       "Cgoit\\ContaoCalendarICalBundle\\Tests\\": "tests/"
     }
   },
     "config": {
@@ -65,7 +66,7 @@
         }
     },
   "extra": {
-    "contao-manager-plugin": "Craffft\\ContaoCalendarICalBundle\\ContaoManager\\Plugin"
+    "contao-manager-plugin": "Cgoit\\ContaoCalendarICalBundle\\ContaoManager\\Plugin"
   },
     "scripts": {
         "all": [

@@ -10,15 +10,17 @@ declare(strict_types=1);
  * @license    LGPL-3.0-or-later
  */
 
-namespace Craffft\ContaoCalendarICalBundle\Classes;
-
-use Contao\Exception;
+namespace Cgoit\ContaoCalendarICalBundle\Classes;
 
 class Csv
 {
-    // take a CSV line (utf-8 encoded) and returns an array
-    // 'string1,string2,"string3","the ""string4"""' => array('string1', 'string2', 'string3', 'the "string4"')
-    public static function parseString($string, $separator = ',')
+    /**
+     * take a CSV line (utf-8 encoded) and returns an array
+     * 'string1,string2,"string3","the ""string4"""' => array('string1', 'string2', 'string3', 'the "string4"').
+     *
+     * @return array<string>
+     */
+    public static function parseString(string $string, string $separator = ','): array
     {
         $values = [];
         $string = str_replace("\r\n", '', (string) $string); // eat the traling new line, if any
@@ -47,7 +49,7 @@ class Csv
                         $newValue .= $token;
                         $newValue .= $separator;
                         if ($i === $count - 1) {
-                            throw new Exception('Illegal unescaped quote.');
+                            throw new \Exception('Illegal unescaped quote.'); // @phpstan-ignore-line
                         }
                         $token = $tokens[++$i];
                     }
@@ -62,7 +64,7 @@ class Csv
         return $values;
     }
 
-    public static function escapeString($string)
+    public static function escapeString(string $string): string
     {
         $string = str_replace('"', '""', (string) $string);
 
@@ -80,9 +82,9 @@ class Csv
     // 'string"' => true
     // 'string""' => false
     // 'string"""' => true
-    public static function _hasEndQuote($token)
+    public static function _hasEndQuote(string $token): bool
     {
-        $len = \strlen((string) $token);
+        $len = \strlen($token);
 
         if (0 === $len) {
             return false;
@@ -101,9 +103,9 @@ class Csv
             if ('"' === $token[$len - 1]) {
                 return true;
             } // the last quote was not escaped
-
-            return false;
-            // was not ending with an unescaped quote
         }
+
+        return false;
+        // was not ending with an unescaped quote
     }
 }

@@ -10,21 +10,13 @@ declare(strict_types=1);
  * @license    LGPL-3.0-or-later
  */
 
-use Craffft\ContaoCalendarICalBundle\Classes\CalendarExport;
-use Craffft\ContaoCalendarICalBundle\Classes\CalendarImport;
-
 /*
  * Content elements
  */
 $GLOBALS['TL_CTE']['files']['ical'] = 'ContentICal';
 
-$GLOBALS['BE_MOD']['content']['calendar']['import'] = ['CalendarImport', 'importCalendar'];
-$GLOBALS['BE_MOD']['content']['calendar']['stylesheet'] = 'bundles/craffftcontaocalendarical/calendar-ical.css';
-
-/*
- * Cron jobs
- */
-$GLOBALS['TL_CRON']['daily'][] = (new CalendarExport())->generateSubscriptions(...);
+$GLOBALS['BE_MOD']['content']['calendar']['import'] = ['@\Cgoit\ContaoCalendarICalBundle\Classes\CalendarImport', 'importCalendar'];
+$GLOBALS['BE_MOD']['content']['calendar']['stylesheet'] = 'bundles/cgoitcontaocalendarical/calendar-ical.css';
 
 /*
  * Add 'ical' to the URL keywords to prevent problems with URL manipulating modules like folderurl
@@ -33,9 +25,6 @@ if (!array_key_exists('urlKeywords', $GLOBALS['TL_CONFIG'])) {
     $GLOBALS['TL_CONFIG'] += ['urlKeywords' => ''];
 }
 $GLOBALS['TL_CONFIG']['urlKeywords'] .= (strlen(trim((string) $GLOBALS['TL_CONFIG']['urlKeywords'])) ? ',' : '').'ical';
-
-$GLOBALS['TL_HOOKS']['removeOldFeeds'][] = (new CalendarExport())->removeOldSubscriptions(...);
-$GLOBALS['TL_HOOKS']['getAllEvents'][] = (new CalendarImport())->getAllEvents(...);
 
 /*
  * Module variables
