@@ -158,7 +158,6 @@ $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_cache'] =
 
 $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_start'] =
     [
-        'default' => time(),
         'exclude' => true,
         'filter' => true,
         'flag' => 8,
@@ -169,7 +168,6 @@ $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_start'] =
 
 $GLOBALS['TL_DCA']['tl_calendar']['fields']['ical_end'] =
     [
-        'default' => time() + 365 * 24 * 3600,
         'exclude' => true,
         'filter' => true,
         'flag' => 8,

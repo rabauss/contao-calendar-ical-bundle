@@ -15,7 +15,6 @@ namespace Cgoit\ContaoCalendarIcalBundle\Cron;
 use Cgoit\ContaoCalendarIcalBundle\Classes\CalendarExport;
 use Contao\CalendarModel;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsCronJob;
-use Contao\System;
 
 #[AsCronJob('daily')]
 class GenerateSubscriptionsCron
@@ -26,17 +25,10 @@ class GenerateSubscriptionsCron
 
     public function __invoke(): void
     {
-        $this->calendarExport->removeOldSubscriptions();
         $arrCalendar = CalendarModel::findBy(['make_ical=?'], [1]);
 
         foreach ($arrCalendar as $objCalendar) {
-            $filename = $objCalendar->ical_alias ?? 'calendar'.$objCalendar->id;
-
-            $this->calendarExport->generateFiles($objCalendar->row());
-            System::getContainer()
-                ->get('monolog.logger.contao.cron')
-                ->info('Generated ical subscription "'.$filename.'.ics"')
-            ;
+            $this->calendarExport->generateSubscriptions($objCalendar);
         }
     }
 }

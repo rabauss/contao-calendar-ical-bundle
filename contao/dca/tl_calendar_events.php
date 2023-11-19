@@ -12,16 +12,9 @@ declare(strict_types=1);
 
 namespace contao\dca;
 
-use Cgoit\ContaoCalendarIcalBundle\Classes\CalendarExport;
-use Contao\Backend;
-use Contao\CalendarEventsModel;
-use Contao\DataContainer;
-
 /*
  * Table tl_calendar_events
  */
-$GLOBALS['TL_DCA']['tl_calendar_events']['config']['onsubmit_callback'][] = ['tl_calendar_events_ical', 'generateICal'];
-
 $GLOBALS['TL_DCA']['tl_calendar_events']['list']['global_operations']['export'] =
     [
         'label' => &$GLOBALS['TL_LANG']['MSC']['import_calendar'],
@@ -35,20 +28,3 @@ $GLOBALS['TL_DCA']['tl_calendar_events']['fields']['icssource'] =
         'label' => &$GLOBALS['TL_LANG']['tl_content']['source'],
         'eval' => ['fieldType' => 'radio', 'files' => true, 'filesOnly' => true, 'extensions' => 'ics,csv'],
     ];
-
-class tl_calendar_events extends Backend
-{
-    public function generateICal(DataContainer $dc): void
-    {
-        if (!$dc->id) {
-            return;
-        }
-
-        $calendarEvent = CalendarEventsModel::findByPk($dc->id);
-
-        if (null !== $calendarEvent) {
-            $this->import(CalendarExport::class);
-            $this->CalendarExport->exportCalendar($calendarEvent->pid);
-        }
-    }
-}

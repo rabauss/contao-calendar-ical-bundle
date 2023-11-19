@@ -17,8 +17,8 @@ use Contao\CalendarModel;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsCallback;
 use Contao\DataContainer;
 
-#[AsCallback(table: 'tl_calendar', target: 'config.onload')]
-class CalendarLoadListener
+#[AsCallback(table: 'tl_calendar', target: 'config.ondelete')]
+class CalendarDeleteListener
 {
     public function __construct(private readonly CalendarExport $calendarExport)
     {
@@ -27,13 +27,13 @@ class CalendarLoadListener
     /**
      * Update the RSS feed.
      */
-    public function __invoke(DataContainer $dc): void
+    public function __invoke(DataContainer $dc, int $undoId): void
     {
         if (!$dc->id) {
             return;
         }
 
         $objCalendar = CalendarModel::findById($dc->id);
-        $this->calendarExport->generateSubscriptions($objCalendar);
+        $this->calendarExport->removeOldSubscriptions($objCalendar);
     }
 }

@@ -13,12 +13,12 @@ declare(strict_types=1);
 namespace Cgoit\ContaoCalendarIcalBundle\EventListener\DataContainer;
 
 use Cgoit\ContaoCalendarIcalBundle\Classes\CalendarExport;
-use Contao\CalendarModel;
+use Contao\CalendarEventsModel;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsCallback;
 use Contao\DataContainer;
 
-#[AsCallback(table: 'tl_calendar', target: 'config.onload')]
-class CalendarLoadListener
+#[AsCallback(table: 'tl_calendar_events', target: 'config.onsubmit')]
+class CalendarEventsSubmitListener
 {
     public function __construct(private readonly CalendarExport $calendarExport)
     {
@@ -33,7 +33,10 @@ class CalendarLoadListener
             return;
         }
 
-        $objCalendar = CalendarModel::findById($dc->id);
-        $this->calendarExport->generateSubscriptions($objCalendar);
+        $calendarEvent = CalendarEventsModel::findByPk($dc->id);
+
+        if (null !== $calendarEvent) {
+            $this->calendarExport->generateSubscriptions($calendarEvent);
+        }
     }
 }
