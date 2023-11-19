@@ -207,126 +207,129 @@ class CalendarExport extends Backend
         foreach ($arrEvents as $arrEvent) {
             $vevent = new Vevent();
 
-            if (!empty($arrEvent['addTime'])) {
-                $vevent->setDtstart(date(DateTimeFactory::$YmdTHis, $arrEvent['startTime']), [IcalInterface::VALUE => IcalInterface::DATE_TIME]);
-                if (!empty($arrEvent['endTime'])) {
-                    if ((int) $arrEvent['startTime'] < (int) $arrEvent['endTime']) {
-                        $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $arrEvent['endTime']),
-                            [IcalInterface::VALUE => IcalInterface::DATE_TIME]);
+            $startDate = $arrEvent['startDate'] ?? $arrEvent['startTime'];
+            $endDate = $arrEvent['endDate'] ?? $arrEvent['endTime'];
+
+            if (!empty($startDate)) {
+                if (!empty($arrEvent['addTime'])) {
+                    $vevent->setDtstart(date(DateTimeFactory::$YmdTHis, $arrEvent['startTime']), [IcalInterface::VALUE => IcalInterface::DATE_TIME]);
+                    if (!empty($arrEvent['endTime'])) {
+                        if ((int) $arrEvent['startTime'] < (int) $arrEvent['endTime']) {
+                            $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $arrEvent['endTime']),
+                                [IcalInterface::VALUE => IcalInterface::DATE_TIME]);
+                        } else {
+                            $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $arrEvent['startTime'] + 60 * 60),
+                                [IcalInterface::VALUE => IcalInterface::DATE_TIME]);
+                        }
                     } else {
                         $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $arrEvent['startTime'] + 60 * 60),
                             [IcalInterface::VALUE => IcalInterface::DATE_TIME]);
                     }
                 } else {
-                    $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $arrEvent['startTime'] + 60 * 60),
-                        [IcalInterface::VALUE => IcalInterface::DATE_TIME]);
-                }
-            } else {
-                $startDate = $arrEvent['startDate'] ?? $arrEvent['startTime'];
-                $endDate = $arrEvent['endDate'] ?? $arrEvent['endTime'];
-                $vevent->setDtstart(date(DateTimeFactory::$Ymd, $startDate), [IcalInterface::VALUE => IcalInterface::DATE]);
-                if (!empty($endDate)) {
-                    if ((int) $startDate < (int) $endDate) {
-                        $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $endDate),
-                            [IcalInterface::VALUE => IcalInterface::DATE_TIME]);
-                    } else {
-                        $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $startDate + 60 * 60),
-                            [IcalInterface::VALUE => IcalInterface::DATE_TIME]);
-                    }
-                } else {
-                    $vevent->setDtend(date(DateTimeFactory::$Ymd, $startDate + 24 * 60 * 60),
-                        [IcalInterface::VALUE => IcalInterface::DATE]);
-                }
-            }
-
-            $vevent->setSummary(html_entity_decode((!empty($objCalendar->ical_prefix) ? $objCalendar->ical_prefix.' ' : '').$arrEvent['title'],
-                ENT_QUOTES, 'UTF-8'));
-            $vevent->setDescription(html_entity_decode(strip_tags(preg_replace('/<br \\/>/', "\n",
-                $this->insertTagParser->replaceInline($arrEvent['teaser']))),
-                ENT_QUOTES, 'UTF-8'));
-
-            if (!empty($arrEvent['location'])) {
-                $vevent->setLocation(trim(html_entity_decode((string) $arrEvent['location'], ENT_QUOTES, 'UTF-8')));
-            }
-
-            if (!empty($arrEvent['cep_participants'])) {
-                $attendees = preg_split('/,/', (string) $arrEvent['cep_participants']);
-                if (is_countable($attendees) ? \count($attendees) : 0) {
-                    foreach ($attendees as $attendee) {
-                        $attendee = trim((string) $attendee);
-                        if (str_contains($attendee, '@')) {
-                            $vevent->setAttendee($attendee);
+                    $vevent->setDtstart(date(DateTimeFactory::$Ymd, $startDate), [IcalInterface::VALUE => IcalInterface::DATE]);
+                    if (!empty($endDate)) {
+                        if ((int) $startDate < (int) $endDate) {
+                            $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $endDate),
+                                [IcalInterface::VALUE => IcalInterface::DATE_TIME]);
                         } else {
-                            $vevent->setAttendee($attendee, ['CN' => $attendee]);
+                            $vevent->setDtend(date(DateTimeFactory::$YmdTHis, $startDate + 60 * 60),
+                                [IcalInterface::VALUE => IcalInterface::DATE_TIME]);
+                        }
+                    } else {
+                        $vevent->setDtend(date(DateTimeFactory::$Ymd, $startDate + 24 * 60 * 60),
+                            [IcalInterface::VALUE => IcalInterface::DATE]);
+                    }
+                }
+
+                $vevent->setSummary(html_entity_decode((!empty($objCalendar->ical_prefix) ? $objCalendar->ical_prefix.' ' : '').$arrEvent['title'],
+                    ENT_QUOTES, 'UTF-8'));
+                $vevent->setDescription(html_entity_decode(strip_tags(preg_replace('/<br \\/>/', "\n",
+                    $this->insertTagParser->replaceInline($arrEvent['teaser']))),
+                    ENT_QUOTES, 'UTF-8'));
+
+                if (!empty($arrEvent['location'])) {
+                    $vevent->setLocation(trim(html_entity_decode((string) $arrEvent['location'], ENT_QUOTES, 'UTF-8')));
+                }
+
+                if (!empty($arrEvent['cep_participants'])) {
+                    $attendees = preg_split('/,/', (string) $arrEvent['cep_participants']);
+                    if (is_countable($attendees) ? \count($attendees) : 0) {
+                        foreach ($attendees as $attendee) {
+                            $attendee = trim((string) $attendee);
+                            if (str_contains($attendee, '@')) {
+                                $vevent->setAttendee($attendee);
+                            } else {
+                                $vevent->setAttendee($attendee, ['CN' => $attendee]);
+                            }
                         }
                     }
                 }
-            }
 
-            if (!empty($arrEvent['location_contact'])) {
-                $contact = trim((string) $arrEvent['location_contact']);
-                $vevent->setContact($contact);
-            }
-
-            if ($arrEvent['recurring']) {
-                $arrRepeat = StringUtil::deserialize($arrEvent['repeatEach'], true);
-                $arg = $arrRepeat['value'];
-
-                $freq = 'YEARLY';
-
-                switch ($arrRepeat['unit']) {
-                    case 'days':
-                        $freq = 'DAILY';
-                        break;
-                    case 'weeks':
-                        $freq = 'WEEKLY';
-                        break;
-                    case 'months':
-                        $freq = 'MONTHLY';
-                        break;
-                    case 'years':
-                        $freq = 'YEARLY';
-                        break;
+                if (!empty($arrEvent['location_contact'])) {
+                    $contact = trim((string) $arrEvent['location_contact']);
+                    $vevent->setContact($contact);
                 }
 
-                $rrule = ['FREQ' => $freq];
+                if ($arrEvent['recurring']) {
+                    $arrRepeat = StringUtil::deserialize($arrEvent['repeatEach'], true);
+                    $arg = $arrRepeat['value'];
 
-                if ($arrEvent['recurrences'] > 0) {
-                    $rrule['count'] = $arrEvent['recurrences'];
+                    $freq = 'YEARLY';
+
+                    switch ($arrRepeat['unit']) {
+                        case 'days':
+                            $freq = 'DAILY';
+                            break;
+                        case 'weeks':
+                            $freq = 'WEEKLY';
+                            break;
+                        case 'months':
+                            $freq = 'MONTHLY';
+                            break;
+                        case 'years':
+                            $freq = 'YEARLY';
+                            break;
+                    }
+
+                    $rrule = ['FREQ' => $freq];
+
+                    if ($arrEvent['recurrences'] > 0) {
+                        $rrule['count'] = $arrEvent['recurrences'];
+                    }
+
+                    if ($arg > 1) {
+                        $rrule['INTERVAL'] = $arg;
+                    }
+
+                    $vevent->setRrule($rrule);
                 }
 
-                if ($arg > 1) {
-                    $rrule['INTERVAL'] = $arg;
-                }
+                /*
+                * begin module event_recurrences handling
+                */
+                if (!empty($arrEvent['repeatExecptions'])) {
+                    $arrSkipDates = StringUtil::deserialize($arrEvent['repeatExecptions'], true);
 
-                $vevent->setRrule($rrule);
+                    foreach ($arrSkipDates as $skipDate) {
+                        $exTStamp = strtotime((string) $skipDate);
+                        $exdate =
+                            \DateTime::createFromFormat(DateTimeFactory::$YmdHis,
+                                date('Y', $exTStamp).
+                                date('m', $exTStamp).
+                                date('d', $exTStamp).
+                                date('H', $arrEvent['startTime']).
+                                date('i', $arrEvent['startTime']).
+                                date('s', $arrEvent['startTime']),
+                            );
+                        $vevent->setExdate($exdate);
+                    }
+                }
+                /*
+                * end module event_recurrences handling
+                */
+
+                $ical->setComponent($vevent);
             }
-
-            /*
-            * begin module event_recurrences handling
-            */
-            if (!empty($arrEvent['repeatExecptions'])) {
-                $arrSkipDates = StringUtil::deserialize($arrEvent['repeatExecptions'], true);
-
-                foreach ($arrSkipDates as $skipDate) {
-                    $exTStamp = strtotime((string) $skipDate);
-                    $exdate =
-                        \DateTime::createFromFormat(DateTimeFactory::$YmdHis,
-                            date('Y', $exTStamp).
-                            date('m', $exTStamp).
-                            date('d', $exTStamp).
-                            date('H', $arrEvent['startTime']).
-                            date('i', $arrEvent['startTime']).
-                            date('s', $arrEvent['startTime']),
-                        );
-                    $vevent->setExdate($exdate);
-                }
-            }
-            /*
-            * end module event_recurrences handling
-            */
-
-            $ical->setComponent($vevent);
         }
 
         return $ical;
