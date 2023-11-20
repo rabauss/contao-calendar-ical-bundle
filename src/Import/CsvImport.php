@@ -180,7 +180,7 @@ class CsvImport extends AbstractImport
                                         $res = date_parse_from_format(Input::post('dateFormat'), $data[$foundindex]);
 
                                         if (false !== $res) {
-                                            $arrFields[$value] = mktime(0, 0,0, $res['month'], $res['day'], $res['year']);
+                                            $arrFields[$value] = mktime(0, 0, 0, $res['month'], $res['day'], $res['year']);
                                         }
                                     } else {
                                         $arrFields[$value] = $this->getTimestampFromDefaultDatetime($data[$foundindex]);
@@ -192,9 +192,10 @@ class CsvImport extends AbstractImport
                                 case 'title':
                                     $arrFields[$value] = StringUtil::specialchars($data[$foundindex]);
                                     $filterEventTitle = $this->Session->get('csv_filterEventTitle');
-                                    if (!empty($filterEventTitle) && !str_contains(mb_strtolower(StringUtil::specialchars($data[$foundindex])), mb_strtolower($filterEventTitle))) {
+                                    if (!empty($filterEventTitle) && !str_contains(mb_strtolower(StringUtil::specialchars($data[$foundindex])), mb_strtolower((string) $filterEventTitle))) {
                                         continue 3;
                                     }
+                                // no break
                                 default:
                                     $arrFields[$value] = StringUtil::specialchars($data[$foundindex]);
                                     break;
@@ -250,7 +251,6 @@ class CsvImport extends AbstractImport
                         }
                     }
                 }
-
 
                 if ($arrFields['startDate'] !== $arrFields['startTime'] || $arrFields['endDate'] !== $arrFields['endTime']) {
                     $arrFields['addTime'] = 1;
@@ -327,8 +327,8 @@ class CsvImport extends AbstractImport
             $tstamp = mktime((int) $matches[4], (int) $matches[5], (int) $matches[6], (int) $matches[2], (int) $matches[3],
                 (int) $matches[1]);
         } elseif (preg_match('/(\\d{4})-(\\d{2})-(\\d{2})\\s+(\\d{2}):(\\d{2})/', $strDate, $matches)) {
-            $tstamp = mktime((int)$matches[4], (int)$matches[5], 0, (int)$matches[2], (int)$matches[3],
-                (int)$matches[1]);
+            $tstamp = mktime((int) $matches[4], (int) $matches[5], 0, (int) $matches[2], (int) $matches[3],
+                (int) $matches[1]);
         } elseif (preg_match('/(\\d{4})-(\\d{2})-(\\d{2})/', $strDate, $matches)) {
             $tstamp = mktime(0, 0, 0, (int) $matches[2], (int) $matches[3], (int) $matches[1]);
         } else {

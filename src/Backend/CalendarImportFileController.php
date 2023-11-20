@@ -129,6 +129,7 @@ class CalendarImportFileController extends Backend implements TimezoneUtilAwareI
                             $this->Session->set('csv_deletecalendar', $deleteCalendar);
                             $this->Session->set('csv_filterEventTitle', $this->filterEventTitle);
                             $this->Session->set('csv_filename', $file->path);
+
                             return $this->csvImport->importFromCSVFile();
                         }
                     }
@@ -154,14 +155,13 @@ class CalendarImportFileController extends Backend implements TimezoneUtilAwareI
 
                 return $this->importFromICSFile($filename, $dc, $startDate, $endDate, $correctTimezone, $timezone,
                     $deleteCalendar, $timeshift);
-            } else {
-                if ('tl_csv_headers' === Input::post('FORM_SUBMIT')) {
-                    if ($this->blnSave && !empty(Input::post('import'))) {
-                        return $this->csvImport->importFromCSVFile(false);
-                    } else {
-                        return $this->csvImport->importFromCSVFile();
-                    }
+            }
+            if ('tl_csv_headers' === Input::post('FORM_SUBMIT')) {
+                if ($this->blnSave && !empty(Input::post('import'))) {
+                    return $this->csvImport->importFromCSVFile(false);
                 }
+
+                return $this->csvImport->importFromCSVFile();
             }
         }
 
