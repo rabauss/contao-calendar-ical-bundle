@@ -70,7 +70,7 @@ class CsvReader implements \Iterator
     /**
      * @return array<mixed>
      */
-    public function current(): array
+    public function current(): array|null
     {
         return $this->currentArray;
     }
@@ -101,7 +101,7 @@ class CsvReader implements \Iterator
         if (0 !== strcmp((string) $this->encoding, 'utf8') && null !== $this->currentLine) {
             $this->currentLine = utf8_encode($this->currentLine);
         }
-        if ('' !== $this->currentLine) {
+        if (!empty($this->currentLine)) {
             $this->currentArray = Csv::parseString($this->currentLine, $this->separator);
         } else {
             $this->currentArray = null;

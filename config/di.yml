@@ -1,16 +1,24 @@
 services:
-   _defaults:
-      autoconfigure: true
-      autowire: true
-      public: false
-      bind:
-          $calendarExport: '@Cgoit\ContaoCalendarIcalBundle\Classes\CalendarExport'
-          $calendarImport: '@Cgoit\ContaoCalendarIcalBundle\Classes\CalendarImport'
-          $timezoneUtil: '@Cgoit\ContaoCalendarIcalBundle\Util\TimezoneUtil'
-          $projectDir: '%kernel.project_dir%'
-          $db: '@database_connection'
-          $slug: '@contao.slug'
-          $insertTagParser: '@contao.insert_tag.parser'
+    _defaults:
+        autoconfigure: true
+        autowire: true
+        public: false
+        bind:
+            $projectDir: '%kernel.project_dir%'
+            $db: '@database_connection'
+            $slug: '@contao.slug'
+            $insertTagParser: '@contao.insert_tag.parser'
+            $calendarExport: '@Cgoit\ContaoCalendarIcalBundle\Classes\CalendarExport'
+            $timezoneUtil: '@Cgoit\ContaoCalendarIcalBundle\Util\TimezoneUtil'
 
-   Cgoit\ContaoCalendarIcalBundle\:
-      resource: ../src/*
+    _instanceof:
+        Cgoit\ContaoCalendarIcalBundle\Util\TimezoneUtilAwareInterface:
+            calls:
+                - [ 'setTimezoneUtil', [ '@Cgoit\ContaoCalendarIcalBundle\Util\TimezoneUtil' ] ]
+
+
+    Cgoit\ContaoCalendarIcalBundle\:
+        resource: ../src/*
+
+    Cgoit\ContaoCalendarIcalBundle\Backend\CalendarImportFileController:
+        public: true

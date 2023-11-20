@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Cgoit\ContaoCalendarIcalBundle\EventListener;
 
-use Cgoit\ContaoCalendarIcalBundle\Classes\CalendarImport;
+use Cgoit\ContaoCalendarIcalBundle\Import\IcsImport;
 use Contao\CalendarModel;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsHook;
 use Contao\Module;
@@ -20,7 +20,7 @@ use Contao\Module;
 #[AsHook('getAllEvents')]
 class GetAllEventsListener
 {
-    public function __construct(private readonly CalendarImport $calendarImport)
+    public function __construct(private readonly IcsImport $icsImport)
     {
     }
 
@@ -36,7 +36,7 @@ class GetAllEventsListener
         );
 
         foreach ($arrCalendars as $calendar) {
-            $this->calendarImport->importCalendarWithData($calendar);
+            $this->icsImport->importIcsForCalendar($calendar);
         }
 
         return $events;

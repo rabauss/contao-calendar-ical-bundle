@@ -10,12 +10,14 @@ declare(strict_types=1);
  * @license    LGPL-3.0-or-later
  */
 
+use Cgoit\ContaoCalendarIcalBundle\Backend\CalendarImportFileController;
+
 /*
  * Content elements
  */
 $GLOBALS['TL_CTE']['files']['ical'] = 'ContentICal';
 
-$GLOBALS['BE_MOD']['content']['calendar']['import'] = ['@\Cgoit\ContaoCalendarIcalBundle\Classes\CalendarImport', 'importCalendar'];
+$GLOBALS['BE_MOD']['content']['calendar']['import'] = [CalendarImportFileController::class, 'importCalendar'];
 $GLOBALS['BE_MOD']['content']['calendar']['stylesheet'] = 'bundles/cgoitcontaocalendarical/calendar-ical.css';
 
 /*

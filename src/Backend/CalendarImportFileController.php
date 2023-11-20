@@ -1,0 +1,248 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Cgoit\ContaoCalendarIcalBundle\Backend;
+
+use Cgoit\ContaoCalendarIcalBundle\Import\CsvImport;
+use Cgoit\ContaoCalendarIcalBundle\Import\IcsImport;
+use Cgoit\ContaoCalendarIcalBundle\Util\TimezoneUtilAwareInterface;
+use Cgoit\ContaoCalendarIcalBundle\Widgets\WidgetTrait;
+use Contao\Backend;
+use Contao\BackendTemplate;
+use Contao\BackendUser;
+use Contao\Config;
+use Contao\DataContainer;
+use Contao\Date;
+use Contao\Environment;
+use Contao\File;
+use Contao\Input;
+use Contao\Message;
+use Contao\StringUtil;
+use Kigkonsult\Icalcreator\Vcalendar;
+
+class CalendarImportFileController extends Backend implements TimezoneUtilAwareInterface
+{
+    use WidgetTrait;
+
+    private string $filterEventTitle;
+
+    public function __construct(
+        private readonly IcsImport $icsImport,
+        private readonly CsvImport $csvImport,
+        private readonly string $projectDir,
+    ) {
+        parent::__construct();
+    }
+
+    public function importCalendar(DataContainer $dc): string
+    {
+        if ('import' !== Input::get('key')) {
+            return '';
+        }
+
+        $class = BackendUser::getInstance()->uploader;
+
+        // See #4086
+        if (!class_exists($class)) {
+            $class = 'FileUpload';
+        }
+
+        static::loadLanguageFile('tl_calendar_events');
+        static::loadLanguageFile('tl_files');
+        $objTemplate = new BackendTemplate('be_import_calendar');
+
+        $objUploader = new $class();
+        $objTemplate->markup = $objUploader->generateMarkup();
+        $objTemplate->icssource = $this->getFileTreeWidget();
+        $year = date('Y', time());
+        $defaultTimeShift = 0;
+        $tstamp = mktime(0, 0, 0, 1, 1, (int) $year);
+        $defaultStartDate = date(Config::get('dateFormat'), $tstamp);
+        $tstamp = mktime(0, 0, 0, 12, 31, (int) $year);
+        $defaultEndDate = date(Config::get('dateFormat'), $tstamp);
+        $objTemplate->startDate = $this->getStartDateWidget($defaultStartDate);
+        $objTemplate->endDate = $this->getEndDateWidget($defaultEndDate);
+        $objTemplate->timeshift = $this->getTimeShiftWidget($defaultTimeShift);
+        $objTemplate->deleteCalendar = $this->getDeleteWidget();
+        $objTemplate->filterEventTitle = $this->getFilterWidget();
+        $objTemplate->max_file_size = Config::get('maxFileSize');
+        $objTemplate->message = Message::generate();
+
+        $objTemplate->hrefBack = StringUtil::ampersand(str_replace('&key=import', '', (string) Environment::get('request')));
+        $objTemplate->goBack = $GLOBALS['TL_LANG']['MSC']['goBack'];
+        $objTemplate->headline = $GLOBALS['TL_LANG']['MSC']['import_calendar'][0];
+        $objTemplate->request = StringUtil::ampersand(Environment::get('request'), true);
+        $objTemplate->submit = StringUtil::specialchars($GLOBALS['TL_LANG']['tl_calendar_events']['import'][0]);
+
+        // Create import form
+        if ('tl_import_calendar' === Input::post('FORM_SUBMIT') && $this->blnSave) {
+            $arrUploaded = $objUploader->uploadTo('system/tmp');
+
+            if (empty($arrUploaded)) {
+                Message::addError($GLOBALS['TL_LANG']['ERR']['all_fields']);
+                static::reload();
+            }
+
+            $arrFiles = [];
+
+            foreach ($arrUploaded as $strFile) {
+                // Skip folders
+                if (is_dir($this->projectDir.'/'.$strFile)) {
+                    Message::addError(sprintf($GLOBALS['TL_LANG']['ERR']['importFolder'], basename((string) $strFile)));
+                    continue;
+                }
+
+                $objFile = new File($strFile);
+
+                if ('ics' !== $objFile->extension && 'csv' !== $objFile->extension) {
+                    Message::addError(sprintf($GLOBALS['TL_LANG']['ERR']['filetype'], $objFile->extension));
+                    continue;
+                }
+
+                $arrFiles[] = $strFile;
+            }
+
+            if (empty($arrFiles)) {
+                Message::addError($GLOBALS['TL_LANG']['ERR']['all_fields']);
+                static::reload();
+            } else {
+                if (\count($arrFiles) > 1) {
+                    Message::addError($GLOBALS['TL_LANG']['ERR']['only_one_file']);
+                    static::reload();
+                } else {
+                    $startDate = new Date($objTemplate->startDate->value, Config::get('dateFormat'));
+                    $endDate = new Date($objTemplate->endDate->value, Config::get('dateFormat'));
+                    $deleteCalendar = $objTemplate->deleteCalendar->value;
+                    $this->filterEventTitle = $objTemplate->filterEventTitle->value;
+                    $timeshift = $objTemplate->timeshift->value;
+                    $file = new File($arrFiles[0]);
+                    if ('ics' === $file->extension) {
+                        $this->importFromICSFile($file->path, $dc, $startDate, $endDate, null, null, $deleteCalendar,
+                            $timeshift);
+                    } else {
+                        if ('csv' === $file->extension) {
+                            $this->Session->set('csv_pid', $dc->id);
+                            $this->Session->set('csv_timeshift', $objTemplate->timeshift->value);
+                            $this->Session->set('csv_startdate', $objTemplate->startDate->value);
+                            $this->Session->set('csv_enddate', $objTemplate->endDate->value);
+                            $this->Session->set('csv_deletecalendar', $deleteCalendar);
+                            $this->Session->set('csv_filterEventTitle', $this->filterEventTitle);
+                            $this->Session->set('csv_filename', $file->path);
+                            return $this->csvImport->importFromCSVFile();
+                        }
+                    }
+                }
+            }
+        } else {
+            if ('tl_import_calendar_confirmation' === Input::post('FORM_SUBMIT') && $this->blnSave) {
+                // TODO prüfen, ob hier die Datümer korrekt gesetzt werden
+                $startDate = new Date((int) Input::post('startDate'), Config::get('dateFormat'));
+                $endDate = new Date((int) Input::post('endDate'), Config::get('dateFormat'));
+                $filename = Input::post('icssource');
+                $deleteCalendar = (bool) Input::post('deleteCalendar');
+                $this->filterEventTitle = Input::post('filterEventTitle');
+                $timeshift = (int) Input::post('timeshift');
+
+                if (!empty(Input::post('timezone'))) {
+                    $timezone = Input::post('timezone');
+                    $correctTimezone = null;
+                } else {
+                    $timezone = null;
+                    $correctTimezone = (bool) Input::post('correctTimezone');
+                }
+
+                return $this->importFromICSFile($filename, $dc, $startDate, $endDate, $correctTimezone, $timezone,
+                    $deleteCalendar, $timeshift);
+            } else {
+                if ('tl_csv_headers' === Input::post('FORM_SUBMIT')) {
+                    if ($this->blnSave && !empty(Input::post('import'))) {
+                        return $this->csvImport->importFromCSVFile(false);
+                    } else {
+                        return $this->csvImport->importFromCSVFile();
+                    }
+                }
+            }
+        }
+
+        return $objTemplate->parse();
+    }
+
+    public function getConfirmationForm(DataContainer $dc, string $icssource, Date $startDate, Date $endDate, string|null $tzimport, string $tzsystem, bool $deleteCalendar): string
+    {
+        $objTemplate = new BackendTemplate('be_import_calendar_confirmation');
+
+        if (!empty($tzimport)) {
+            $objTemplate->confirmationText = sprintf(
+                $GLOBALS['TL_LANG']['tl_calendar_events']['confirmationTimezone'],
+                $tzsystem,
+                $tzimport,
+            );
+            $objTemplate->correctTimezone = $this->getCorrectTimezoneWidget();
+        } else {
+            $objTemplate->confirmationText = sprintf(
+                $GLOBALS['TL_LANG']['tl_calendar_events']['confirmationMissingTZ'],
+                $tzsystem,
+            );
+            $objTemplate->timezone = $this->getTimezoneWidget($tzsystem);
+        }
+
+        $objTemplate->startDate = $startDate->date;
+        $objTemplate->endDate = $endDate->date;
+        $objTemplate->icssource = $icssource;
+        $objTemplate->deleteCalendar = $deleteCalendar;
+        $objTemplate->filterEventTitle = $this->filterEventTitle;
+        $objTemplate->hrefBack = StringUtil::ampersand(str_replace('&key=import', '', (string) Environment::get('request')));
+        $objTemplate->goBack = $GLOBALS['TL_LANG']['MSC']['goBack'];
+        $objTemplate->headline = $GLOBALS['TL_LANG']['MSC']['import_calendar'][0];
+        $objTemplate->request = StringUtil::ampersand(Environment::get('request'));
+        $objTemplate->submit = StringUtil::specialchars($GLOBALS['TL_LANG']['tl_calendar_events']['proceed'][0]);
+
+        return $objTemplate->parse();
+    }
+
+    private function importFromICSFile(string $filename, DataContainer $dc, Date $startDate, Date $endDate, bool|null $correctTimezone = null, string|null $manualTZ = null, bool $deleteCalendar = false, int $timeshift = 0): string
+    {
+        $pid = $dc->id;
+        $cal = new Vcalendar();
+        $cal->setMethod(Vcalendar::PUBLISH);
+        $cal->setXprop(Vcalendar::X_WR_CALNAME, $this->strTitle);
+        $cal->setXprop(Vcalendar::X_WR_CALDESC, $this->strTitle);
+
+        try {
+            $file = new File($filename);
+            $content = $file->exists() ? $file->getContent() : '';
+            if (empty($content)) {
+                throw new \InvalidArgumentException('Ical content empty');
+            }
+            $cal->parse($content);
+        } catch (\Exception $e) {
+            Message::addError($e->getMessage());
+            static::redirect(str_replace('&key=import', '', (string) Environment::get('request')));
+        }
+        $tz = $cal->getXprop(Vcalendar::X_WR_TIMEZONE);
+
+        if (0 === $timeshift) {
+            if (\is_array($tz) && !empty((string) $tz[1]) && 0 !== strcmp((string) $tz[1], (string) Config::get('timeZone'))) {
+                if (null === $correctTimezone) {
+                    return $this->getConfirmationForm($dc, $filename, $startDate, $endDate, $tz[1],
+                        $GLOBALS['TL_CONFIG']['timeZone'], $deleteCalendar);
+                }
+            } else {
+                if (!\is_array($tz) || '' === $tz[1]) {
+                    if (null === $manualTZ) {
+                        return $this->getConfirmationForm($dc, $filename, $startDate, $endDate, null,
+                            $GLOBALS['TL_CONFIG']['timeZone'], $deleteCalendar);
+                    }
+                }
+            }
+            if (\strlen((string) $manualTZ)) {
+                $tz[1] = $manualTZ;
+            }
+        }
+        $this->icsImport->importFromIcsFile($cal, $pid, $startDate, $endDate, $correctTimezone, $tz, $deleteCalendar, $timeshift);
+        static::redirect(str_replace('&key=import', '', (string) Environment::get('request')));
+
+        return '';
+    }
+}

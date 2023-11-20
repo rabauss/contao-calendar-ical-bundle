@@ -54,7 +54,10 @@ class CsvParser
 
         do {
             $this->reader->next();
-            $res[] = $this->reader->current();
+            $val = $this->reader->current();
+            if (!empty($val)) {
+                $res[] = $val;
+            }
             --$lines;
         } while ($this->reader->valid() && $lines > 0);
 
