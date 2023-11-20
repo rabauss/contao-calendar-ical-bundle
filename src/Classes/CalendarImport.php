@@ -296,7 +296,7 @@ class CalendarImport extends Backend
         $this->importCalendarWithData($calendar);
     }
 
-    protected function importCalendarWithData(CalendarModel $objCalendar, bool $force_import = false): void
+    public function importCalendarWithData(CalendarModel $objCalendar, bool $force_import = false): void
     {
         $arrCalendar = $objCalendar->row();
         if ($arrCalendar['ical_source']) {

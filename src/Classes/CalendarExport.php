@@ -119,7 +119,7 @@ class CalendarExport extends Backend
 
             if (
                 'ics' === $objFile->extension
-                && $useWhitelist ? in_array($objFile->filename, $arrFeeds, true) : !\in_array($objFile->filename, $arrFeeds, true)
+                && $useWhitelist ? \in_array($objFile->filename, $arrFeeds, true) : !\in_array($objFile->filename, $arrFeeds, true)
             ) {
                 System::getContainer()
                     ->get('monolog.logger.contao.general')

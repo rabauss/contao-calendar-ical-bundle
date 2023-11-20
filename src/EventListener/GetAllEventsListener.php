@@ -36,7 +36,7 @@ class GetAllEventsListener
         );
 
         foreach ($arrCalendars as $calendar) {
-            $this->calendarImport->importCalendarWithID($calendar);
+            $this->calendarImport->importCalendarWithData($calendar);
         }
 
         return $events;
