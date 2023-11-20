@@ -117,16 +117,18 @@ class IcsImport extends AbstractImport
 
         $eventArray = $cal->selectComponents((int) date('Y', $startDate->tstamp), (int) date('m', $startDate->tstamp),
             (int) date('d', $startDate->tstamp), (int) date('Y', $endDate->tstamp), (int) date('m', $endDate->tstamp),
-            (int) date('d', $endDate->tstamp), 'vevent', true);
+            (int) date('d', $endDate->tstamp), IcalInterface::VEVENT, true);
 
         if (\is_array($eventArray)) {
             foreach ($eventArray as $vevent) {
                 /** @var Vevent $vevent */
                 $arrFields = $defaultFields;
+
                 /** @var Pc|bool|null $dtstart */
                 $dtstart = $vevent->getDtstart(true);
                 /** @var Pc|bool|null $dtend */
                 $dtend = $vevent->getDtend(true);
+
                 $rrule = $vevent->getRrule();
                 $summary = $vevent->getSummary() ?? '';
                 if (!empty($filterEventTitle) && !str_contains(mb_strtolower($summary), mb_strtolower($filterEventTitle))) {
@@ -311,22 +313,22 @@ class IcsImport extends AbstractImport
     /**
      * @throws \Exception
      */
-    public function getDateFromPc(Pc $dtend, string $tz): array
+    public function getDateFromPc(Pc $pc, string $tz): array
     {
-        if ($dtend->hasParamKey(IcalInterface::TZID)) {
-            $timezone = $dtend->getParams(IcalInterface::TZID);
-            $date = $dtend->getValue();
+        if ($pc->hasParamKey(IcalInterface::TZID)) {
+            $timezone = $pc->getParams(IcalInterface::TZID);
+            $date = $pc->getValue();
         } else {
-            if ($dtend->getValue()->getTimezone() && $dtend->getValue()->getTimezone()->getName() === $tz) {
-                $timezone = $dtend->getValue()->getTimezone()->getName();
+            if ($pc->getValue()->getTimezone()) {
+                $timezone = $pc->getValue()->getTimezone()->getName();
                 $date = new \DateTime(
-                    $dtend->getValue()->format(DateTimeFactory::$YmdHis),
-                    $dtend->getValue()->getTimezone(),
+                    $pc->getValue()->format(DateTimeFactory::$YmdHis),
+                    $pc->getValue()->getTimezone(),
                 );
             } else {
                 $timezone = $tz;
                 $date = new \DateTime(
-                    $dtend->getValue()->format(DateTimeFactory::$YmdHis),
+                    $pc->getValue()->format(DateTimeFactory::$YmdHis),
                     DateTimeZoneFactory::factory($tz),
                 );
             }
