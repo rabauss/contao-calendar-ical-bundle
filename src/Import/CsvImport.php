@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Cgoit\ContaoCalendarIcalBundle\Import;
 
-use Cgoit\ContaoCalendarIcalBundle\Classes\CsvParser;
+use Cgoit\ContaoCalendarIcalBundle\Import\Csv\CsvParser;
 use Cgoit\ContaoCalendarIcalBundle\Widgets\WidgetTrait;
 use Contao\BackendTemplate;
 use Contao\BackendUser;
