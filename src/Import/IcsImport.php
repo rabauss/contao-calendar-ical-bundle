@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Cgoit\ContaoCalendarIcalBundle\Import;
 
+use Contao\BackendUser;
 use Contao\CalendarEventsModel;
 use Contao\CalendarModel;
 use Contao\Config;
@@ -22,12 +23,6 @@ use Kigkonsult\Icalcreator\Vevent;
 
 class IcsImport extends AbstractImport
 {
-    private string $filterEventTitle = '';
-
-    private string $patternEventTitle = '';
-
-    private string $replacementEventTitle = '';
-
     public function __construct(
         private readonly Connection $db,
         Slug $slug,
@@ -64,12 +59,7 @@ class IcsImport extends AbstractImport
                     new Date($objCalendar->ical_source_end, Config::get('dateFormat')) :
                     new Date(time() + $GLOBALS['calendar_ical']['endDateTimeDifferenceInDays'] * 24 * 3600, Config::get('dateFormat'));
                 $tz = [$objCalendar->ical_timezone, $objCalendar->ical_timezone];
-                $this->filterEventTitle = $objCalendar->ical_filter_event_title;
-                $this->patternEventTitle = $objCalendar->ical_pattern_event_title;
-                $this->replacementEventTitle = $objCalendar->ical_replacement_event_title;
-                $this->importFromWebICS($objCalendar->id, $objCalendar->ical_url, $startDate,
-                    $endDate, $tz, $objCalendar->ical_proxy, $objCalendar->ical_bnpw,
-                    $objCalendar->ical_port);
+                $this->importFromWebICS($objCalendar, $startDate, $endDate, $tz);
                 $this->db->update('tl_calendar', ['tstamp' => time(), 'ical_importing' => ''], ['id' => $objCalendar->id]);
             }
         }
@@ -80,12 +70,8 @@ class IcsImport extends AbstractImport
      *
      * @throws \Exception
      */
-    public function importFromIcsFile(Vcalendar $cal, int $pid, Date $startDate, Date $endDate, array|bool $tz, bool|null $correctTimezone, bool $deleteCalendar = false, int $timeshift = 0): void
+    public function importFromIcsFile(Vcalendar $cal, CalendarModel $objCalendar, Date $startDate, Date $endDate, array|bool $tz, string|null $filterEventTitle, string|null $patternEventTitle, string|null $replacementEventTitle, bool $deleteCalendar = false, int $timeshift = 0): void
     {
-        // TODO check what has to be done with $correctTimezone parameter
-        // $this->cal->sort() was previously in the code. This is quite useless because without arguments this methods
-        // sorts by UID which doesn't give us any benefit.
-        // $this->cal->sort();
         static::loadDataContainer('tl_calendar_events');
 
         $schemaManager = $this->db->createSchemaManager();
@@ -108,11 +94,10 @@ class IcsImport extends AbstractImport
             }
         }
 
-        $this->import('BackendUser', 'User');
         $foundevents = [];
 
-        if ($deleteCalendar && $pid) {
-            $arrEvents = CalendarEventsModel::findByPid($pid);
+        if ($deleteCalendar && !empty($objCalendar->id)) {
+            $arrEvents = CalendarEventsModel::findByPid($objCalendar->id);
             if (!empty($arrEvents)) {
                 foreach ($arrEvents as $event) {
                     $arrColumns = ['ptable=? AND pid=?'];
@@ -138,29 +123,27 @@ class IcsImport extends AbstractImport
             foreach ($eventArray as $vevent) {
                 /** @var Vevent $vevent */
                 $arrFields = $defaultFields;
-                $dtstart = $vevent->getDtstart();
-                /** @var Pc|null $dtstartRow */
-                $dtstartRow = $vevent->getDtstart(true);
-                $dtend = $vevent->getDtend();
-                /** @var Pc|null $dtendRow */
-                $dtendRow = $vevent->getDtend(true);
+                /** @var Pc|bool|null $dtstart */
+                $dtstart = $vevent->getDtstart(true);
+                /** @var Pc|bool|null $dtend */
+                $dtend = $vevent->getDtend(true);
                 $rrule = $vevent->getRrule();
                 $summary = $vevent->getSummary() ?? '';
-                if (!empty($this->filterEventTitle) && !str_contains($summary, (string) $this->filterEventTitle)) {
+                if (!empty($filterEventTitle) && !str_contains(mb_strtolower($summary), mb_strtolower($filterEventTitle))) {
                     continue;
                 }
-                $description = $vevent->getDescription() ?? '';
-                $location = trim($vevent->getLocation() ?? '');
+                $description = $vevent->getDescription() ?: '';
+                $location = trim($vevent->getLocation() ?: '');
                 $uid = $vevent->getUid();
 
                 $arrFields['tstamp'] = time();
-                $arrFields['pid'] = $pid;
+                $arrFields['pid'] = $objCalendar->id;
                 $arrFields['published'] = 1;
-                $arrFields['author'] = $this->User->id ?: 0;
+                $arrFields['author'] = BackendUser::getInstance()->id ?: 0;
 
                 $title = $summary;
-                if (!empty($this->patternEventTitle) && !empty($this->replacementEventTitle)) {
-                    $title = preg_replace($this->patternEventTitle, (string) $this->replacementEventTitle, $summary);
+                if (!empty($patternEventTitle) && !empty($replacementEventTitle)) {
+                    $title = preg_replace($patternEventTitle, $replacementEventTitle, $summary);
                 }
 
                 // set values from vevent
@@ -195,24 +178,22 @@ class IcsImport extends AbstractImport
                         }
                     }
 
-                    if (\count($attendees)) {
+                    if (!empty($attendees)) {
                         $arrFields['cep_participants'] = implode(',', $attendees);
                     }
                 }
 
                 if (\in_array('location_contact', $fieldNames, true)) {
-                    $contact = $vevent->getContact();
-                    if (\is_array($contact)) {
-                        $contacts = [];
+                    $contact = $vevent->getAllContact();
+                    $contacts = [];
 
-                        foreach ($contact as $data) {
-                            if (!empty($data['value'])) {
-                                $contacts[] = $data['value'];
-                            }
+                    foreach ($contact as $c) {
+                        if (!empty($c->getValue())) {
+                            $contacts[] = $c->getValue();
                         }
-                        if (\count($contacts)) {
-                            $arrFields['location_contact'] = implode(',', $contacts);
-                        }
+                    }
+                    if (!empty($contacts)) {
+                        $arrFields['location_contact'] = implode(',', $contacts);
                     }
                 }
 
@@ -223,106 +204,29 @@ class IcsImport extends AbstractImport
                 $arrFields['endTime'] = 0;
                 $timezone = \is_array($tz) ? $tz[1] : null;
 
-                if ($dtstart instanceof \DateTime) {
-                    if ($dtstartRow instanceof Pc) {
-                        if ($dtstartRow->hasParamKey(IcalInterface::TZID)) {
-                            $timezone = $dtstartRow->getParams(IcalInterface::TZID);
-                        } else {
-                            if ($dtstart->getTimezone() && $dtstart->getTimezone()->getName() === $tz[1]) {
-                                $timezone = $dtstart->getTimezone()->getName();
-                                $dtstart = new \DateTime(
-                                    $dtstart->format(DateTimeFactory::$YmdHis),
-                                    $dtstart->getTimezone(),
-                                );
-                            } else {
-                                $dtstart = new \DateTime(
-                                    $dtstart->format(DateTimeFactory::$YmdHis),
-                                    DateTimeZoneFactory::factory($tz[1]),
-                                );
-                            }
-                        }
+                if (!empty($dtstart)) {
+                    [$sDate, $timezone] = $this->getDateFromPc($dtstart, $tz[1]);
 
-                        if (!$dtstartRow->hasParamValue(IcalInterface::DATE)) {
-                            $arrFields['addTime'] = 1;
-                        } else {
-                            $arrFields['addTime'] = 0;
-                        }
+                    if (!$dtstart->hasParamValue(IcalInterface::DATE)) {
+                        $arrFields['addTime'] = 1;
                     } else {
-                        if ($dtstart->getTimezone() && $dtstart->getTimezone()->getName() === $tz[1]) {
-                            $timezone = $dtstart->getTimezone()->getName();
-                            $dtstart = new \DateTime(
-                                $dtstart->format(DateTimeFactory::$YmdHis),
-                                $dtstart->getTimezone(),
-                            );
-                        } else {
-                            $dtstart = new \DateTime(
-                                $dtstart->format(DateTimeFactory::$YmdHis),
-                                DateTimeZoneFactory::factory($tz[1]),
-                            );
-                        }
-
-                        if (!empty($dtstartRow->getParams('VALUE')) && 'DATE' === $dtstartRow->getParams('VALUE')) {
-                            $arrFields['addTime'] = 0;
-                        } else {
-                            $arrFields['addTime'] = 1;
-                        }
+                        $arrFields['addTime'] = 0;
                     }
-                    $arrFields['startDate'] = $dtstart->getTimestamp();
-                    $arrFields['startTime'] = $dtstart->getTimestamp();
+                    $arrFields['startDate'] = $sDate->getTimestamp();
+                    $arrFields['startTime'] = $sDate->getTimestamp();
                 }
-                if ($dtend instanceof \DateTime) {
-                    if ($dtendRow instanceof Pc) {
-                        if ($dtendRow->hasParamKey(IcalInterface::TZID)) {
-                            $timezone = $dtendRow->getParams(IcalInterface::TZID);
-                        } else {
-                            if ($dtend->getTimezone() && $dtend->getTimezone()->getName() === $tz[1]) {
-                                $timezone = $dtend->getTimezone()->getName();
-                                $dtend = new \DateTime(
-                                    $dtend->format(DateTimeFactory::$YmdHis),
-                                    $dtend->getTimezone(),
-                                );
-                            } else {
-                                $dtend = new \DateTime(
-                                    $dtend->format(DateTimeFactory::$YmdHis),
-                                    DateTimeZoneFactory::factory($tz[1]),
-                                );
-                            }
-                        }
+                if (!empty($dtend)) {
+                    [$eDate, $timezone] = $this->getDateFromPc($dtend, $tz[1]);
 
-                        if (1 === $arrFields['addTime']) {
-                            $arrFields['endDate'] = $dtend->getTimestamp();
-                            $arrFields['endTime'] = $dtend->getTimestamp();
-                        } else {
-                            $endDate = (clone $dtend)->modify('- 1 day')->getTimestamp();
-                            $endTime = (clone $dtend)->modify('- 1 second')->getTimestamp();
-
-                            $arrFields['endDate'] = $endDate;
-                            $arrFields['endTime'] = $endTime <= $endDate ? $endTime : $endDate;
-                        }
+                    if (1 === $arrFields['addTime']) {
+                        $arrFields['endDate'] = $eDate->getTimestamp();
+                        $arrFields['endTime'] = $eDate->getTimestamp();
                     } else {
-                        if ($dtend->getTimezone() && $dtend->getTimezone()->getName() === $tz[1]) {
-                            $timezone = $dtend->getTimezone()->getName();
-                            $dtend = new \DateTime(
-                                $dtend->format(DateTimeFactory::$YmdHis),
-                                $dtend->getTimezone(),
-                            );
-                        } else {
-                            $dtend = new \DateTime(
-                                $dtend->format(DateTimeFactory::$YmdHis),
-                                DateTimeZoneFactory::factory($tz[1]),
-                            );
-                        }
+                        $endDate = (clone $eDate)->modify('- 1 day')->getTimestamp();
+                        $endTime = (clone $eDate)->modify('- 1 second')->getTimestamp();
 
-                        if (1 === $arrFields['addTime']) {
-                            $arrFields['endDate'] = $dtend->getTimestamp();
-                            $arrFields['endTime'] = $dtend->getTimestamp();
-                        } else {
-                            $endDate = (clone $dtend)->modify('- 1 day')->getTimestamp();
-                            $endTime = (clone $dtend)->modify('- 1 second')->getTimestamp();
-
-                            $arrFields['endDate'] = $endDate;
-                            $arrFields['endTime'] = $endTime <= $endDate ? $endTime : $endDate;
-                        }
+                        $arrFields['endDate'] = $endDate;
+                        $arrFields['endTime'] = min($endTime, $endDate);
                     }
                 }
 
@@ -378,7 +282,7 @@ class IcsImport extends AbstractImport
                     }
 
                     if ($this->db->insert('tl_calendar_events', $arrFields)) {
-                        $insertID = $this->db->lastInsertId();
+                        $insertID = (int) $this->db->lastInsertId();
 
                         if (\count($eventcontent)) {
                             $step = 128;
@@ -396,12 +300,39 @@ class IcsImport extends AbstractImport
                             }
                         }
 
-                        $alias = $this->generateAlias($arrFields['title'], $insertID, $pid);
+                        $alias = $this->generateAlias($arrFields['title'], $insertID, $objCalendar->id);
                         $this->db->update('tl_calendar_events', ['alias' => $alias], ['id' => $insertID]);
                     }
                 }
             }
         }
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function getDateFromPc(Pc $dtend, string $tz): array
+    {
+        if ($dtend->hasParamKey(IcalInterface::TZID)) {
+            $timezone = $dtend->getParams(IcalInterface::TZID);
+            $date = $dtend->getValue();
+        } else {
+            if ($dtend->getValue()->getTimezone() && $dtend->getValue()->getTimezone()->getName() === $tz) {
+                $timezone = $dtend->getValue()->getTimezone()->getName();
+                $date = new \DateTime(
+                    $dtend->getValue()->format(DateTimeFactory::$YmdHis),
+                    $dtend->getValue()->getTimezone(),
+                );
+            } else {
+                $timezone = $tz;
+                $date = new \DateTime(
+                    $dtend->getValue()->format(DateTimeFactory::$YmdHis),
+                    DateTimeZoneFactory::factory($tz),
+                );
+            }
+        }
+
+        return [$date, $timezone];
     }
 
     protected function downloadURLToTempFile(string $url, string $proxy, string $benutzerpw, int $port): File|null
@@ -456,15 +387,15 @@ class IcsImport extends AbstractImport
     /**
      * @param array<mixed> $timezone
      */
-    private function importFromWebICS(int $pid, string $url, Date $startDate, Date $endDate, array $timezone, string $proxy, string $benutzerpw, int $port): void
+    private function importFromWebICS(CalendarModel $objCalendar, Date $startDate, Date $endDate, array $timezone): void
     {
         $cal = new Vcalendar();
         $cal->setMethod(Vcalendar::PUBLISH);
-        $cal->setXprop(Vcalendar::X_WR_CALNAME, $this->strTitle);
-        $cal->setXprop(Vcalendar::X_WR_CALDESC, $this->strTitle);
+        $cal->setXprop(Vcalendar::X_WR_CALNAME, $objCalendar->title);
+        $cal->setXprop(Vcalendar::X_WR_CALDESC, $objCalendar->title);
 
         /* start parse of local file */
-        $file = $this->downloadURLToTempFile($url, $proxy, $benutzerpw, $port);
+        $file = $this->downloadURLToTempFile($objCalendar->ical_url, $objCalendar->ical_proxy, $objCalendar->ical_bnpw, $objCalendar->ical_port);
         if (null === $file) {
             return;
         }
@@ -479,13 +410,17 @@ class IcsImport extends AbstractImport
 
             return;
         }
-        $tz = $cal->getProperty(Vcalendar::X_WR_TIMEZONE);
+
+        $tz = $cal->getProperty(IcalInterface::X_WR_TIMEZONE);
+        if (false === $tz && null !== $tzComponent = $cal->getComponent(IcalInterface::VTIMEZONE)) {
+            $tz = $tzComponent->getXprop(IcalInterface::X_LIC_LOCATION);
+        }
 
         if (!\is_array($tz) || '' === $tz[1]) {
             $tz = $timezone;
         }
 
-        $this->importFromIcsFile($cal, $pid, $startDate, $endDate, $tz, null, true);
+        $this->importFromIcsFile($cal, $objCalendar, $startDate, $endDate, $tz, $objCalendar->ical_filter_event_title, $objCalendar->ical_pattern_event_title, $objCalendar->ical_replacement_event_title, true);
     }
 
     private function isCurlInstalled(): bool
