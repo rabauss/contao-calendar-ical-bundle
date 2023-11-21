@@ -10,7 +10,7 @@ declare(strict_types=1);
  * @license    LGPL-3.0-or-later
  */
 
-namespace Cgoit\ContaoCalendarIcalBundle\Classes;
+namespace Cgoit\ContaoCalendarIcalBundle\Backend;
 
 use Contao\Backend;
 use Contao\CalendarEventsModel;
@@ -27,7 +27,7 @@ use Kigkonsult\Icalcreator\Util\DateTimeFactory;
 use Kigkonsult\Icalcreator\Vcalendar;
 use Kigkonsult\Icalcreator\Vevent;
 
-class CalendarExport extends Backend
+class CalendarExportController extends Backend
 {
     public function __construct(
         private readonly Connection $db,

@@ -8,7 +8,7 @@ services:
             $db: '@database_connection'
             $slug: '@contao.slug'
             $insertTagParser: '@contao.insert_tag.parser'
-            $calendarExport: '@Cgoit\ContaoCalendarIcalBundle\Classes\CalendarExport'
+            $calendarExport: '@Cgoit\ContaoCalendarIcalBundle\Backend\CalendarExportController'
             $timezoneUtil: '@Cgoit\ContaoCalendarIcalBundle\Util\TimezoneUtil'
 
     _instanceof:

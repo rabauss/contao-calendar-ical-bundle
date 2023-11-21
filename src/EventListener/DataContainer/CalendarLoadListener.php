@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Cgoit\ContaoCalendarIcalBundle\EventListener\DataContainer;
 
-use Cgoit\ContaoCalendarIcalBundle\Classes\CalendarExport;
+use Cgoit\ContaoCalendarIcalBundle\Backend\CalendarExportController;
 use Contao\CalendarModel;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsCallback;
 use Contao\DataContainer;
@@ -20,7 +20,7 @@ use Contao\DataContainer;
 #[AsCallback(table: 'tl_calendar', target: 'config.onload')]
 class CalendarLoadListener
 {
-    public function __construct(private readonly CalendarExport $calendarExport)
+    public function __construct(private readonly CalendarExportController $calendarExport)
     {
     }
 

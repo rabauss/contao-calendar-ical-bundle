@@ -12,13 +12,13 @@ declare(strict_types=1);
 
 namespace Cgoit\ContaoCalendarIcalBundle\EventListener;
 
-use Cgoit\ContaoCalendarIcalBundle\Classes\CalendarExport;
+use Cgoit\ContaoCalendarIcalBundle\Backend\CalendarExportController;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsHook;
 
 #[AsHook('removeOldFeeds')]
 class RemoveOldFeedsListener
 {
-    public function __construct(private readonly CalendarExport $calendarExport)
+    public function __construct(private readonly CalendarExportController $calendarExport)
     {
     }
 
