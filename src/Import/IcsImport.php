@@ -115,9 +115,9 @@ class IcsImport extends AbstractImport
             }
         }
 
-        $eventArray = $cal->selectComponents((int) date('Y', $startDate->tstamp), (int) date('m', $startDate->tstamp),
-            (int) date('d', $startDate->tstamp), (int) date('Y', $endDate->tstamp), (int) date('m', $endDate->tstamp),
-            (int) date('d', $endDate->tstamp), IcalInterface::VEVENT, true);
+        $eventArray = $cal->selectComponents((int) date('Y', (int) $startDate->tstamp), (int) date('m', (int) $startDate->tstamp),
+            (int) date('d', (int) $startDate->tstamp), (int) date('Y', (int) $endDate->tstamp), (int) date('m', (int) $endDate->tstamp),
+            (int) date('d', (int) $endDate->tstamp), IcalInterface::VEVENT, true);
 
         if (\is_array($eventArray)) {
             foreach ($eventArray as $vevent) {
@@ -337,27 +337,29 @@ class IcsImport extends AbstractImport
         return [$date, $timezone];
     }
 
-    protected function downloadURLToTempFile(string $url, string $proxy, string $benutzerpw, int $port): File|null
+    protected function downloadURLToTempFile(string $url, string|null $proxy, string|null $benutzerpw, int|null $port): File|null
     {
         $url = html_entity_decode((string) $url);
 
         if ($this->isCurlInstalled()) {
             $ch = curl_init($url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             if (!empty($proxy)) {
                 curl_setopt($ch, CURLOPT_PROXY, "$proxy");
                 if (!empty($benutzerpw)) {
                     curl_setopt($ch, CURLOPT_PROXYUSERPWD, "$benutzerpw");
                 }
-                curl_setopt($ch, CURLOPT_PROXYPORT, "$port");
+                if (!empty($port)) {
+                    curl_setopt($ch, CURLOPT_PROXYPORT, "$port");
+                }
             }
 
             if (preg_match('/^https/', $url)) {
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
             }
 
-            curl_setopt($ch, CURLOPT_HEADER, 0);
+            curl_setopt($ch, CURLOPT_HEADER, false);
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 
             $content = curl_exec($ch);
