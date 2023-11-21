@@ -10,7 +10,7 @@ declare(strict_types=1);
  * @license    LGPL-3.0-or-later
  */
 
-$GLOBALS['TL_LANG']['tl_content']['ical_download_title']['0'] = 'iCal-Datei herunterladen';
+$GLOBALS['TL_LANG']['tl_content']['ical_download_title'] = 'iCal-Datei herunterladen';
 
 $GLOBALS['TL_LANG']['tl_content']['ical_calendar']['0'] = 'Kalender';
 $GLOBALS['TL_LANG']['tl_content']['ical_calendar']['1'] = 'Bitte wählen Sie einen oder mehrere Kalender aus.';

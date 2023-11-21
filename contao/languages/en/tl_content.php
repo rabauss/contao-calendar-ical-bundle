@@ -10,7 +10,7 @@ declare(strict_types=1);
  * @license    LGPL-3.0-or-later
  */
 
-$GLOBALS['TL_LANG']['tl_content']['ical_download_title']['0'] = 'Download iCal';
+$GLOBALS['TL_LANG']['tl_content']['ical_download_title'] = 'Download iCal';
 
 $GLOBALS['TL_LANG']['tl_content']['ical_calendar'] = ['Calendars', 'Please choose one or more calendars.'];
 $GLOBALS['TL_LANG']['tl_content']['ical_start'] = ['Start date', 'Please enter the start date of the calendar. If you do not enter a date, the actual date will be taken as start date.'];

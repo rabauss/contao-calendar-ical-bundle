@@ -35,8 +35,10 @@ class GetAllEventsListener
             ['1'],
         );
 
-        foreach ($arrCalendars as $calendar) {
-            $this->icsImport->importIcsForCalendar($calendar);
+        if (!empty($arrCalendars)) {
+            foreach ($arrCalendars as $calendar) {
+                $this->icsImport->importIcsForCalendar($calendar);
+            }
         }
 
         return $events;

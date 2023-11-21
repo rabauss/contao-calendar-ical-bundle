@@ -134,9 +134,12 @@ class IcsExport extends Backend
                         $summary = $objCalendar->ical_prefix.' '.$summary;
                     }
                     $vevent->setSummary(html_entity_decode((string) $summary, ENT_QUOTES, 'UTF-8'));
-                    $vevent->setDescription(html_entity_decode(strip_tags(preg_replace('/<br \\/>/', "\n",
-                        $this->insertTagParser->replaceInline($arrEvent['teaser']))),
-                        ENT_QUOTES, 'UTF-8'));
+
+                    if (!empty($arrEvent['teaser'])) {
+                        $vevent->setDescription(html_entity_decode(strip_tags(preg_replace('/<br \\/>/', "\n",
+                            $this->insertTagParser->replaceInline($arrEvent['teaser']))),
+                            ENT_QUOTES, 'UTF-8'));
+                    }
 
                     if (!empty($arrEvent['location'])) {
                         $vevent->setLocation(trim(html_entity_decode((string) $arrEvent['location'], ENT_QUOTES, 'UTF-8')));

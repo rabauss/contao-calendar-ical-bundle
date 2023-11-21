@@ -104,10 +104,6 @@ class CalendarExportController extends Backend
                 continue;
             }
 
-            if (\is_array($GLOBALS['TL_CONFIG']['rootFiles']) && \in_array($file, $GLOBALS['TL_CONFIG']['rootFiles'], true)) {
-                continue;
-            }
-
             $objFile = new File(StringUtil::stripRootDir($shareDir).'/'.$file);
 
             if (

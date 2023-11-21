@@ -1,11 +1,8 @@
-<!-- indexer::stop -->
-<div class="<?= $this->class; ?> block"<?= $this->cssID; ?><?php if ($this->style): ?> style="<?= $this->style; ?>"<?php endif; ?>>
-  <?php if ($this->headline): ?>
 
-  <<?= $this->hl; ?>><?= $this->headline; ?></<?= $this->hl; ?>>
-<?php endif; ?>
+<?php $this->extend('block_searchable'); ?>
+
+<?php $this->block('content'); ?>
 
 <a class="ical" href="<?= $this->href; ?>" title="<?= $this->title; ?>"><?= $this->link; ?></a>
 
-</div>
-<!-- indexer::continue -->
+<?php $this->endblock(); ?>

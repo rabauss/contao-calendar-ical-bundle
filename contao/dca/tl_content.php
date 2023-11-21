@@ -18,7 +18,7 @@ $GLOBALS['TL_DCA']['tl_content']['fields']['ical_calendar'] =
     [
         'exclude' => true,
         'inputType' => 'checkbox',
-        'eval' => ['mandatory' => true, 'multiple' => true, 'tl_class' => 'w100'],
+        'eval' => ['mandatory' => true, 'multiple' => true],
         'sql' => 'blob NULL',
     ];
 
@@ -36,7 +36,7 @@ $GLOBALS['TL_DCA']['tl_content']['fields']['ical_description'] =
         'exclude' => true,
         'search' => true,
         'inputType' => 'textarea',
-        'eval' => ['maxlength' => 1024, 'rows' => 4, 'allowHtml' => false, 'decodeEntities' => true, 'tl_class' => 'w100'],
+        'eval' => ['maxlength' => 1024, 'rows' => 4, 'allowHtml' => false, 'decodeEntities' => true, 'tl_class' => 'clr'],
         'sql' => 'text NULL',
     ];
 
