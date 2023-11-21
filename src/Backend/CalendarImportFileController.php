@@ -147,9 +147,8 @@ class CalendarImportFileController extends Backend implements TimezoneUtilAwareI
             }
         } else {
             if ('tl_import_calendar_confirmation' === Input::post('FORM_SUBMIT') && $this->blnSave) {
-                // TODO prüfen, ob hier die Datümer korrekt gesetzt werden
-                $startDate = new Date((int) Input::post('startDate'), Config::get('dateFormat'));
-                $endDate = new Date((int) Input::post('endDate'), Config::get('dateFormat'));
+                $startDate = new Date(Input::post('startDate'), Config::get('dateFormat'));
+                $endDate = new Date(Input::post('endDate'), Config::get('dateFormat'));
                 $filename = Input::post('icssource');
                 $deleteCalendar = (bool) Input::post('deleteCalendar');
                 $this->filterEventTitle = Input::post('filterEventTitle');
