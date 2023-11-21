@@ -8,7 +8,7 @@
 
 .header_export {
   padding: 2px 0 3px 20px;
-  background-image: url('export.png');
+  background-image: url('export.svg');
   background-position: left center;
   background-repeat: no-repeat;
 }
