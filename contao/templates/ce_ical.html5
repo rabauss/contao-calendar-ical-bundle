@@ -3,6 +3,6 @@
 
 <?php $this->block('content'); ?>
 
-<a class="ical" href="<?= $this->href; ?>" title="<?= $this->title; ?>"><?= $this->link; ?></a>
+<?= $this->downloadElement ?>
 
 <?php $this->endblock(); ?>

@@ -17,7 +17,9 @@ $GLOBALS['TL_LANG']['CTE'][ContentIcalElement::TYPE]['1'] = 'Dieses Element erst
 
 $GLOBALS['TL_LANG']['MSC']['import_calendar']['0'] = 'Kalender importieren';
 $GLOBALS['TL_LANG']['MSC']['import_calendar']['1'] = 'Importieren Sie eine iCal (.ics) Kalender-Datei in Ihren Kalender.';
+
 $GLOBALS['TL_LANG']['MSC']['export_calendar']['0'] = 'Kalender exportieren';
 $GLOBALS['TL_LANG']['MSC']['export_calendar']['1'] = 'Importieren Sie Ihren Kalender in eine iCal (.ics) Kalender-Datei.';
+
 $GLOBALS['TL_LANG']['MSC']['location'] = 'Ort';
 $GLOBALS['TL_LANG']['ERR']['only_one_file'] = 'Bitte wählen Sie nur eine Datei zum Hochladen aus!';

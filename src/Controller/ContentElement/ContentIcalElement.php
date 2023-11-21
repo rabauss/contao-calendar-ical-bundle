@@ -13,7 +13,6 @@ declare(strict_types=1);
 namespace Cgoit\ContaoCalendarIcalBundle\Controller\ContentElement;
 
 use Cgoit\ContaoCalendarIcalBundle\Export\IcsExport;
-use Cgoit\ContaoCalendarIcalBundle\Util\BinaryMemoryFileResponse;
 use Contao\CalendarModel;
 use Contao\ContentModel;
 use Contao\Controller;
@@ -21,6 +20,7 @@ use Contao\CoreBundle\Controller\ContentElement\AbstractContentElementController
 use Contao\CoreBundle\DependencyInjection\Attribute\AsContentElement;
 use Contao\CoreBundle\Exception\ResponseException;
 use Contao\File;
+use Contao\FrontendTemplate;
 use Contao\Input;
 use Contao\StringUtil;
 use Contao\System;
@@ -50,14 +50,10 @@ class ContentIcalElement extends AbstractContentElementController
     protected function getResponse(Template $template, ContentModel $model, Request $request): Response
     {
         System::loadLanguageFile('tl_content');
+        $ical = $this->getIcalFile($model);
 
-        if (!empty(Input::get('ical'))) {
-            $startDate = !empty($model->ical_start) ? (int) $model->ical_start : time();
-            $endDate = !empty($model->ical_end) ? (int) $model->ical_end : time() + 365 * 24 * 3600;
-
-            $arrCalendars = CalendarModel::findMultipleByIds(StringUtil::deserialize($model->ical_calendar, true));
-            if (!empty($arrCalendars)) {
-                $ical = $this->icsExport->getVcalendar($arrCalendars, $startDate, $endDate, $model->ical_title, $model->ical_description, $model->ical_prefix);
+        if (!empty($ical)) {
+            if (!empty(Input::get('ical')) && !empty($ical)) {
                 $filename = StringUtil::sanitizeFileName($model->ical_title).'.ics';
                 $file = new File('system/tmp/'.$filename);
                 $file->write($ical->createCalendar());
@@ -67,12 +63,34 @@ class ContentIcalElement extends AbstractContentElementController
 
                 throw new ResponseException($binaryFileResponse);
             }
+
+            // Generate a general HTML output using the download template
+            $tpl = new FrontendTemplate(empty($model->ical_download_template) ? 'ce_download' : $model->ical_download_template);
+            $tpl->link = !empty($model->linkTitle) ? $model->linkTitle : $GLOBALS['TL_LANG']['tl_content']['ical_download_title'];
+            $tpl->title = $GLOBALS['TL_LANG']['tl_content']['ical_download_title'];
+            $tpl->href = Controller::addToUrl('ical=1');
+            $tpl->filesize = System::getReadableSize(\strlen($ical->createCalendar()));
+            $tpl->mime = 'text/calendar';
+            $tpl->extension = 'ics';
+            $template->downloadElement = $tpl->parse();
+
+            return $template->getResponse();
         }
 
-        $template->link = !empty($model->linkTitle) ? $model->linkTitle : $GLOBALS['TL_LANG']['tl_content']['ical_title'];
-        $template->href = Controller::addToUrl('ical=1');
-        $template->title = $GLOBALS['TL_LANG']['tl_content']['ical_download_title'];
-
+        $template->error = $GLOBALS['TL_LANG']['tl_content']['error_generating_ical_file'];
         return $template->getResponse();
+    }
+
+    private function getIcalFile(ContentModel $model): Vcalendar|null
+    {
+        $startDate = !empty($model->ical_start) ? (int) $model->ical_start : time();
+        $endDate = !empty($model->ical_end) ? (int) $model->ical_end : time() + 365 * 24 * 3600;
+
+        $arrCalendars = CalendarModel::findMultipleByIds(StringUtil::deserialize($model->ical_calendar, true));
+        if (!empty($arrCalendars)) {
+            return $this->icsExport->getVcalendar($arrCalendars, $startDate, $endDate, $model->ical_title, $model->ical_description, $model->ical_prefix);
+        }
+
+        return null;
     }
 }
