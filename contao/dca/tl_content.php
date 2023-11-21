@@ -12,84 +12,61 @@ declare(strict_types=1);
 
 namespace contao\dca;
 
-use Contao\Backend;
-
-$GLOBALS['TL_DCA']['tl_content']['palettes']['ical'] = '{type_legend},type,headline;{calendar_legend},ical_calendar,ical_start,ical_end,ical_prefix;{link_legend},linkTitle;{protected_legend:hide},protected;{expert_legend},{expert_legend:hide},guests,cssID,space';
+$GLOBALS['TL_DCA']['tl_content']['palettes']['ical'] = '{type_legend},type,headline;{calendar_legend},ical_calendar,ical_title,ical_description,ical_prefix,ical_start,ical_end;{link_legend},linkTitle;{protected_legend:hide},protected;{expert_legend},{expert_legend:hide},guests,cssID,space';
 
 $GLOBALS['TL_DCA']['tl_content']['fields']['ical_calendar'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['tl_content']['ical_calendar'],
         'exclude' => true,
         'inputType' => 'checkbox',
-        'options_callback' => ['tl_content_ical', 'getCalendars'],
-        'eval' => ['mandatory' => true, 'multiple' => true],
+        'eval' => ['mandatory' => true, 'multiple' => true, 'tl_class' => 'w100'],
         'sql' => 'blob NULL',
+    ];
+
+$GLOBALS['TL_DCA']['tl_content']['fields']['ical_title'] =
+    [
+        'exclude' => true,
+        'search' => true,
+        'inputType' => 'text',
+        'eval' => ['mandatory' => true, 'maxlength' => 255, 'tl_class' => 'w50 clr'],
+        'sql' => "varchar(255) NOT NULL default ''",
+    ];
+
+$GLOBALS['TL_DCA']['tl_content']['fields']['ical_description'] =
+    [
+        'exclude' => true,
+        'search' => true,
+        'inputType' => 'textarea',
+        'eval' => ['maxlength' => 1024, 'rows' => 4, 'allowHtml' => false, 'decodeEntities' => true, 'tl_class' => 'w100'],
+        'sql' => 'text NULL',
     ];
 
 $GLOBALS['TL_DCA']['tl_content']['fields']['ical_prefix'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['tl_content']['ical_prefix'],
         'exclude' => true,
         'search' => true,
         'inputType' => 'text',
-        'eval' => ['maxlength' => 128, 'tl_class' => 'w50'],
+        'eval' => ['maxlength' => 128, 'tl_class' => 'w50 clr'],
         'sql' => "varchar(128) NOT NULL default ''",
     ];
 
 $GLOBALS['TL_DCA']['tl_content']['fields']['ical_start'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['tl_content']['ical_start'],
         'default' => time(),
         'exclude' => true,
         'filter' => true,
         'flag' => 8,
         'inputType' => 'text',
-        'eval' => ['mandatory' => false, 'maxlength' => 10, 'rgxp' => 'date', 'datepicker' => $this->getDatePickerString(), 'tl_class' => 'w50 wizard'],
+        'eval' => ['mandatory' => false, 'maxlength' => 10, 'rgxp' => 'date', 'datepicker' => true, 'tl_class' => 'w50 clr'],
         'sql' => "varchar(12) NOT NULL default ''",
     ];
 
 $GLOBALS['TL_DCA']['tl_content']['fields']['ical_end'] =
     [
-        'label' => &$GLOBALS['TL_LANG']['tl_content']['ical_end'],
         'default' => time() + 365 * 24 * 3600,
         'exclude' => true,
         'filter' => true,
         'flag' => 8,
         'inputType' => 'text',
-        'eval' => ['mandatory' => false, 'maxlength' => 10, 'rgxp' => 'date', 'datepicker' => $this->getDatePickerString(), 'tl_class' => 'w50 wizard'],
+        'eval' => ['mandatory' => false, 'maxlength' => 10, 'rgxp' => 'date', 'datepicker' => true, 'tl_class' => 'w50'],
         'sql' => "varchar(12) NOT NULL default ''",
     ];
-
-class tl_content extends Backend
-{
-    /**
-     * Import the back end user object.
-     */
-    public function __construct()
-    {
-        $this->import('BackendUser', 'User');
-    }
-
-    /**
-     * Get all calendars and return them as array.
-     *
-     * @return array
-     */
-    public function getCalendars()
-    {
-        if (!$this->User->isAdmin && !\is_array($this->User->calendars)) {
-            return [];
-        }
-
-        $arrForms = [];
-        $objForms = $this->Database->execute('SELECT id, title FROM tl_calendar ORDER BY title');
-
-        while ($objForms->next()) {
-            if ($this->User->isAdmin || \in_array($objForms->id, $this->User->calendars, true)) {
-                $arrForms[$objForms->id] = $objForms->title;
-            }
-        }
-
-        return $arrForms;
-    }
-}

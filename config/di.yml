@@ -9,6 +9,7 @@ services:
             $slug: '@contao.slug'
             $insertTagParser: '@contao.insert_tag.parser'
             $calendarExport: '@Cgoit\ContaoCalendarIcalBundle\Backend\CalendarExportController'
+            $icsExport: '@Cgoit\ContaoCalendarIcalBundle\Export\IcsExport'
             $timezoneUtil: '@Cgoit\ContaoCalendarIcalBundle\Util\TimezoneUtil'
 
     _instanceof:

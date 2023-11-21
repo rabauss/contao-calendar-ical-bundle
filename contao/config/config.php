@@ -13,10 +13,8 @@ declare(strict_types=1);
 use Cgoit\ContaoCalendarIcalBundle\Backend\CalendarImportFileController;
 
 /*
- * Content elements
+ * Backend modules
  */
-$GLOBALS['TL_CTE']['files']['ical'] = 'ContentICal';
-
 $GLOBALS['BE_MOD']['content']['calendar']['import'] = [CalendarImportFileController::class, 'importCalendar'];
 $GLOBALS['BE_MOD']['content']['calendar']['stylesheet'] = 'bundles/cgoitcontaocalendarical/calendar-ical.css';
 
