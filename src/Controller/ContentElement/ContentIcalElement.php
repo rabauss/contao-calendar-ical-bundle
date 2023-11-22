@@ -53,7 +53,7 @@ class ContentIcalElement extends AbstractContentElementController
         $ical = $this->getIcalFile($model);
 
         if (!empty($ical)) {
-            if (!empty(Input::get('ical')) && !empty($ical)) {
+            if (!empty(Input::get('ical'))) {
                 $filename = StringUtil::sanitizeFileName($model->ical_title).'.ics';
                 $file = new File('system/tmp/'.$filename);
                 $file->write($ical->createCalendar());
@@ -78,6 +78,7 @@ class ContentIcalElement extends AbstractContentElementController
         }
 
         $template->error = $GLOBALS['TL_LANG']['tl_content']['error_generating_ical_file'];
+
         return $template->getResponse();
     }
 
