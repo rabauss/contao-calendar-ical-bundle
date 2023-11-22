@@ -16,7 +16,6 @@ use Cgoit\ContaoCalendarIcalBundle\Backend\CalendarImportFileController;
  * Backend modules
  */
 $GLOBALS['BE_MOD']['content']['calendar']['import'] = [CalendarImportFileController::class, 'importCalendar'];
-$GLOBALS['BE_MOD']['content']['calendar']['stylesheet'] = 'bundles/cgoitcontaocalendarical/calendar-ical.css';
 
 /*
  * Add 'ical' to the URL keywords to prevent problems with URL manipulating modules like folderurl
