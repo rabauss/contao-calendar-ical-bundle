@@ -393,6 +393,10 @@ class IcsImport extends AbstractImport
      */
     private function importFromWebICS(CalendarModel $objCalendar, Date $startDate, Date $endDate, array $timezone): void
     {
+        if (empty($objCalendar->ical_url)) {
+            return;
+        }
+
         $cal = new Vcalendar();
         $cal->setMethod(Vcalendar::PUBLISH);
         $cal->setXprop(Vcalendar::X_WR_CALNAME, $objCalendar->title);
@@ -416,7 +420,7 @@ class IcsImport extends AbstractImport
         }
 
         $tz = $cal->getProperty(IcalInterface::X_WR_TIMEZONE);
-        if (false === $tz && null !== $tzComponent = $cal->getComponent(IcalInterface::VTIMEZONE)) {
+        if (false === $tz && !empty($tzComponent = $cal->getComponent(IcalInterface::VTIMEZONE))) {
             $tz = $tzComponent->getXprop(IcalInterface::X_LIC_LOCATION);
         }
 

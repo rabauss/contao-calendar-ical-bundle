@@ -94,7 +94,11 @@ class CsvReader implements \Iterator
     protected function _readLine(): void
     {
         if (!feof($this->fileHandle)) {
-            $this->currentLine = trim(fgets($this->fileHandle));
+            if (false !== $line = fgets($this->fileHandle)) {
+                $this->currentLine = trim($line);
+            } else {
+                $this->currentLine = null;
+            }
         } else {
             $this->currentLine = null;
         }

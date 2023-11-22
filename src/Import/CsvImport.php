@@ -267,7 +267,7 @@ class CsvImport extends AbstractImport
                     }
                 }
 
-                if ($arrFields['startDate'] !== $arrFields['startTime'] || $arrFields['endDate'] !== $arrFields['endTime']) {
+                if ((!empty($arrFields['startTime']) && $arrFields['startDate'] !== $arrFields['startTime']) || (!empty($arrFields['endTime']) && $arrFields['endDate'] !== $arrFields['endTime'])) {
                     $arrFields['addTime'] = 1;
                 }
 
@@ -280,8 +280,12 @@ class CsvImport extends AbstractImport
                 if (0 !== $timeshift) {
                     $arrFields['startDate'] += $timeshift * 3600;
                     $arrFields['endDate'] += $timeshift * 3600;
-                    $arrFields['startTime'] += $timeshift * 3600;
-                    $arrFields['endTime'] += $timeshift * 3600;
+                    if (!empty($arrFields['startTime'])) {
+                        $arrFields['startTime'] += $timeshift * 3600;
+                    }
+                    if (!empty($arrFields['endTime'])) {
+                        $arrFields['endTime'] += $timeshift * 3600;
+                    }
                 }
 
                 $startDate = new Date($importSettings['csv_startdate'], $GLOBALS['TL_CONFIG']['dateFormat']);
