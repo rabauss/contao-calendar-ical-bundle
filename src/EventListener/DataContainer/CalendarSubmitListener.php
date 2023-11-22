@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Cgoit\ContaoCalendarIcalBundle\EventListener\DataContainer;
 
+use Cgoit\ContaoCalendarIcalBundle\Backend\CalendarExportController;
 use Cgoit\ContaoCalendarIcalBundle\Import\IcsImport;
 use Contao\CalendarModel;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsCallback;
@@ -20,8 +21,10 @@ use Contao\DataContainer;
 #[AsCallback(table: 'tl_calendar', target: 'config.onsubmit')]
 class CalendarSubmitListener
 {
-    public function __construct(private readonly IcsImport $icsImport)
-    {
+    public function __construct(
+        private readonly IcsImport $icsImport,
+        private readonly CalendarExportController $calendarExport,
+    ) {
     }
 
     /**
@@ -36,6 +39,7 @@ class CalendarSubmitListener
         $objCalendar = CalendarModel::findById($dc->id);
         if (!empty($objCalendar)) {
             $this->icsImport->importIcsForCalendar($objCalendar);
+            $this->calendarExport->generateSubscriptions($objCalendar);
         }
     }
 }

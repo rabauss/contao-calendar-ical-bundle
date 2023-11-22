@@ -17,11 +17,14 @@ use Contao\DataContainer;
 use Contao\Date;
 use Contao\Environment;
 use Contao\File;
+use Contao\FileUpload;
 use Contao\Input;
 use Contao\Message;
 use Contao\StringUtil;
 use Kigkonsult\Icalcreator\IcalInterface;
 use Kigkonsult\Icalcreator\Vcalendar;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 class CalendarImportFileController extends Backend implements TimezoneUtilAwareInterface
 {
@@ -30,6 +33,9 @@ class CalendarImportFileController extends Backend implements TimezoneUtilAwareI
     private string $filterEventTitle;
 
     public function __construct(
+        private readonly RequestStack $requestStack,
+        private readonly CsrfTokenManagerInterface $csrfTokenManager,
+        private readonly string $csrfTokenName,
         private readonly IcsImport $icsImport,
         private readonly CsvImport $csvImport,
         private readonly string $projectDir,
@@ -56,12 +62,14 @@ class CalendarImportFileController extends Backend implements TimezoneUtilAwareI
 
         // See #4086
         if (!class_exists($class)) {
-            $class = 'FileUpload';
+            $class = FileUpload::class;
         }
 
         static::loadLanguageFile('tl_calendar_events');
         static::loadLanguageFile('tl_files');
         $objTemplate = new BackendTemplate('be_import_calendar');
+
+        $objTemplate->request_token = $this->csrfTokenManager->getToken($this->csrfTokenName)->getValue();
 
         $objUploader = new $class();
         $objTemplate->markup = $objUploader->generateMarkup();
@@ -133,45 +141,48 @@ class CalendarImportFileController extends Backend implements TimezoneUtilAwareI
                             $timeshift);
                     }
                     if ('csv' === $file->extension) {
-                        $this->Session->set('csv_pid', $dc->id);
-                        $this->Session->set('csv_timeshift', $objTemplate->timeshift->value);
-                        $this->Session->set('csv_startdate', $objTemplate->startDate->value);
-                        $this->Session->set('csv_enddate', $objTemplate->endDate->value);
-                        $this->Session->set('csv_deletecalendar', $deleteCalendar);
-                        $this->Session->set('csv_filterEventTitle', $this->filterEventTitle);
-                        $this->Session->set('csv_filename', $file->path);
+                        $this->requestStack
+                            ->getCurrentRequest()
+                            ->getSession()
+                            ->set('calendar_ical.csvimport.settings', serialize([
+                                'csv_pid' => $dc->id,
+                                'csv_timeshift' => $objTemplate->timeshift->value,
+                                'csv_startdate' => $objTemplate->startDate->value,
+                                'csv_enddate' => $objTemplate->endDate->value,
+                                'csv_deletecalendar' => $deleteCalendar,
+                                'csv_filterEventTitle' => $this->filterEventTitle,
+                                'csv_filename' => $file->path,
+                            ]))
+                        ;
 
                         return $this->csvImport->importFromCSVFile();
                     }
                 }
             }
-        } else {
-            if ('tl_import_calendar_confirmation' === Input::post('FORM_SUBMIT') && $this->blnSave) {
-                $startDate = new Date(Input::post('startDate'), Config::get('dateFormat')); // @phpstan-ignore-line
-                $endDate = new Date(Input::post('endDate'), Config::get('dateFormat')); // @phpstan-ignore-line
-                $filename = Input::post('icssource');
-                $deleteCalendar = (bool) Input::post('deleteCalendar');
-                $this->filterEventTitle = Input::post('filterEventTitle');
-                $timeshift = (int) Input::post('timeshift');
+        } elseif ('tl_import_calendar_confirmation' === Input::post('FORM_SUBMIT') && $this->blnSave) {
+            $startDate = new Date(Input::post('startDate'), Config::get('dateFormat')); // @phpstan-ignore-line
+            $endDate = new Date(Input::post('endDate'), Config::get('dateFormat')); // @phpstan-ignore-line
+            $filename = Input::post('icssource');
+            $deleteCalendar = (bool) Input::post('deleteCalendar');
+            $this->filterEventTitle = Input::post('filterEventTitle');
+            $timeshift = (int) Input::post('timeshift');
 
-                if (!empty(Input::post('timezone'))) {
-                    $timezone = Input::post('timezone');
-                    $correctTimezone = null;
-                } else {
-                    $timezone = null;
-                    $correctTimezone = (bool) Input::post('correctTimezone');
-                }
-
-                return $this->importFromICSFile($filename, $objCalendar, $startDate, $endDate, $correctTimezone, $timezone,
-                    $deleteCalendar, $timeshift);
+            if (!empty(Input::post('timezone'))) {
+                $timezone = Input::post('timezone');
+                $correctTimezone = null;
+            } else {
+                $timezone = null;
+                $correctTimezone = (bool) Input::post('correctTimezone');
             }
-            if ('tl_csv_headers' === Input::post('FORM_SUBMIT')) {
-                if ($this->blnSave && !empty(Input::post('import'))) {
-                    return $this->csvImport->importFromCSVFile(false);
-                }
 
-                return $this->csvImport->importFromCSVFile();
+            return $this->importFromICSFile($filename, $objCalendar, $startDate, $endDate, $correctTimezone, $timezone,
+                $deleteCalendar, $timeshift);
+        } elseif ('tl_csv_headers' === Input::post('FORM_SUBMIT')) {
+            if ($this->blnSave && !empty(Input::post('import'))) {
+                return $this->csvImport->importFromCSVFile(false);
             }
+
+            return $this->csvImport->importFromCSVFile();
         }
 
         return $objTemplate->parse();
@@ -180,6 +191,8 @@ class CalendarImportFileController extends Backend implements TimezoneUtilAwareI
     public function getConfirmationForm(string $icssource, Date $startDate, Date $endDate, string|null $tzimport, string $tzsystem, bool $deleteCalendar): string
     {
         $objTemplate = new BackendTemplate('be_import_calendar_confirmation');
+
+        $objTemplate->request_token = $this->csrfTokenManager->getToken($this->csrfTokenName)->getValue();
 
         if (!empty($tzimport)) {
             $objTemplate->confirmationText = sprintf(

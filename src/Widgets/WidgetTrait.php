@@ -6,10 +6,15 @@ namespace Cgoit\ContaoCalendarIcalBundle\Widgets;
 
 use Cgoit\ContaoCalendarIcalBundle\Util\TimezoneUtil;
 use Contao\CheckBox;
+use Contao\Config;
+use Contao\Date;
 use Contao\FileTree;
+use Contao\Image;
 use Contao\Input;
 use Contao\SelectMenu;
+use Contao\StringUtil;
 use Contao\TextField;
+use Contao\Widget;
 
 trait WidgetTrait
 {
@@ -164,7 +169,7 @@ trait WidgetTrait
         }
 
         // Valiate input
-        if ('tl_import_calendar' === $this->Input->post('FORM_SUBMIT')) {
+        if ('tl_import_calendar' === Input::post('FORM_SUBMIT')) {
             $widget->validate();
 
             if ($widget->hasErrors()) {
@@ -225,7 +230,7 @@ trait WidgetTrait
         $widget->required = true;
         $widget->maxlength = 10;
         $widget->rgxp = 'date'; // @phpstan-ignore-line
-        $widget->datepicker = $this->getDatePickerString(); // @phpstan-ignore-line
+        $widget->wizard = $this->getDatePickerWizard($widget);
         $widget->value = $value;
 
         $widget->label = $GLOBALS['TL_LANG']['tl_calendar_events']['importStartDate'][0];
@@ -260,7 +265,7 @@ trait WidgetTrait
         $widget->mandatory = false;
         $widget->maxlength = 10;
         $widget->rgxp = 'date'; // @phpstan-ignore-line
-        $widget->datepicker = $this->getDatePickerString(); // @phpstan-ignore-line
+        $widget->wizard = $this->getDatePickerWizard($widget);
         $widget->value = $value;
 
         $widget->label = $GLOBALS['TL_LANG']['tl_calendar_events']['importEndDate'][0];
@@ -451,5 +456,24 @@ trait WidgetTrait
         }
 
         return $widget;
+    }
+
+    private function getDatePickerWizard(Widget $objWidget): string
+    {
+        return Image::getHtml('assets/datepicker/images/icon.svg', '', 'title="'.StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['datepicker']).'" id="toggle_'.$objWidget->id.'" style="cursor:pointer"').'
+  <script>
+    window.addEvent("domready", function() {
+      new Picker.Date($("ctrl_'.$objWidget->id.'"), {
+        draggable: false,
+        toggle: $("toggle_'.$objWidget->id.'"),
+        format: "'.Date::formatToJs(Config::get('dateFormat')).'",
+        positionOffset: {x:-211,y:-209},
+        pickerClass: "datepicker_bootstrap",
+        useFadeInOut: !Browser.ie,
+        startDay: '.$GLOBALS['TL_LANG']['MSC']['weekOffset'].',
+        titleFormat: "'.$GLOBALS['TL_LANG']['MSC']['titleFormat'].'"
+      });
+    });
+  </script>';
     }
 }

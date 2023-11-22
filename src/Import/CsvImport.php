@@ -17,13 +17,18 @@ use Contao\Environment;
 use Contao\Input;
 use Contao\StringUtil;
 use Doctrine\DBAL\Connection;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 class CsvImport extends AbstractImport
 {
     use WidgetTrait;
 
     public function __construct(
+        private readonly RequestStack $requestStack,
         private readonly Connection $db,
+        private readonly CsrfTokenManagerInterface $csrfTokenManager,
+        private readonly string $csrfTokenName,
         private readonly string $projectDir,
         Slug $slug,
     ) {
@@ -72,7 +77,7 @@ class CsvImport extends AbstractImport
         $encoding = Input::post('encoding');
 
         if (!\is_array($csvvalues)) {
-            $sessiondata = StringUtil::deserialize(Config::get('calendar_ical.csvimport'), true);
+            $sessiondata = StringUtil::deserialize(Config::get('calendar_ical.csvimport.data'), true);
             if (\is_array($sessiondata) && 5 === \count($sessiondata)) {
                 $csvvalues = $sessiondata[0];
                 $calvalues = $sessiondata[1];
@@ -82,7 +87,15 @@ class CsvImport extends AbstractImport
             }
         }
 
-        $data = $this->projectDir.'/'.$this->Session->get('csv_filename');
+        $importSettings = StringUtil::deserialize(
+            $this->requestStack
+                ->getCurrentRequest()
+                ->getSession()
+                ->get('calendar_ical.csvimport.settings'),
+            true,
+        );
+
+        $data = $this->projectDir.'/'.$importSettings['csv_filename'];
         $parser = new CsvParser($data, !empty((string) $encoding) ? $encoding : 'utf8');
         $header = $parser->extractHeader();
 
@@ -96,6 +109,8 @@ class CsvImport extends AbstractImport
         if ($prepare) {
             $preview = $parser->getDataArray(5);
             $objTemplate = new BackendTemplate('be_import_calendar_csv_headers');
+            $objTemplate->request_token = $this->csrfTokenManager->getToken($this->csrfTokenName)->getValue();
+
             $objTemplate->lngFields = $GLOBALS['TL_LANG']['tl_calendar_events']['fields'];
             $objTemplate->lngPreview = $GLOBALS['TL_LANG']['tl_calendar_events']['preview'];
             $objTemplate->check = $GLOBALS['TL_LANG']['tl_calendar_events']['check'];
@@ -129,7 +144,7 @@ class CsvImport extends AbstractImport
             return $objTemplate->parse();
         }
         // save config
-        Config::set('calendar_ical.csvimport', serialize([
+        Config::set('calendar_ical.csvimport.data', serialize([
             $csvvalues,
             $calvalues,
             Input::post('dateFormat'),
@@ -137,8 +152,8 @@ class CsvImport extends AbstractImport
             Input::post('encoding'),
         ]));
 
-        if ($this->Session->get('csv_deletecalendar') && $this->Session->get('csv_pid')) {
-            $objEvents = CalendarEventsModel::findByPid($this->Session->get('csv_pid'));
+        if (!empty($importSettings['csv_deletecalendar']) && !empty($importSettings['csv_pid'])) {
+            $objEvents = CalendarEventsModel::findByPid($importSettings['csv_pid']);
             if (!empty($objEvents)) {
                 foreach ($objEvents as $event) {
                     $arrColumns = ['ptable=? AND pid=?'];
@@ -163,7 +178,7 @@ class CsvImport extends AbstractImport
                 $eventcontent = [];
                 $arrFields = [];
                 $arrFields['tstamp'] = time();
-                $arrFields['pid'] = $this->Session->get('csv_pid');
+                $arrFields['pid'] = $importSettings['csv_pid'];
                 $arrFields['published'] = 1;
                 $arrFields['author'] = BackendUser::getInstance()->id ?: 0;
 
@@ -191,7 +206,7 @@ class CsvImport extends AbstractImport
                                     break;
                                 case 'title':
                                     $arrFields[$value] = StringUtil::specialchars($data[$foundindex]);
-                                    $filterEventTitle = $this->Session->get('csv_filterEventTitle');
+                                    $filterEventTitle = $importSettings['csv_filterEventTitle'];
                                     if (!empty($filterEventTitle) && !str_contains(mb_strtolower(StringUtil::specialchars($data[$foundindex])), mb_strtolower((string) $filterEventTitle))) {
                                         continue 3;
                                     }
@@ -260,7 +275,7 @@ class CsvImport extends AbstractImport
                     $arrFields['title'] = $GLOBALS['TL_LANG']['tl_calendar_events']['untitled'];
                 }
 
-                $timeshift = (int) $this->Session->get('csv_timeshift');
+                $timeshift = (int) $importSettings['csv_timeshift'];
 
                 if (0 !== $timeshift) {
                     $arrFields['startDate'] += $timeshift * 3600;
@@ -269,14 +284,14 @@ class CsvImport extends AbstractImport
                     $arrFields['endTime'] += $timeshift * 3600;
                 }
 
-                $startDate = new Date($this->Session->get('csv_startdate'), $GLOBALS['TL_CONFIG']['dateFormat']);
-                $endDate = new Date($this->Session->get('csv_enddate'), $GLOBALS['TL_CONFIG']['dateFormat']);
+                $startDate = new Date($importSettings['csv_startdate'], $GLOBALS['TL_CONFIG']['dateFormat']);
+                $endDate = new Date($importSettings['csv_enddate'], $GLOBALS['TL_CONFIG']['dateFormat']);
 
                 if (!\array_key_exists('source', $arrFields)) {
                     $arrFields['source'] = 'default';
                 }
 
-                if ($arrFields['endDate'] < $startDate->tstamp || (\strlen((string) $this->Session->get('csv_enddate')) && ($arrFields['startDate'] > $endDate->tstamp))) {
+                if ($arrFields['endDate'] < $startDate->tstamp || (\strlen((string) $importSettings['csv_enddate']) && ($arrFields['startDate'] > $endDate->tstamp))) {
                     // date is not in range
                 } else {
                     $objInsertStmt = $this->Database->prepare('INSERT INTO tl_calendar_events %s')
@@ -303,7 +318,7 @@ class CsvImport extends AbstractImport
                             }
                         }
 
-                        $alias = $this->generateAlias($arrFields['title'], $insertID, (int) $this->Session->get('csv_pid'));
+                        $alias = $this->generateAlias($arrFields['title'], $insertID, (int) $importSettings['csv_pid']);
                         $this->Database->prepare('UPDATE tl_calendar_events SET alias = ? WHERE id = ?')
                             ->execute($alias, $insertID)
                         ;
@@ -313,6 +328,12 @@ class CsvImport extends AbstractImport
                 $done = true;
             }
         }
+
+        $this->requestStack
+            ->getCurrentRequest()
+            ->getSession()
+            ->remove('calendar_ical.csvimport.settings')
+        ;
 
         static::redirect(str_replace('&key=import', '', (string) Environment::get('request')));
 

@@ -201,8 +201,8 @@ class IcsExport extends Backend
                     /*
                     * begin module event_recurrences handling
                     */
-                    if (!empty($arrEvent['repeatExecptions'])) {
-                        $arrSkipDates = StringUtil::deserialize($arrEvent['repeatExecptions'], true);
+                    if (!empty($arrEvent['repeatExceptions'])) {
+                        $arrSkipDates = StringUtil::deserialize($arrEvent['repeatExceptions'], true);
 
                         foreach ($arrSkipDates as $skipDate) {
                             $exTStamp = strtotime((string) $skipDate);

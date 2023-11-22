@@ -5,9 +5,12 @@ services:
         public: false
         bind:
             $projectDir: '%kernel.project_dir%'
+            $requestStack: '@request_stack'
             $db: '@database_connection'
             $slug: '@contao.slug'
             $insertTagParser: '@contao.insert_tag.parser'
+            $csrfTokenManager: '@contao.csrf.token_manager'
+            $csrfTokenName: '%contao.csrf_token_name%'
             $calendarExport: '@Cgoit\ContaoCalendarIcalBundle\Backend\CalendarExportController'
             $icsExport: '@Cgoit\ContaoCalendarIcalBundle\Export\IcsExport'
             $timezoneUtil: '@Cgoit\ContaoCalendarIcalBundle\Util\TimezoneUtil'
