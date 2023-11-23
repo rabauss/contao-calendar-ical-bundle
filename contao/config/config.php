@@ -24,8 +24,3 @@ if (!array_key_exists('urlKeywords', $GLOBALS['TL_CONFIG'])) {
     $GLOBALS['TL_CONFIG'] += ['urlKeywords' => ''];
 }
 $GLOBALS['TL_CONFIG']['urlKeywords'] .= (strlen(trim((string) $GLOBALS['TL_CONFIG']['urlKeywords'])) ? ',' : '').'ical';
-
-/*
- * Module variables
- */
-$GLOBALS['calendar_ical']['endDateTimeDifferenceInDays'] = 365;

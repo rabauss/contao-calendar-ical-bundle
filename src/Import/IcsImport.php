@@ -26,6 +26,7 @@ class IcsImport extends AbstractImport
     public function __construct(
         private readonly Connection $db,
         Slug $slug,
+        private readonly int $defaultEndTimeDifference,
     ) {
         parent::__construct($slug);
     }
@@ -57,7 +58,7 @@ class IcsImport extends AbstractImport
                     new Date(time(), Config::get('dateFormat'));
                 $endDate = !empty((string) $objCalendar->ical_source_end) ?
                     new Date($objCalendar->ical_source_end, Config::get('dateFormat')) :
-                    new Date(time() + $GLOBALS['calendar_ical']['endDateTimeDifferenceInDays'] * 24 * 3600, Config::get('dateFormat'));
+                    new Date(time() + $this->defaultEndTimeDifference * 24 * 3600, Config::get('dateFormat'));
                 $tz = [$objCalendar->ical_timezone, $objCalendar->ical_timezone];
                 $this->importFromWebICS($objCalendar, $startDate, $endDate, $tz);
                 $this->db->update('tl_calendar', ['tstamp' => time(), 'ical_importing' => ''], ['id' => $objCalendar->id]);

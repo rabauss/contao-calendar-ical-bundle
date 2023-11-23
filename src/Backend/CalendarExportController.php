@@ -16,6 +16,7 @@ use Cgoit\ContaoCalendarIcalBundle\Export\IcsExport;
 use Contao\Backend;
 use Contao\CalendarEventsModel;
 use Contao\CalendarModel;
+use Contao\Config;
 use Contao\File;
 use Contao\Folder;
 use Contao\StringUtil;
@@ -25,6 +26,7 @@ class CalendarExportController extends Backend
 {
     public function __construct(
         private readonly IcsExport $icsExport,
+        private readonly int $defaultEndTimeDifference,
     ) {
         parent::__construct();
     }
@@ -128,7 +130,8 @@ class CalendarExportController extends Backend
     private function generateFile(CalendarModel $objCalendar): bool|string
     {
         $startdate = !empty($objCalendar->ical_start) ? (int) $objCalendar->ical_start : time();
-        $enddate = !empty($objCalendar->ical_end) ? (int) $objCalendar->ical_end : (time() + $GLOBALS['calendar_ical']['endDateTimeDifferenceInDays'] * 24 * 3600);
+        $enddate = !empty($objCalendar->ical_end) ? (int) $objCalendar->ical_end :
+            (time() + $this->defaultEndTimeDifference * 24 * 3600);
         $filename = $objCalendar->ical_alias ?? 'calendar'.$objCalendar->id;
         if (
             null !== $ical = $this->icsExport->getVcalendar([$objCalendar], $startdate, $enddate)
