@@ -22,4 +22,9 @@ $GLOBALS['TL_LANG']['MSC']['export_calendar']['0'] = 'Kalender exportieren';
 $GLOBALS['TL_LANG']['MSC']['export_calendar']['1'] = 'Importieren Sie Ihren Kalender in eine iCal (.ics) Kalender-Datei.';
 
 $GLOBALS['TL_LANG']['MSC']['location'] = 'Ort';
+
+$GLOBALS['TL_LANG']['tl_maintenance_jobs']['calendar_ical_regen_subscriptions'][0] = 'ICS-Dateien neu schreiben';
+$GLOBALS['TL_LANG']['tl_maintenance_jobs']['calendar_ical_regen_subscriptions'][1] = 'Schreibt die ICS-Dateien im Ordner <code>shared</code> neu und leert anschließend den Shared-Cache, damit keine ungültigen Links zurückbleiben.';
+
 $GLOBALS['TL_LANG']['ERR']['only_one_file'] = 'Bitte wählen Sie nur eine Datei zum Hochladen aus!';
+$GLOBALS['TL_LANG']['ERR']['ics_parse_error'] = 'Die hochgeladene ics-Datei konnte aufgrund eines Formatfehlers nicht verarbeitet werden.';

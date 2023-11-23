@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Cgoit\ContaoCalendarIcalBundle\EventListener\DataContainer;
 
-use Cgoit\ContaoCalendarIcalBundle\Backend\CalendarExportController;
+use Cgoit\ContaoCalendarIcalBundle\Backend\ExportController;
 use Cgoit\ContaoCalendarIcalBundle\Import\IcsImport;
 use Contao\CalendarModel;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsCallback;
@@ -23,7 +23,7 @@ class CalendarSubmitListener
 {
     public function __construct(
         private readonly IcsImport $icsImport,
-        private readonly CalendarExportController $calendarExport,
+        private readonly ExportController $calendarExport,
     ) {
     }
 

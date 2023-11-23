@@ -21,12 +21,13 @@ use Contao\FileUpload;
 use Contao\Input;
 use Contao\Message;
 use Contao\StringUtil;
+use Contao\System;
 use Kigkonsult\Icalcreator\IcalInterface;
 use Kigkonsult\Icalcreator\Vcalendar;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
-class CalendarImportFileController extends Backend implements TimezoneUtilAwareInterface
+class ImportFileController extends Backend implements TimezoneUtilAwareInterface
 {
     use WidgetTrait;
 
@@ -237,9 +238,14 @@ class CalendarImportFileController extends Backend implements TimezoneUtilAwareI
                 throw new \InvalidArgumentException('Ical content empty');
             }
             $cal->parse($content);
-        } catch (\Exception $e) {
-            Message::addError($e->getMessage());
-            static::redirect(str_replace('&key=import', '', (string) Environment::get('request')));
+        } catch (\Throwable $e) {
+            Message::addError($GLOBALS['TL_LANG']['ERR']['ics_parse_error']);
+            System::getContainer()
+                ->get('monolog.logger.contao.general')
+                ->error('Could not import ics file "'.$filename.'": '.$e->getMessage())
+            ;
+
+            static::reload();
         }
 
         $tz = $cal->getXprop(IcalInterface::X_WR_TIMEZONE);

@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Cgoit\ContaoCalendarIcalBundle\EventListener\DataContainer;
 
-use Cgoit\ContaoCalendarIcalBundle\Backend\CalendarExportController;
+use Cgoit\ContaoCalendarIcalBundle\Backend\ExportController;
 use Contao\CalendarModel;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsCallback;
 use Contao\DataContainer;
@@ -20,7 +20,7 @@ use Contao\DataContainer;
 #[AsCallback(table: 'tl_calendar', target: 'config.ondelete')]
 class CalendarDeleteListener
 {
-    public function __construct(private readonly CalendarExportController $calendarExport)
+    public function __construct(private readonly ExportController $calendarExport)
     {
     }
 
@@ -34,6 +34,6 @@ class CalendarDeleteListener
         }
 
         $objCalendar = CalendarModel::findById($dc->id);
-        $this->calendarExport->removeOldSubscriptions($objCalendar);
+        $this->calendarExport->removeSubscriptions($objCalendar);
     }
 }

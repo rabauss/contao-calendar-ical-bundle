@@ -21,4 +21,9 @@ $GLOBALS['TL_LANG']['MSC']['export_calendar']['0'] = 'Export calendar';
 $GLOBALS['TL_LANG']['MSC']['export_calendar']['1'] = 'Export an iCal (.ics) file with events from your calendar.';
 
 $GLOBALS['TL_LANG']['MSC']['location'] = 'Location';
+
+$GLOBALS['TL_LANG']['tl_maintenance_jobs']['calendar_ical_regen_subscriptions'][0] = 'Recreate the ICS files';
+$GLOBALS['TL_LANG']['tl_maintenance_jobs']['calendar_ical_regen_subscriptions'][1] = 'Recreates the ICS files in the <code>shared</code> folder and then purges the shared cache, so there are no links to deleted resources.';
+
 $GLOBALS['TL_LANG']['ERR']['only_one_file'] = 'Please choose only one file for upload!';
+$GLOBALS['TL_LANG']['ERR']['ics_parse_error'] = 'The uploaded ics file could not be processed due to a format error.';

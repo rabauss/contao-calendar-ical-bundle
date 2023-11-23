@@ -369,6 +369,11 @@ class IcsImport extends AbstractImport
             } else {
                 $responseCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 if ($responseCode >= 400) {
+                    System::getContainer()
+                        ->get('monolog.logger.contao.general')
+                        ->error('Could not download ics file from URL "'.$url.'". Got response code: '.$responseCode)
+                    ;
+
                     $content = null;
                 }
             }
@@ -378,6 +383,11 @@ class IcsImport extends AbstractImport
         }
 
         if (empty($content)) {
+            System::getContainer()
+                ->get('monolog.logger.contao.general')
+                ->warn('The downloaded ics file from URL "'.$url.'" seems to be empty.')
+            ;
+
             return null;
         }
 
@@ -411,10 +421,10 @@ class IcsImport extends AbstractImport
 
         try {
             $cal->parse($file->getContent());
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             System::getContainer()
                 ->get('monolog.logger.contao.general')
-                ->error($e->getMessage())
+                ->error('Could not import ics file from URL "'.$objCalendar->ical_url.'": '.$e->getMessage())
             ;
 
             return;

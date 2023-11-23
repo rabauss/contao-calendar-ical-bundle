@@ -16,13 +16,12 @@ use Cgoit\ContaoCalendarIcalBundle\Export\IcsExport;
 use Contao\Backend;
 use Contao\CalendarEventsModel;
 use Contao\CalendarModel;
-use Contao\Config;
 use Contao\File;
 use Contao\Folder;
 use Contao\StringUtil;
 use Contao\System;
 
-class CalendarExportController extends Backend
+class ExportController extends Backend
 {
     public function __construct(
         private readonly IcsExport $icsExport,
@@ -36,10 +35,6 @@ class CalendarExportController extends Backend
      */
     public function generateSubscriptions(CalendarEventsModel|CalendarModel|null $objCalendar = null): void
     {
-        if (empty($objCalendar)) {
-            return;
-        }
-
         $arrCalendars = [];
         if ($objCalendar instanceof CalendarEventsModel) {
             if (null === $objCalendar = CalendarModel::findById($objCalendar->pid)) {
@@ -47,10 +42,13 @@ class CalendarExportController extends Backend
             }
 
             $arrCalendars[] = $objCalendar;
+            $this->removeSubscriptions($objCalendar);
         } elseif ($objCalendar instanceof CalendarModel) {
             $arrCalendars[] = $objCalendar;
+            $this->removeSubscriptions($objCalendar);
         } else {
-            $arrCalendars = CalendarModel::findBy(['make_ical=?'], ['1']);
+            $arrCalendars = CalendarModel::findAll();
+            $this->removeSubscriptions();
         }
 
         foreach ($arrCalendars as $calendar) {
@@ -58,7 +56,6 @@ class CalendarExportController extends Backend
                 return;
             }
 
-            $this->removeOldSubscriptions($calendar);
             if (false !== $filename = $this->generateFile($calendar)) {
                 System::getContainer()
                     ->get('monolog.logger.contao.general')
@@ -78,23 +75,19 @@ class CalendarExportController extends Backend
      *
      * @return array<string>
      */
-    public function removeOldSubscriptions(CalendarModel|null $objCalendar = null): array
+    public function removeSubscriptions(CalendarModel|null $objCalendar = null): array
     {
         $arrFeeds = [];
-        $useWhitelist = true;
-        if (null === $objCalendar) {
-            $arrCalendars = CalendarModel::findBy(['make_ical=?'], ['1']);
-            $useWhitelist = false;
-        } else {
-            if (empty($objCalendar->make_ical)) {
-                return $arrFeeds;
-            }
+        if (null !== $objCalendar) {
             $arrCalendars = [$objCalendar];
         }
 
         if (!empty($arrCalendars)) {
             foreach ($arrCalendars as $objCalendar) {
-                $arrFeeds[] = $objCalendar->ical_alias ?? 'calendar'.$objCalendar->id;
+                $arrFeeds[] = 'calendar'.$objCalendar->id;
+                if (!empty($objCalendar->ical_alias)) {
+                    $arrFeeds[] = $objCalendar->ical_alias;
+                }
             }
         }
 
@@ -110,7 +103,7 @@ class CalendarExportController extends Backend
 
             if (
                 'ics' === $objFile->extension
-                && $useWhitelist ? \in_array($objFile->filename, $arrFeeds, true) : !\in_array($objFile->filename, $arrFeeds, true)
+                && (empty($arrFeeds) || \in_array($objFile->filename, $arrFeeds, true))
             ) {
                 System::getContainer()
                     ->get('monolog.logger.contao.general')
@@ -132,7 +125,7 @@ class CalendarExportController extends Backend
         $startdate = !empty($objCalendar->ical_start) ? (int) $objCalendar->ical_start : time();
         $enddate = !empty($objCalendar->ical_end) ? (int) $objCalendar->ical_end :
             (time() + $this->defaultEndTimeDifference * 24 * 3600);
-        $filename = $objCalendar->ical_alias ?? 'calendar'.$objCalendar->id;
+        $filename = !empty($objCalendar->ical_alias) ? $objCalendar->ical_alias : 'calendar'.$objCalendar->id;
         if (
             null !== $ical = $this->icsExport->getVcalendar([$objCalendar], $startdate, $enddate)
         ) {

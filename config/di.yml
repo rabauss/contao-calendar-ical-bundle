@@ -12,7 +12,7 @@ services:
             $csrfTokenManager: '@contao.csrf.token_manager'
             $csrfTokenName: '%contao.csrf_token_name%'
             $defaultEndTimeDifference: '%calendar_ical.end_date_time_difference_in_days%'
-            $calendarExport: '@Cgoit\ContaoCalendarIcalBundle\Backend\CalendarExportController'
+            $calendarExport: '@Cgoit\ContaoCalendarIcalBundle\Backend\ExportController'
             $icsExport: '@Cgoit\ContaoCalendarIcalBundle\Export\IcsExport'
             $timezoneUtil: '@Cgoit\ContaoCalendarIcalBundle\Util\TimezoneUtil'
 
@@ -25,5 +25,8 @@ services:
     Cgoit\ContaoCalendarIcalBundle\:
         resource: ../src/*
 
-    Cgoit\ContaoCalendarIcalBundle\Backend\CalendarImportFileController:
+    Cgoit\ContaoCalendarIcalBundle\Backend\ImportFileController:
+        public: true
+
+    Cgoit\ContaoCalendarIcalBundle\Backend\Automator:
         public: true

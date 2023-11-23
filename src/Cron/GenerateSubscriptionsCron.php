@@ -12,14 +12,14 @@ declare(strict_types=1);
 
 namespace Cgoit\ContaoCalendarIcalBundle\Cron;
 
-use Cgoit\ContaoCalendarIcalBundle\Backend\CalendarExportController;
+use Cgoit\ContaoCalendarIcalBundle\Backend\ExportController;
 use Contao\CalendarModel;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsCronJob;
 
 #[AsCronJob('daily')]
 class GenerateSubscriptionsCron
 {
-    public function __construct(private readonly CalendarExportController $calendarExport)
+    public function __construct(private readonly ExportController $calendarExport)
     {
     }
 
