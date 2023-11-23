@@ -1,3 +1,7 @@
+[![Latest Version on Packagist](http://img.shields.io/packagist/v/cgoit/contao-calendar-ical-php8-bundle.svg?style=flat)](https://packagist.org/packages/cgoit/contao-calendar-ical-php8-bundle)
+[![Installations via composer per month](http://img.shields.io/packagist/dm/cgoit/contao-calendar-ical-php8-bundle.svg?style=flat)](https://packagist.org/packages/cgoit/contao-calendar-ical-php8-bundle)
+[![Installations via composer total](http://img.shields.io/packagist/dt/cgoit/contao-calendar-ical-php8-bundle.svg?style=flat)](https://packagist.org/packages/cgoit/contao-calendar-ical-php8-bundle)
+
 Contao 4 and Contao 5 Calendar iCal Bundle
 =======================
 
@@ -23,3 +27,12 @@ Contao 5 support
 ----------------
 
 Starting with version 5 of this bundle Contao 5 is supported. Many things have been refactored in this version, many classes have been split or moved. Therefore, the chance that something does not yet work 100% is quite high. I therefore recommend that all Contao 4 users check very carefully whether version 5 works the way they want it to. Alternatively, version 4 can continue to be used for Contao 4.
+
+#### Important
+
+If you have overwritten the default difference between start and end date in your `localconfig.php` via setting a value for `$GLOBALS['calendar_ical']['endDateTimeDifferenceInDays']` you have to put this value now into your `config.yml`.
+
+```
+cgoit_contao_calendar_ical:
+    end_date_time_difference_in_days: 365
+```
