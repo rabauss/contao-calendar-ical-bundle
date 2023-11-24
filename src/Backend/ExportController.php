@@ -53,7 +53,7 @@ class ExportController extends Backend
 
         foreach ($arrCalendars as $calendar) {
             if (empty($calendar->make_ical)) {
-                return;
+                continue;
             }
 
             if (false !== $filename = $this->generateFile($calendar)) {

@@ -34,23 +34,20 @@ class IcsImport extends AbstractImport
     public function importIcsForCalendar(CalendarModel $objCalendar, bool $force_import = false): void
     {
         if (!empty($objCalendar->ical_source)) {
-            $arrLastchange = $this->db->executeQuery('SELECT MAX(tstamp) lastchange FROM tl_calendar_events WHERE pid = ?', [$objCalendar->id])
-                ->fetchAssociative()
-            ;
-
-            $last_change = $arrLastchange['lastchange'];
-
-            if (0 === $last_change) {
-                $last_change = $objCalendar->tstamp;
+            $last_change = (int) $objCalendar->ical_last_sync;
+            if (empty($last_change)) {
+                $last_change = time();
+                $force_import = true;
             }
 
             if (((time() - $last_change > $objCalendar->ical_cache) && (1 !== $objCalendar->ical_importing || (time() - $objCalendar->tstamp) > 120)) || $force_import) {
-                $this->db->update('tl_calendar', ['tstamp' => time(), 'ical_importing' => '1'], ['id' => $objCalendar->id]);
+                $objCalendar->ical_importing = true;
+                $objCalendar->save();
 
                 // create new from ical file
                 System::getContainer()
                     ->get('monolog.logger.contao.general')
-                    ->error('Reload iCal Web Calendar '.$objCalendar->title.' ('.$objCalendar->id.'): Triggered by '.time().' - '.$last_change.' = '.(time() - $arrLastchange['lastchange']).' > '.$objCalendar->ical_cache)
+                    ->error('Reload iCal Web Calendar '.$objCalendar->title.' ('.$objCalendar->id.'): Triggered by '.time().' - '.$last_change.' = '.(time() - $last_change).' > '.$objCalendar->ical_cache)
                 ;
 
                 $startDate = !empty((string) $objCalendar->ical_source_start) ?
@@ -61,7 +58,11 @@ class IcsImport extends AbstractImport
                     new Date(time() + $this->defaultEndTimeDifference * 24 * 3600, Config::get('dateFormat'));
                 $tz = [$objCalendar->ical_timezone, $objCalendar->ical_timezone];
                 $this->importFromWebICS($objCalendar, $startDate, $endDate, $tz);
-                $this->db->update('tl_calendar', ['tstamp' => time(), 'ical_importing' => ''], ['id' => $objCalendar->id]);
+
+                $objCalendar->tstamp = time();
+                $objCalendar->ical_importing = false;
+                $objCalendar->ical_last_sync = time();
+                $objCalendar->save();
             }
         }
     }
