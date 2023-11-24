@@ -13,32 +13,32 @@ declare(strict_types=1);
 namespace Cgoit\ContaoCalendarIcalBundle\EventListener\DataContainer;
 
 use Cgoit\ContaoCalendarIcalBundle\Backend\ExportController;
-use Cgoit\ContaoCalendarIcalBundle\Import\IcsImport;
 use Contao\CalendarModel;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsCallback;
 use Contao\DataContainer;
 
-#[AsCallback(table: 'tl_calendar', target: 'config.onsubmit')]
-class CalendarSubmitListener
+#[AsCallback(table: 'tl_calendar', target: 'fields.ical_alias.save')]
+class CalendarIcalAliasSaveListener
 {
-    public function __construct(
-        private readonly IcsImport $icsImport,
-        private readonly ExportController $calendarExport,
-    ) {
+    public function __construct(private readonly ExportController $calendarExport)
+    {
     }
 
-    public function __invoke(DataContainer $dc): void
+    /**
+     * Update the RSS feed.
+     */
+    public function __invoke(mixed $value, DataContainer $dc): mixed
     {
         if (!$dc->id) {
-            return;
+            return $value;
         }
 
         $objCalendar = CalendarModel::findById($dc->id);
-        if (!empty($objCalendar)) {
-            $objCalendar->refresh();
 
-            $this->icsImport->importIcsForCalendar($objCalendar);
-            $this->calendarExport->generateSubscriptions($objCalendar);
+        if (null !== $objCalendar && $value !== $objCalendar->ical_alias) {
+            $this->calendarExport->removeSubscriptions($objCalendar);
         }
+
+        return $value;
     }
 }

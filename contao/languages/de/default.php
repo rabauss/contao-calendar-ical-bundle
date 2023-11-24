@@ -21,6 +21,8 @@ $GLOBALS['TL_LANG']['MSC']['import_calendar']['1'] = 'Importieren Sie eine iCal 
 $GLOBALS['TL_LANG']['MSC']['export_calendar']['0'] = 'Kalender exportieren';
 $GLOBALS['TL_LANG']['MSC']['export_calendar']['1'] = 'Importieren Sie Ihren Kalender in eine iCal (.ics) Kalender-Datei.';
 
+$GLOBALS['TL_LANG']['MSC']['copy_to_clipboard'] = 'Link zur ics Datei in die Zwischenablage kopieren.';
+
 $GLOBALS['TL_LANG']['MSC']['location'] = 'Ort';
 
 $GLOBALS['TL_LANG']['tl_maintenance_jobs']['calendar_ical_regen_subscriptions'][0] = 'ICS-Dateien neu schreiben';

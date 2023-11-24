@@ -15,6 +15,7 @@ namespace Cgoit\ContaoCalendarIcalBundle\Import;
 use Contao\Backend;
 use Contao\CalendarEventsModel;
 use Contao\CalendarModel;
+use Contao\ContentModel;
 use Contao\CoreBundle\Slug\Slug;
 
 class AbstractImport extends Backend
@@ -25,24 +26,46 @@ class AbstractImport extends Backend
     }
 
     /**
+     * @param array<mixed> $eventcontent
+     */
+    protected function addEventContent(CalendarEventsModel $objEvent, array $eventcontent): void
+    {
+        $step = 128;
+
+        foreach ($eventcontent as $content) {
+            $cm = new ContentModel();
+            $cm->tstamp = time();
+            $cm->pid = $objEvent->id;
+            $cm->ptable = 'tl_calendar_events';
+            $cm->sorting = $step;
+            $step *= 2;
+            $cm->type = 'text';
+            $cm->text = $content;
+            $cm->save();
+        }
+    }
+
+    /**
      * Auto-generate the event alias if it has not been set yet.
      */
-    protected function generateAlias(string $varValue, int $id, int $pid): string
+    protected function generateAlias(CalendarEventsModel $objEvent): CalendarEventsModel
     {
-        $aliasExists = static function (string $alias) use ($id): bool {
+        $aliasExists = static function (string $alias) use ($objEvent): bool {
             $objEvents = CalendarEventsModel::findBy(
                 ['alias=?', 'id!=?'],
-                [$alias, $id],
+                [$alias, $objEvent->id],
             );
 
             return null !== $objEvents && $objEvents->count() > 0;
         };
 
         // Generate the alias if there is none
-        return $this->slug->generate(
-            $varValue,
-            CalendarModel::findByPk($pid)->jumpTo,
+        $objEvent->alias = $this->slug->generate(
+            $objEvent->title,
+            CalendarModel::findByPk($objEvent->pid)->jumpTo,
             $aliasExists,
         );
+
+        return $objEvent->save();
     }
 }

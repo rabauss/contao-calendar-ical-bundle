@@ -79,8 +79,6 @@ class IcsImport extends AbstractImport
         $fields = $schemaManager->listTableColumns('tl_calendar_events');
 
         $fieldNames = [];
-        $arrFields = [];
-        $defaultFields = [];
 
         foreach ($fields as $field) {
             if ('id' !== $field->getName()) {
@@ -89,11 +87,7 @@ class IcsImport extends AbstractImport
         }
 
         // Get all default values for new entries
-        foreach ($GLOBALS['TL_DCA']['tl_calendar_events']['fields'] as $k => $v) {
-            if (isset($v['default'])) {
-                $defaultFields[$k] = \is_array($v['default']) ? serialize($v['default']) : $v['default'];
-            }
-        }
+        $defaultFields = array_filter($GLOBALS['TL_DCA']['tl_calendar_events']['fields'], static fn ($val) => isset($val['default']));
 
         $foundevents = [];
 
@@ -121,9 +115,20 @@ class IcsImport extends AbstractImport
             (int) date('d', (int) $endDate->tstamp), IcalInterface::VEVENT, true);
 
         if (\is_array($eventArray)) {
+            /** @var Vevent $vevent */
             foreach ($eventArray as $vevent) {
-                /** @var Vevent $vevent */
-                $arrFields = $defaultFields;
+                $objEvent = new CalendarEventsModel();
+                $objEvent->tstamp = time();
+                $objEvent->pid = $objCalendar->id;
+                $objEvent->published = true;
+
+                foreach ($defaultFields as $field => $value) {
+                    $objEvent->{$field} = $value['default'];
+                }
+
+                if (!empty(BackendUser::getInstance())) {
+                    $objEvent->author = BackendUser::getInstance()->id;
+                }
 
                 /** @var Pc|bool|null $dtstart */
                 $dtstart = $vevent->getDtstart(true);
@@ -139,18 +144,13 @@ class IcsImport extends AbstractImport
                 $location = trim($vevent->getLocation() ?: '');
                 $uid = $vevent->getUid();
 
-                $arrFields['tstamp'] = time();
-                $arrFields['pid'] = $objCalendar->id;
-                $arrFields['published'] = 1;
-                $arrFields['author'] = BackendUser::getInstance()->id ?: 0;
-
                 $title = $summary;
                 if (!empty($patternEventTitle) && !empty($replacementEventTitle)) {
                     $title = preg_replace($patternEventTitle, $replacementEventTitle, $summary);
                 }
 
                 // set values from vevent
-                $arrFields['title'] = !empty($title) ? $title : $summary;
+                $objEvent->title = !empty($title) ? $title : $summary;
                 $cleanedup = \strlen($description) ? $description : $summary;
                 $cleanedup = preg_replace('/[\\r](\\\\)n(\\t){0,1}/ims', '', $cleanedup);
                 $cleanedup = preg_replace('/[\\r\\n]/ims', '', $cleanedup);
@@ -165,7 +165,7 @@ class IcsImport extends AbstractImport
                 if (!empty($location)) {
                     if (\in_array('location', $fieldNames, true)) {
                         $location = preg_replace('/(\\\\r)|(\\\\n)/im', "\n", $location);
-                        $arrFields['location'] = $location;
+                        $objEvent->location = $location;
                     } else {
                         $location = preg_replace('/(\\\\r)|(\\\\n)/im', '<br />', $location);
                         $eventcontent[] = '<p><strong>'.$GLOBALS['TL_LANG']['MSC']['location'].':</strong> '.$location.'</p>';
@@ -182,7 +182,7 @@ class IcsImport extends AbstractImport
                     }
 
                     if (!empty($attendees)) {
-                        $arrFields['cep_participants'] = implode(',', $attendees);
+                        $objEvent->cep_participants = implode(',', $attendees);
                     }
                 }
 
@@ -196,53 +196,53 @@ class IcsImport extends AbstractImport
                         }
                     }
                     if (!empty($contacts)) {
-                        $arrFields['location_contact'] = implode(',', $contacts);
+                        $objEvent->location_contact = implode(',', $contacts);
                     }
                 }
 
-                $arrFields['startDate'] = 0;
-                $arrFields['startTime'] = 0;
-                $arrFields['addTime'] = '';
-                $arrFields['endDate'] = 0;
-                $arrFields['endTime'] = 0;
+                $objEvent->startDate = null;
+                $objEvent->startTime = null;
+                $objEvent->addTime = false;
+                $objEvent->endDate = null;
+                $objEvent->endTime = null;
                 $timezone = \is_array($tz) ? $tz[1] : null;
 
                 if (!empty($dtstart)) {
                     [$sDate, $timezone] = $this->getDateFromPc($dtstart, $tz[1]);
 
                     if (!$dtstart->hasParamValue(IcalInterface::DATE)) {
-                        $arrFields['addTime'] = 1;
+                        $objEvent->addTime = true;
                     } else {
-                        $arrFields['addTime'] = 0;
+                        $objEvent->addTime = false;
                     }
-                    $arrFields['startDate'] = $sDate->getTimestamp();
-                    $arrFields['startTime'] = $sDate->getTimestamp();
+                    $objEvent->startDate = $sDate->getTimestamp();
+                    $objEvent->startTime = $sDate->getTimestamp();
                 }
                 if (!empty($dtend)) {
                     [$eDate, $timezone] = $this->getDateFromPc($dtend, $tz[1]);
 
-                    if (1 === $arrFields['addTime']) {
-                        $arrFields['endDate'] = $eDate->getTimestamp();
-                        $arrFields['endTime'] = $eDate->getTimestamp();
+                    if (true === $objEvent->addTime) {
+                        $objEvent->endDate = $eDate->getTimestamp();
+                        $objEvent->endTime = $eDate->getTimestamp();
                     } else {
                         $endDate = (clone $eDate)->modify('- 1 day')->getTimestamp();
                         $endTime = (clone $eDate)->modify('- 1 second')->getTimestamp();
 
-                        $arrFields['endDate'] = $endDate;
-                        $arrFields['endTime'] = min($endTime, $endDate);
+                        $objEvent->endDate = $endDate;
+                        $objEvent->endTime = min($endTime, $endDate);
                     }
                 }
 
                 if (0 !== $timeshift) {
-                    $arrFields['startDate'] += $timeshift * 3600;
-                    $arrFields['endDate'] += $timeshift * 3600;
-                    $arrFields['startTime'] += $timeshift * 3600;
-                    $arrFields['endTime'] += $timeshift * 3600;
+                    $objEvent->startDate += $timeshift * 3600;
+                    $objEvent->endDate += $timeshift * 3600;
+                    $objEvent->startTime += $timeshift * 3600;
+                    $objEvent->endTime += $timeshift * 3600;
                 }
 
                 if (\is_array($rrule)) {
-                    $arrFields['recurring'] = 1;
-                    $arrFields['recurrences'] = \array_key_exists('COUNT', $rrule) ? $rrule['COUNT'] : 0;
+                    $objEvent->recurring = true;
+                    $objEvent->recurrences = \array_key_exists('COUNT', $rrule) ? $rrule['COUNT'] : 0;
                     $repeatEach = [];
 
                     switch ($rrule['FREQ']) {
@@ -261,51 +261,35 @@ class IcsImport extends AbstractImport
                     }
 
                     $repeatEach['value'] = $rrule['INTERVAL'] ?? 1;
-                    $arrFields['repeatEach'] = serialize($repeatEach);
-                    $arrFields['repeatEnd'] = $this->getRepeatEnd($arrFields, $rrule, $repeatEach, $timezone, $timeshift);
+                    $objEvent->repeatEach = serialize($repeatEach);
+                    $objEvent->repeatEnd = $this->getRepeatEnd($objEvent, $rrule, $repeatEach, $timezone, $timeshift);
 
-                    if (isset($rrule['WKST']) && \is_array($rrule['WKST'])) {
+                    if (\in_array('repeatWeekday', $fieldNames, true) && isset($rrule['WKST']) && \is_array($rrule['WKST'])) {
                         $weekdays = ['MO' => 1, 'TU' => 2, 'WE' => 3, 'TH' => 4, 'FR' => 5, 'SA' => 6, 'SU' => 0];
                         $mapWeekdays = static fn (string $value): ?int => $weekdays[$value] ?? null;
-                        $arrFields['repeatWeekday'] = serialize(array_map($mapWeekdays, $rrule['WKST']));
+                        $objEvent->repeatWeekday = serialize(array_map($mapWeekdays, $rrule['WKST']));
                     }
                 }
-                $this->handleRecurringExceptions($arrFields, $vevent, $timezone, $timeshift);
+                $this->handleRecurringExceptions($objEvent, $fieldNames, $vevent, $timezone, $timeshift);
 
                 if (!isset($foundevents[$uid])) {
                     $foundevents[$uid] = 0;
                 }
                 ++$foundevents[$uid];
 
-                $arrFields['description'] = $uid;
+                $objEvent->description = $uid;
 
                 if ($foundevents[$uid] <= 1) {
-                    if (\array_key_exists('singleSRC', $arrFields) && '' === $arrFields['singleSRC']) {
-                        $arrFields['singleSRC'] = null;
+                    if ('' === $objEvent->singleSRC) {
+                        $objEvent->singleSRC = null;
                     }
 
-                    if ($this->db->insert('tl_calendar_events', $arrFields)) {
-                        $insertID = (int) $this->db->lastInsertId();
-
-                        if (\count($eventcontent)) {
-                            $step = 128;
-
-                            foreach ($eventcontent as $content) {
-                                $cm = new ContentModel();
-                                $cm->tstamp = time();
-                                $cm->pid = $insertID;
-                                $cm->ptable = 'tl_calendar_events';
-                                $cm->sorting = $step;
-                                $step *= 2;
-                                $cm->type = 'text';
-                                $cm->text = $content;
-                                $cm->save();
-                            }
-                        }
-
-                        $alias = $this->generateAlias($arrFields['title'], $insertID, $objCalendar->id);
-                        $this->db->update('tl_calendar_events', ['alias' => $alias], ['id' => $insertID]);
+                    $objEvent = $objEvent->save();
+                    if (!empty($eventcontent)) {
+                        $this->addEventContent($objEvent, $eventcontent);
                     }
+
+                    $this->generateAlias($objEvent);
                 }
             }
         }
@@ -448,13 +432,12 @@ class IcsImport extends AbstractImport
     }
 
     /**
-     * @param array<mixed> $arrFields
      * @param array<mixed> $rrule
      * @param array<mixed> $repeatEach
      *
      * @throws \Exception
      */
-    private function getRepeatEnd(array $arrFields, array $rrule, array $repeatEach, string $timezone, int $timeshift = 0): int
+    private function getRepeatEnd(CalendarEventsModel $objEvent, array $rrule, array $repeatEach, string $timezone, int $timeshift = 0): int
     {
         if (($until = $rrule[IcalInterface::UNTIL] ?? null) instanceof \DateTime) {
             // convert UNTIL date to current timezone
@@ -471,41 +454,41 @@ class IcsImport extends AbstractImport
             return $timestamp;
         }
 
-        if (0 === (int) $arrFields['recurrences']) {
+        if (0 === $objEvent->recurrences) {
             return (int) min(4_294_967_295, PHP_INT_MAX);
         }
 
         if (isset($repeatEach['unit'], $repeatEach['value'])) {
-            $arg = $repeatEach['value'] * $arrFields['recurrences'];
+            $arg = $repeatEach['value'] * $objEvent->recurrences;
             $unit = $repeatEach['unit'];
 
             $strtotime = '+ '.$arg.' '.$unit;
 
-            return (int) strtotime($strtotime, $arrFields['endTime']);
+            return (int) strtotime($strtotime, $objEvent->endTime);
         }
 
         return 0;
     }
 
     /**
-     * @param array  $arrFields
-     * @param Vevent $vevent
-     * @param string $timezone
-     * @param int    $timeshift
+     * @param array<mixed> $fieldNames
+     * @param Vevent       $vevent
+     * @param string       $timezone
+     * @param int          $timeshift
      */
-    private function handleRecurringExceptions(&$arrFields, $vevent, $timezone, $timeshift): void
+    private function handleRecurringExceptions(CalendarEventsModel $objEvent, array $fieldNames, $vevent, $timezone, $timeshift): void
     {
         if (
-            !\array_key_exists('useExceptions', $arrFields)
-            && !\array_key_exists('repeatExceptions', $arrFields)
-            && !\array_key_exists('exceptionList', $arrFields)
+            !\array_key_exists('useExceptions', $fieldNames)
+            && !\array_key_exists('repeatExceptions', $fieldNames)
+            && !\array_key_exists('exceptionList', $fieldNames)
         ) {
             return;
         }
 
-        $arrFields['useExceptions'] = 0;
-        $arrFields['repeatExceptions'] = null;
-        $arrFields['exceptionList'] = null;
+        $objEvent->useExceptions = 0;
+        $objEvent->repeatExceptions = null;
+        $objEvent->exceptionList = null;
 
         $exDates = [];
 
@@ -533,9 +516,9 @@ class IcsImport extends AbstractImport
             return;
         }
 
-        $arrFields['useExceptions'] = 1;
+        $objEvent->useExceptions = true;
         ksort($exDates);
-        $arrFields['exceptionList'] = $exDates;
-        $arrFields['repeatExceptions'] = array_values($exDates);
+        $objEvent->exceptionList = $exDates;
+        $objEvent->repeatExceptions = array_values($exDates);
     }
 }

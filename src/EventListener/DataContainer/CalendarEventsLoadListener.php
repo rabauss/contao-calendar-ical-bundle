@@ -14,12 +14,13 @@ namespace Cgoit\ContaoCalendarIcalBundle\EventListener\DataContainer;
 
 use Cgoit\ContaoCalendarIcalBundle\Backend\ExportController;
 use Contao\CalendarEventsModel;
+use Contao\CalendarModel;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsCallback;
 use Contao\DataContainer;
 use Symfony\Component\HttpFoundation\RequestStack;
 
-#[AsCallback(table: 'tl_calendar_events', target: 'config.onsubmit')]
-class CalendarEventsSubmitListener
+#[AsCallback(table: 'tl_calendar_events', target: 'config.onload')]
+class CalendarEventsLoadListener
 {
     public function __construct(
         private readonly RequestStack $requestStack,
@@ -27,23 +28,21 @@ class CalendarEventsSubmitListener
     ) {
     }
 
-    /**
-     * Update the RSS feed.
-     */
-    public function __invoke(DataContainer $dc): void
+    public function __invoke(DataContainer|null $dc): void
     {
-        $request = $this->requestStack->getCurrentRequest();
-        $act = $request->get('act');
-        $field = $request->get('field');
-        if (!$dc->id || 'toggle' !== $act || 'published' !== $field) {
+        $act = $this->requestStack->getCurrentRequest()->get('act');
+        if (null === $dc || !$dc->id || 'toggle' === $act || 'delete' === $act) {
             return;
         }
 
-        $calendarEvent = CalendarEventsModel::findById($dc->id);
+        $objModel = match ($act) {
+            null => CalendarModel::findById($dc->id),
+            default => CalendarEventsModel::findById($dc->id),
+        };
 
-        if (null !== $calendarEvent) {
-            $calendarEvent->refresh();
-            $this->calendarExport->generateSubscriptions($calendarEvent);
+        if (null !== $objModel && !empty($objModel->tstamp)) {
+            $objModel->refresh();
+            $this->calendarExport->generateSubscriptions($objModel);
         }
     }
 }
