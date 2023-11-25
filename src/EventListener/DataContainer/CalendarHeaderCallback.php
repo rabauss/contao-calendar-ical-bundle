@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Cgoit\ContaoCalendarIcalBundle\EventListener\DataContainer;
 
 use Contao\CalendarModel;
+use Contao\CoreBundle\ContaoCoreBundle;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsCallback;
 use Contao\DataContainer;
 use Contao\Environment;
@@ -48,17 +49,28 @@ class CalendarHeaderCallback
                     'title' => $GLOBALS['TL_LANG']['MSC']['copy_to_clipboard'],
                 ];
 
-                $content = sprintf(
-                    '%s<a href="%s" target="_blank" title="%s" data-to-clipboard="%s">%s</a> ',
-                    $file,
-                    $clipboard['content'],
-                    StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['copy_to_clipboard']),
-                    StringUtil::specialchars(json_encode($clipboard, JSON_THROW_ON_ERROR)),
-                    Image::getHtml('share.svg', $GLOBALS['TL_LANG']['MSC']['copy_to_clipboard']),
-                );
+                if (str_starts_with(ContaoCoreBundle::getVersion(), '5')) {
+                    $content = sprintf(
+                        '%s&nbsp;<a href="%s" target="_blank" title="%s" data-controller="contao--clipboard" data-contao--clipboard-content-value="%s" data-action="contao--clipboard#write:prevent">%s</a> ',
+                        $file,
+                        $clipboard['content'],
+                        StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['copy_to_clipboard']),
+                        $clipboard['content'],
+                        Image::getHtml('share.svg', $GLOBALS['TL_LANG']['MSC']['copy_to_clipboard']),
+                    );
+                } else {
+                    $content = sprintf(
+                        '%s&nbsp;<a href="%s" target="_blank" title="%s" data-to-clipboard="%s">%s</a> ',
+                        $file,
+                        $clipboard['content'],
+                        StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['copy_to_clipboard']),
+                        StringUtil::specialchars(json_encode($clipboard, JSON_THROW_ON_ERROR)),
+                        Image::getHtml('share.svg', $GLOBALS['TL_LANG']['MSC']['copy_to_clipboard']),
+                    );
+                    $GLOBALS['TL_JAVASCRIPT'][] = 'bundles/contaocore/clipboard.min.js';
+                }
 
                 $labels[$GLOBALS['TL_LANG']['tl_calendar']['ical_alias']['0']] = $content;
-                $GLOBALS['TL_JAVASCRIPT'][] = 'bundles/contaocore/clipboard.min.js';
             }
             if (!empty($objCalendar->ical_source)) {
                 $labels[$GLOBALS['TL_LANG']['tl_calendar']['ical_url']['0']] = $objCalendar->ical_url;
