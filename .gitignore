@@ -1,20 +1,17 @@
-# OS
-.DS_Store
-Thumbs.db
+# Composer
+/composer.lock
+/vendor/
 
-# IDEs
-.buildpath
-.project
-.settings/
-.build/
-.external*/
+# PhpUnit
+/.phpunit.result.cache
+/phpunit.xml
+
+# Tools
+/tools/*/vendor
+
+# PHPStorm
 .idea/
-nbproject/
 
-# composer related
-vendor/
-composer.lock
-composer.phar
+# Mac
+.DS_Store
 
-# build
-build/
