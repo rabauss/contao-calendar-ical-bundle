@@ -7,23 +7,23 @@
     "calendar",
     "contao"
   ],
-  "version": "4.5.1",
+  "version": "5.0.0",
   "license": "LGPL-3.0-or-later",
   "authors": [
-      {
-          "name": "Helmut Schottmüller",
-          "homepage": "https://github.com/hschottm"
-      },
-      {
-          "name": "Daniel Kiesel",
-          "email": "daniel@craffft.de",
-          "homepage": "http://craffft.de"
-      },
-      {
-          "name": "Carsten Götzinger",
-          "email": "info@cgo-it.de",
-          "homepage": "https://cgo-it.de"
-      }
+    {
+      "name": "Helmut Schottmüller",
+      "homepage": "https://github.com/hschottm"
+    },
+    {
+      "name": "Daniel Kiesel",
+      "email": "daniel@craffft.de",
+      "homepage": "http://craffft.de"
+    },
+    {
+      "name": "Carsten Götzinger",
+      "email": "info@cgo-it.de",
+      "homepage": "https://cgo-it.de"
+    }
   ],
   "support": {
     "issues": "https://github.com/cgoIT/contao-calendar-ical-bundle/issues",
@@ -54,27 +54,27 @@
   },
   "autoload-dev": {
     "psr-4": {
-       "Cgoit\\ContaoCalendarIcalBundle\\Tests\\": "tests/"
+      "Cgoit\\ContaoCalendarIcalBundle\\Tests\\": "tests/"
     }
   },
-    "config": {
-        "allow-plugins": {
-            "contao-components/installer": true,
-            "contao/manager-plugin": true,
-            "php-http/discovery": true,
-            "terminal42/contao-build-tools": true
-        }
-    },
+  "config": {
+    "allow-plugins": {
+      "contao-components/installer": true,
+      "contao/manager-plugin": true,
+      "php-http/discovery": true,
+      "terminal42/contao-build-tools": true
+    }
+  },
   "extra": {
     "contao-manager-plugin": "Cgoit\\ContaoCalendarIcalBundle\\ContaoManager\\Plugin"
   },
-    "scripts": {
-        "all": [
-            "@unit-tests",
-            "@cs-fixer",
-            "@rector",
-            "@phpstan"
-        ],
-        "unit-tests": "@php vendor/bin/phpunit --colors=always"
-    }
+  "scripts": {
+    "all": [
+      "@unit-tests",
+      "@cs-fixer",
+      "@rector",
+      "@phpstan"
+    ],
+    "unit-tests": "@php vendor/bin/phpunit --colors=always"
+  }
 }
