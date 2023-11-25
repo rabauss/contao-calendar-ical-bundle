@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Cgoit\ContaoCalendarIcalBundle\Import;
 
-use _PHPStan_532094bc1\Nette\PhpGenerator\Closure;
 use Contao\BackendUser;
 use Contao\CalendarEventsModel;
 use Contao\CalendarModel;

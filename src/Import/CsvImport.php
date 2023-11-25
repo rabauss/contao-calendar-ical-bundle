@@ -193,6 +193,10 @@ class CsvImport extends AbstractImport
                     $objEvent->{$field} = $varValue;
                 }
 
+                if (!empty(BackendUser::getInstance())) {
+                    $objEvent->author = BackendUser::getInstance()->id;
+                }
+
                 foreach ($calvalues as $idx => $value) {
                     if (!empty($value)) {
                         $indexfield = $csvvalues[$idx];
