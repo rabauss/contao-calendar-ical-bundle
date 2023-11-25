@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Cgoit\ContaoCalendarIcalBundle\Import;
 
+use _PHPStan_532094bc1\Nette\PhpGenerator\Closure;
 use Contao\BackendUser;
 use Contao\CalendarEventsModel;
 use Contao\CalendarModel;
@@ -33,7 +34,7 @@ class IcsImport extends AbstractImport
 
     public function importIcsForCalendar(CalendarModel $objCalendar, bool $force_import = false): void
     {
-        if (!empty($objCalendar->ical_source)) {
+        if (!empty($objCalendar->ical_source) && !empty($objCalendar->ical_url)) {
             $last_change = (int) $objCalendar->ical_last_sync;
             if (empty($last_change)) {
                 $last_change = time();
@@ -124,7 +125,11 @@ class IcsImport extends AbstractImport
                 $objEvent->published = true;
 
                 foreach ($defaultFields as $field => $value) {
-                    $objEvent->{$field} = $value['default'];
+                    $varValue = $value['default'];
+                    if ($varValue instanceof \Closure) {
+                        $varValue = $varValue();
+                    }
+                    $objEvent->{$field} = $varValue;
                 }
 
                 if (!empty(BackendUser::getInstance())) {

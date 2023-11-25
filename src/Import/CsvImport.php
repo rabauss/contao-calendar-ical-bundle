@@ -186,11 +186,11 @@ class CsvImport extends AbstractImport
                 $objEvent->published = true;
 
                 foreach ($defaultFields as $field => $value) {
-                    $objEvent->{$field} = $value['default'];
-                }
-
-                if (!empty(BackendUser::getInstance())) {
-                    $objEvent->author = BackendUser::getInstance()->id;
+                    $varValue = $value['default'];
+                    if ($varValue instanceof \Closure) {
+                        $varValue = $varValue();
+                    }
+                    $objEvent->{$field} = $varValue;
                 }
 
                 foreach ($calvalues as $idx => $value) {
