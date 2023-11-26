@@ -27,7 +27,6 @@ class ExportController extends Backend
         private readonly IcsExport $icsExport,
         private readonly int $defaultEndTimeDifference,
     ) {
-        parent::__construct();
     }
 
     /**

@@ -22,7 +22,6 @@ class AbstractImport extends Backend
 {
     public function __construct(protected readonly Slug $slug)
     {
-        parent::__construct();
     }
 
     /**

@@ -23,7 +23,6 @@ class IcsExport extends Backend
         private readonly Connection $db,
         private readonly InsertTagParser $insertTagParser,
     ) {
-        parent::__construct();
     }
 
     /**
