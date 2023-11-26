@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.0.1](https://github.com/cgoIT/contao-calendar-ical-bundle/compare/v5.0.0...v5.0.1) (2023-11-26)
+
+
+### Bug Fixes
+
+* default values are closures in contao 5 ([ddedb47](https://github.com/cgoIT/contao-calendar-ical-bundle/commit/ddedb4718bf57cf49f951539fb503ff748758da8))
+* fix database migration via contao-manager in contao 5 ([31ac4ac](https://github.com/cgoIT/contao-calendar-ical-bundle/commit/31ac4ac93664e3ba93643f064543cb72b9bf6b18))
+
 ## [5.0.0](https://github.com/cgoIT/contao-calendar-ical-bundle/compare/4.5.1...v5.0.0) (2023-11-25)
 
 
