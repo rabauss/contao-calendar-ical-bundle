@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.0.2](https://github.com/cgoIT/contao-calendar-ical-bundle/compare/v5.0.1...v5.0.2) (2023-11-28)
+
+
+### Bug Fixes
+
+* don't store the uid in the description field ([4a0af93](https://github.com/cgoIT/contao-calendar-ical-bundle/commit/4a0af93e1603e484f90b30ab8c2011021fb6011b))
+
 ## [5.0.1](https://github.com/cgoIT/contao-calendar-ical-bundle/compare/v5.0.0...v5.0.1) (2023-11-26)
 
 
