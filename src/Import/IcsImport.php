@@ -282,8 +282,6 @@ class IcsImport extends AbstractImport
                 }
                 ++$foundevents[$uid];
 
-                $objEvent->description = $uid;
-
                 if ($foundevents[$uid] <= 1) {
                     if ('' === $objEvent->singleSRC) {
                         $objEvent->singleSRC = null;
