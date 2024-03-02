@@ -46,8 +46,7 @@ trait WidgetTrait
         $widget->value = $value;
 
         if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen((string) $GLOBALS['TL_LANG']['tl_calendar_events']['importDeleteCalendar'][1])) {
-            // TODO prüfen, ob der Text hin muss
-            // @phpstan-ignore-next-line
+            // TODO prüfen, ob der Text hin muss @phpstan-ignore-next-line
             $widget->help = $GLOBALS['TL_LANG']['tl_calendar_events']['importDeleteCalendar'][1];
         }
 
@@ -81,8 +80,7 @@ trait WidgetTrait
         ];
 
         if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen((string) $GLOBALS['TL_LANG']['tl_calendar_events']['correctTimezone'][1])) {
-            // TODO prüfen, ob der Text hin muss
-            // @phpstan-ignore-next-line
+            // TODO prüfen, ob der Text hin muss @phpstan-ignore-next-line
             $widget->help = $GLOBALS['TL_LANG']['tl_calendar_events']['correctTimezone'][1];
         }
 
@@ -113,8 +111,7 @@ trait WidgetTrait
         $widget->label = $GLOBALS['TL_LANG']['tl_calendar_events']['timezone'][0];
 
         if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen((string) $GLOBALS['TL_LANG']['tl_calendar_events']['timezone'][1])) {
-            // TODO prüfen, ob der Text hin muss
-            // @phpstan-ignore-next-line
+            // TODO prüfen, ob der Text hin muss @phpstan-ignore-next-line
             $widget->help = $GLOBALS['TL_LANG']['tl_calendar_events']['timezone'][1];
         }
 
@@ -163,8 +160,7 @@ trait WidgetTrait
                 (string) $GLOBALS['TL_LANG']['tl_calendar_events']['importFilterEventTitle'][1],
             )
         ) {
-            // TODO prüfen, ob der Text hin muss
-            // @phpstan-ignore-next-line
+            // TODO prüfen, ob der Text hin muss @phpstan-ignore-next-line
             $widget->help = $GLOBALS['TL_LANG']['tl_calendar_events']['importFilterEventTitle'][1];
         }
 
@@ -200,8 +196,7 @@ trait WidgetTrait
         $widget->label = $GLOBALS['TL_LANG']['tl_calendar_events']['icssource'][0];
 
         if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen((string) $GLOBALS['TL_LANG']['tl_calendar_events']['icssource'][1])) {
-            // TODO prüfen, ob der Text hin muss
-            // @phpstan-ignore-next-line
+            // TODO prüfen, ob der Text hin muss @phpstan-ignore-next-line
             $widget->help = $GLOBALS['TL_LANG']['tl_calendar_events']['icssource'][1];
         }
 
@@ -236,8 +231,7 @@ trait WidgetTrait
         $widget->label = $GLOBALS['TL_LANG']['tl_calendar_events']['importStartDate'][0];
 
         if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen((string) $GLOBALS['TL_LANG']['tl_calendar_events']['importStartDate'][1])) {
-            // TODO prüfen, ob der Text hin muss
-            // @phpstan-ignore-next-line
+            // TODO prüfen, ob der Text hin muss @phpstan-ignore-next-line
             $widget->help = $GLOBALS['TL_LANG']['tl_calendar_events']['importStartDate'][1];
         }
 
@@ -271,8 +265,7 @@ trait WidgetTrait
         $widget->label = $GLOBALS['TL_LANG']['tl_calendar_events']['importEndDate'][0];
 
         if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen((string) $GLOBALS['TL_LANG']['tl_calendar_events']['importEndDate'][1])) {
-            // TODO prüfen, ob der Text hin muss
-            // @phpstan-ignore-next-line
+            // TODO prüfen, ob der Text hin muss @phpstan-ignore-next-line
             $widget->help = $GLOBALS['TL_LANG']['tl_calendar_events']['importEndDate'][1];
         }
 
@@ -305,8 +298,7 @@ trait WidgetTrait
         $widget->label = $GLOBALS['TL_LANG']['tl_calendar_events']['importTimeShift'][0];
 
         if ($GLOBALS['TL_CONFIG']['showHelp'] && \strlen((string) $GLOBALS['TL_LANG']['tl_calendar_events']['importTimeShift'][1])) {
-            // TODO prüfen, ob der Text hin muss
-            // @phpstan-ignore-next-line
+            // TODO prüfen, ob der Text hin muss @phpstan-ignore-next-line
             $widget->help = $GLOBALS['TL_LANG']['tl_calendar_events']['importTimeShift'][1];
         }
 
@@ -336,8 +328,7 @@ trait WidgetTrait
         $widget->label = $GLOBALS['TL_LANG']['tl_calendar_events']['importDateFormat'][0];
 
         if ($GLOBALS['TL_CONFIG']['showHelp'] && !empty((string) $GLOBALS['TL_LANG']['tl_calendar_events']['importDateFormat'][1])) {
-            // TODO prüfen, ob der Text hin muss
-            // @phpstan-ignore-next-line
+            // TODO prüfen, ob der Text hin muss @phpstan-ignore-next-line
             $widget->help = $GLOBALS['TL_LANG']['tl_calendar_events']['importDateFormat'][1];
         }
 
@@ -367,8 +358,7 @@ trait WidgetTrait
         $widget->label = $GLOBALS['TL_LANG']['tl_calendar_events']['importTimeFormat'][0];
 
         if ($GLOBALS['TL_CONFIG']['showHelp'] && !empty((string) $GLOBALS['TL_LANG']['tl_calendar_events']['importTimeFormat'][1])) {
-            // TODO prüfen, ob der Text hin muss
-            // @phpstan-ignore-next-line
+            // TODO prüfen, ob der Text hin muss @phpstan-ignore-next-line
             $widget->help = $GLOBALS['TL_LANG']['tl_calendar_events']['importTimeFormat'][1];
         }
 
@@ -395,8 +385,7 @@ trait WidgetTrait
         $widget->label = $GLOBALS['TL_LANG']['tl_calendar_events']['encoding'][0];
 
         if ($GLOBALS['TL_CONFIG']['showHelp'] && !empty((string) $GLOBALS['TL_LANG']['tl_calendar_events']['encoding'][1])) {
-            // TODO prüfen, ob der Text hin muss
-            // @phpstan-ignore-next-line
+            // TODO prüfen, ob der Text hin muss @phpstan-ignore-next-line
             $widget->help = $GLOBALS['TL_LANG']['tl_calendar_events']['encoding'][1];
         }
 

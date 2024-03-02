@@ -47,8 +47,8 @@ class CsvReader implements \Iterator
         $this->close();
     }
 
-    // You should not have to call it unless you need to
-    // explicitly free the file descriptor
+    // You should not have to call it unless you need to explicitly free the
+    // file descriptor
     public function close(): void
     {
         if ($this->fileHandle) {

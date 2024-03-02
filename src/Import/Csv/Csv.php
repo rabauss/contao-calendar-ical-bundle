@@ -5,7 +5,7 @@ declare(strict_types=1);
 /*
  * This file is part of cgoit\contao-calendar-ical-php8-bundle for Contao Open Source CMS.
  *
- * @copyright  Copyright (c) 2023, cgoIT
+ * @copyright  Copyright (c) 2024, cgoIT
  * @author     cgoIT <https://cgo-it.de>
  * @license    LGPL-3.0-or-later
  */
@@ -78,10 +78,8 @@ class Csv
         return $string;
     }
 
-    // checks if a string ends with an unescaped quote
-    // 'string"' => true
-    // 'string""' => false
-    // 'string"""' => true
+    // checks if a string ends with an unescaped quote 'string"' => true 'string""'
+    // => false 'string"""' => true
     public static function _hasEndQuote(string $token): bool
     {
         $len = \strlen($token);
