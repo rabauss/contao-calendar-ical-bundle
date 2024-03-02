@@ -67,4 +67,25 @@ class AbstractImport extends Backend
 
         return $objEvent->save();
     }
+
+    protected function deleteEvents($events): void
+    {
+        if (empty($events)) {
+            return;
+        }
+
+        foreach ($events as $event) {
+            $columns = ['ptable=? AND pid=?'];
+            $values = ['tl_calendar_events', $event->id];
+            $content = ContentModel::findBy($columns, $values);
+
+            if ($content) {
+                while ($content->next()) {
+                    $content->delete();
+                }
+            }
+
+            $event->delete();
+        }
+    }
 }

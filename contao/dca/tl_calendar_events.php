@@ -26,3 +26,9 @@ $GLOBALS['TL_DCA']['tl_calendar_events']['fields']['icssource'] = [
     'label' => &$GLOBALS['TL_LANG']['tl_content']['source'],
     'eval' => ['fieldType' => 'radio', 'files' => true, 'filesOnly' => true, 'extensions' => 'ics,csv'],
 ];
+
+$GLOBALS['TL_DCA']['tl_calendar_events']['fields']['ical_uuid'] = [
+    'inputType' => 'text',
+    'eval' => ['maxlength' => 255, 'tl_class' => 'long'],
+    'sql' => "varchar(255) NOT NULL default ''",
+];

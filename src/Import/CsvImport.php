@@ -10,7 +10,6 @@ use Contao\BackendTemplate;
 use Contao\BackendUser;
 use Contao\CalendarEventsModel;
 use Contao\Config;
-use Contao\ContentModel;
 use Contao\CoreBundle\Slug\Slug;
 use Contao\Date;
 use Contao\Environment;
@@ -154,19 +153,7 @@ class CsvImport extends AbstractImport
 
         if (!empty($importSettings['csv_deletecalendar']) && !empty($importSettings['csv_pid'])) {
             $objEvents = CalendarEventsModel::findByPid($importSettings['csv_pid']);
-            if (!empty($objEvents)) {
-                foreach ($objEvents as $event) {
-                    $arrColumns = ['ptable=? AND pid=?'];
-                    $arrValues = ['tl_calendar_events', $event->id];
-                    $content = ContentModel::findBy($arrColumns, $arrValues);
-                    if ($content) {
-                        while ($content->next()) {
-                            $content->delete();
-                        }
-                    }
-                    $event->delete();
-                }
-            }
+            $this->deleteEvents($objEvents);
         }
 
         $done = false;
