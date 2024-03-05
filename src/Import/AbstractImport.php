@@ -17,6 +17,7 @@ use Contao\CalendarEventsModel;
 use Contao\CalendarModel;
 use Contao\ContentModel;
 use Contao\CoreBundle\Slug\Slug;
+use Contao\Model\Collection;
 
 class AbstractImport extends Backend
 {
@@ -68,7 +69,12 @@ class AbstractImport extends Backend
         return $objEvent->save();
     }
 
-    protected function deleteEvents($events): void
+    /**
+     * Delete calendar events and associated content.
+     *
+     * @param Collection<CalendarEventsModel>|array<CalendarEventsModel>|null $events The event(s) to be deleted
+     */
+    protected function deleteEvents(Collection|array|null $events): void
     {
         if (empty($events)) {
             return;
