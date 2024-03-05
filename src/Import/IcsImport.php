@@ -8,7 +8,6 @@ use Contao\BackendUser;
 use Contao\CalendarEventsModel;
 use Contao\CalendarModel;
 use Contao\Config;
-use Contao\ContentModel;
 use Contao\CoreBundle\Slug\Slug;
 use Contao\Date;
 use Contao\File;
@@ -92,23 +91,14 @@ class IcsImport extends AbstractImport
 
         $foundevents = [];
 
-        if ($deleteCalendar && !empty($objCalendar->id)) {
-            $arrEvents = CalendarEventsModel::findByPid($objCalendar->id);
-            if (!empty($arrEvents)) {
-                foreach ($arrEvents as $event) {
-                    $arrColumns = ['ptable=? AND pid=?'];
-                    $arrValues = ['tl_calendar_events', $event->id];
-                    $content = ContentModel::findBy($arrColumns, $arrValues);
+        $arrEvents = !empty($objCalendar->id) ? CalendarEventsModel::findByPid($objCalendar->id) : [];
+        $eventsDictionary = [];
 
-                    if ($content) {
-                        while ($content->next()) {
-                            $content->delete();
-                        }
-                    }
-
-                    $event->delete();
-                }
+        foreach ($arrEvents as $event) {
+            if (empty($event->ical_uuid)) {
+                $event->ical_uuid = uniqid('', true);
             }
+            $eventsDictionary[$event->ical_uuid] = $event;
         }
 
         $eventArray = $cal->selectComponents((int) date('Y', (int) $startDate->tstamp), (int) date('m', (int) $startDate->tstamp),
@@ -118,7 +108,15 @@ class IcsImport extends AbstractImport
         if (\is_array($eventArray)) {
             /** @var Vevent $vevent */
             foreach ($eventArray as $vevent) {
-                $objEvent = new CalendarEventsModel();
+                // Use the existing event with matching uuid
+                $uid = $vevent->getUid();
+                if (isset($eventsDictionary[$uid])) {
+                    $objEvent = $eventsDictionary[$uid];
+                    unset($eventsDictionary[$uid]);
+                } else {
+                    $objEvent = new CalendarEventsModel();
+                    $objEvent->ical_uuid = $uid;
+                }
                 $objEvent->tstamp = time();
                 $objEvent->pid = $objCalendar->id;
                 $objEvent->published = true;
@@ -131,9 +129,7 @@ class IcsImport extends AbstractImport
                     $objEvent->{$field} = $varValue;
                 }
 
-                if (!empty(BackendUser::getInstance())) {
-                    $objEvent->author = BackendUser::getInstance()->id;
-                }
+                $objEvent->author = BackendUser::getInstance()->id;
 
                 /** @var Pc|bool|null $dtstart */
                 $dtstart = $vevent->getDtstart(true);
@@ -147,7 +143,6 @@ class IcsImport extends AbstractImport
                 }
                 $description = $vevent->getDescription() ?: '';
                 $location = trim($vevent->getLocation() ?: '');
-                $uid = $vevent->getUid();
 
                 $title = $summary;
                 if (!empty($patternEventTitle) && !empty($replacementEventTitle)) {
@@ -158,8 +153,8 @@ class IcsImport extends AbstractImport
                 $objEvent->title = !empty($title) ? $title : $summary;
                 $cleanedup = \strlen($description) ? $description : $summary;
                 $cleanedup = preg_replace('/[\\r](\\\\)n(\\t){0,1}/ims', '', $cleanedup);
-                $cleanedup = preg_replace('/[\\r\\n]/ims', '', $cleanedup);
-                $cleanedup = str_replace('\\n', '<br />', $cleanedup);
+                $cleanedup = preg_replace('/[\\r\\n]/ims', '', (string) $cleanedup);
+                $cleanedup = str_replace('\\n', '<br />', (string) $cleanedup);
                 $eventcontent = [];
 
                 if (\strlen($cleanedup)) {
@@ -271,7 +266,7 @@ class IcsImport extends AbstractImport
 
                     if (\in_array('repeatWeekday', $fieldNames, true) && isset($rrule['WKST']) && \is_array($rrule['WKST'])) {
                         $weekdays = ['MO' => 1, 'TU' => 2, 'WE' => 3, 'TH' => 4, 'FR' => 5, 'SA' => 6, 'SU' => 0];
-                        $mapWeekdays = static fn (string $value): ?int => $weekdays[$value] ?? null;
+                        $mapWeekdays = static fn (string $value): int|null => $weekdays[$value] ?? null;
                         $objEvent->repeatWeekday = serialize(array_map($mapWeekdays, $rrule['WKST']));
                     }
                 }
@@ -295,6 +290,10 @@ class IcsImport extends AbstractImport
                     $this->generateAlias($objEvent);
                 }
             }
+        }
+
+        if ($deleteCalendar) {
+            $this->deleteEvents($eventsDictionary);
         }
     }
 
@@ -327,7 +326,7 @@ class IcsImport extends AbstractImport
 
     protected function downloadURLToTempFile(string $url, string|null $proxy, string|null $benutzerpw, int|null $port): File|null
     {
-        $url = html_entity_decode((string) $url);
+        $url = html_entity_decode($url);
 
         if ($this->isCurlInstalled()) {
             $ch = curl_init($url);

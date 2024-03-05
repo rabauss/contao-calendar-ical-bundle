@@ -5,7 +5,7 @@ declare(strict_types=1);
 /*
  * This file is part of cgoit\contao-calendar-ical-php8-bundle for Contao Open Source CMS.
  *
- * @copyright  Copyright (c) 2023, cgoIT
+ * @copyright  Copyright (c) 2024, cgoIT
  * @author     cgoIT <https://cgo-it.de>
  * @license    LGPL-3.0-or-later
  */
@@ -23,7 +23,7 @@ class Csv
     public static function parseString(string $string, string $separator = ','): array
     {
         $values = [];
-        $string = str_replace("\r\n", '', (string) $string); // eat the traling new line, if any
+        $string = str_replace("\r\n", '', $string); // eat the traling new line, if any
 
         if ('' === $string) {
             return $values;
@@ -66,7 +66,7 @@ class Csv
 
     public static function escapeString(string $string): string
     {
-        $string = str_replace('"', '""', (string) $string);
+        $string = str_replace('"', '""', $string);
 
         if (
             str_contains($string, '"') || str_contains($string, ',') || str_contains($string,
@@ -78,10 +78,8 @@ class Csv
         return $string;
     }
 
-    // checks if a string ends with an unescaped quote
-    // 'string"' => true
-    // 'string""' => false
-    // 'string"""' => true
+    // checks if a string ends with an unescaped quote 'string"' => true 'string""'
+    // => false 'string"""' => true
     public static function _hasEndQuote(string $token): bool
     {
         $len = \strlen($token);
