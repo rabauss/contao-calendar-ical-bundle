@@ -11,7 +11,6 @@ use Contao\Config;
 use Contao\CoreBundle\InsertTag\InsertTagParser;
 use Contao\Model\Collection;
 use Contao\StringUtil;
-use Doctrine\DBAL\Connection;
 use Kigkonsult\Icalcreator\IcalInterface;
 use Kigkonsult\Icalcreator\Util\DateTimeFactory;
 use Kigkonsult\Icalcreator\Vcalendar;
