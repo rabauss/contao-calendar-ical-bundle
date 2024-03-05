@@ -1,5 +1,24 @@
 # Changelog
 
+## [5.1.0](https://github.com/cgoIT/contao-calendar-ical-bundle/compare/v5.0.2...v5.1.0) (2024-03-05)
+
+
+### Features
+
+* better handling for existing events. events are not fully deleted and reimported but mapped via the event uid, fix ecs and phpstan findings ([0fe487b](https://github.com/cgoIT/contao-calendar-ical-bundle/commit/0fe487bbb68bdc5df56fdf0ef46796f1a11405f4))
+
+
+### Bug Fixes
+
+* ecs and phpstan findings ([10739cc](https://github.com/cgoIT/contao-calendar-ical-bundle/commit/10739cc3bcc0d144257b14c0f4c3ec687348131b))
+
+
+### Miscellaneous Chores
+
+* automatic rector changes ([d41ed3c](https://github.com/cgoIT/contao-calendar-ical-bundle/commit/d41ed3cfd0b5ad6570f201eda0104c0bfc193b9f))
+* **ci:** add php 8.3 to version matrix ([e0c8f12](https://github.com/cgoIT/contao-calendar-ical-bundle/commit/e0c8f12cee00db18a0746d9d12de8f996f942fd5))
+* fix phpstan errors ([ed2998f](https://github.com/cgoIT/contao-calendar-ical-bundle/commit/ed2998f31209d79e46b8b9086e873b0071185b4a))
+
 ## [5.0.2](https://github.com/cgoIT/contao-calendar-ical-bundle/compare/v5.0.1...v5.0.2) (2023-11-28)
 
 
