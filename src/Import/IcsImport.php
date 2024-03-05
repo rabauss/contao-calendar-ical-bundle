@@ -129,9 +129,7 @@ class IcsImport extends AbstractImport
                     $objEvent->{$field} = $varValue;
                 }
 
-                if (!empty(BackendUser::getInstance())) {
-                    $objEvent->author = BackendUser::getInstance()->id;
-                }
+                $objEvent->author = BackendUser::getInstance()->id;
 
                 /** @var Pc|bool|null $dtstart */
                 $dtstart = $vevent->getDtstart(true);
@@ -155,8 +153,8 @@ class IcsImport extends AbstractImport
                 $objEvent->title = !empty($title) ? $title : $summary;
                 $cleanedup = \strlen($description) ? $description : $summary;
                 $cleanedup = preg_replace('/[\\r](\\\\)n(\\t){0,1}/ims', '', $cleanedup);
-                $cleanedup = preg_replace('/[\\r\\n]/ims', '', $cleanedup);
-                $cleanedup = str_replace('\\n', '<br />', $cleanedup);
+                $cleanedup = preg_replace('/[\\r\\n]/ims', '', (string) $cleanedup);
+                $cleanedup = str_replace('\\n', '<br />', (string) $cleanedup);
                 $eventcontent = [];
 
                 if (\strlen($cleanedup)) {
@@ -328,7 +326,7 @@ class IcsImport extends AbstractImport
 
     protected function downloadURLToTempFile(string $url, string|null $proxy, string|null $benutzerpw, int|null $port): File|null
     {
-        $url = html_entity_decode((string) $url);
+        $url = html_entity_decode($url);
 
         if ($this->isCurlInstalled()) {
             $ch = curl_init($url);

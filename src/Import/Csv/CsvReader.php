@@ -102,7 +102,7 @@ class CsvReader implements \Iterator
         } else {
             $this->currentLine = null;
         }
-        if (0 !== strcmp((string) $this->encoding, 'utf8') && null !== $this->currentLine) {
+        if (0 !== strcmp($this->encoding, 'utf8') && null !== $this->currentLine) {
             $this->currentLine = utf8_encode($this->currentLine);
         }
         if (!empty($this->currentLine)) {

@@ -23,7 +23,7 @@ class Csv
     public static function parseString(string $string, string $separator = ','): array
     {
         $values = [];
-        $string = str_replace("\r\n", '', (string) $string); // eat the traling new line, if any
+        $string = str_replace("\r\n", '', $string); // eat the traling new line, if any
 
         if ('' === $string) {
             return $values;
@@ -66,7 +66,7 @@ class Csv
 
     public static function escapeString(string $string): string
     {
-        $string = str_replace('"', '""', (string) $string);
+        $string = str_replace('"', '""', $string);
 
         if (
             str_contains($string, '"') || str_contains($string, ',') || str_contains($string,

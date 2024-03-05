@@ -20,7 +20,6 @@ use Kigkonsult\Icalcreator\Vevent;
 class IcsExport extends Backend
 {
     public function __construct(
-        private readonly Connection $db,
         private readonly InsertTagParser $insertTagParser,
     ) {
     }
@@ -99,7 +98,7 @@ class IcsExport extends Backend
                         $vevent->setSummary(html_entity_decode((string) $summary, ENT_QUOTES, 'UTF-8'));
 
                         if (!empty($objEvent->teaser)) {
-                            $vevent->setDescription(html_entity_decode(strip_tags(preg_replace('/<br \\/>/', "\n",
+                            $vevent->setDescription(html_entity_decode(strip_tags((string) preg_replace('/<br \\/>/', "\n",
                                 $this->insertTagParser->replaceInline($objEvent->teaser))),
                                 ENT_QUOTES, 'UTF-8'));
                         }
@@ -112,7 +111,7 @@ class IcsExport extends Backend
                             $attendees = preg_split('/,/', (string) $objEvent->cep_participants);
                             if (is_countable($attendees) ? \count($attendees) : 0) {
                                 foreach ($attendees as $attendee) {
-                                    $attendee = trim((string) $attendee);
+                                    $attendee = trim($attendee);
                                     if (str_contains($attendee, '@')) {
                                         $vevent->setAttendee($attendee);
                                     } else {

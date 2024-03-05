@@ -81,12 +81,10 @@ class ExportController extends Backend
             $arrCalendars = [$objCalendar];
         }
 
-        if (!empty($arrCalendars)) {
-            foreach ($arrCalendars as $objCalendar) {
-                $arrFeeds[] = 'calendar'.$objCalendar->id;
-                if (!empty($objCalendar->ical_alias)) {
-                    $arrFeeds[] = $objCalendar->ical_alias;
-                }
+        foreach ($arrCalendars as $objCalendar) {
+            $arrFeeds[] = 'calendar'.$objCalendar->id;
+            if (!empty($objCalendar->ical_alias)) {
+                $arrFeeds[] = $objCalendar->ical_alias;
             }
         }
 

@@ -180,9 +180,7 @@ class CsvImport extends AbstractImport
                     $objEvent->{$field} = $varValue;
                 }
 
-                if (!empty(BackendUser::getInstance())) {
-                    $objEvent->author = BackendUser::getInstance()->id;
-                }
+                $objEvent->author = BackendUser::getInstance()->id;
 
                 foreach ($calvalues as $idx => $value) {
                     if (!empty($value)) {
@@ -196,9 +194,7 @@ class CsvImport extends AbstractImport
                                     if (\function_exists('date_parse_from_format')) {
                                         $res = date_parse_from_format(Input::post('dateFormat'), $data[$foundindex]);
 
-                                        if (false !== $res) {
-                                            $objEvent->{$value} = mktime(0, 0, 0, $res['month'], $res['day'], $res['year']);
-                                        }
+                                        $objEvent->{$value} = mktime(0, 0, 0, $res['month'], $res['day'], $res['year']);
                                     } else {
                                         $objEvent->{$value} = $this->getTimestampFromDefaultDatetime($data[$foundindex]);
                                     }
@@ -242,9 +238,7 @@ class CsvImport extends AbstractImport
                                     if (\function_exists('date_parse_from_format')) {
                                         $res = date_parse_from_format(Input::post('timeFormat'), $data[$foundindex]);
 
-                                        if (false !== $res) {
-                                            $objEvent->{$value} = $objEvent->startDate + $res['hour'] * 60 * 60 + $res['minute'] * 60 + $res['second'];
-                                        }
+                                        $objEvent->{$value} = $objEvent->startDate + $res['hour'] * 60 * 60 + $res['minute'] * 60 + $res['second'];
                                     } else {
                                         if (preg_match('/(\\d+):(\\d+)/', (string) $data[$foundindex], $matches)) {
                                             $objEvent->{$value} = $objEvent->startDate + (int) $matches[1] * 60 * 60 + (int) $matches[2] * 60;
@@ -255,9 +249,7 @@ class CsvImport extends AbstractImport
                                     if (\function_exists('date_parse_from_format')) {
                                         $res = date_parse_from_format(Input::post('timeFormat'), $data[$foundindex]);
 
-                                        if (false !== $res) {
-                                            $objEvent->{$value} = $objEvent->endDate + $res['hour'] * 60 * 60 + $res['minute'] * 60 + $res['second'];
-                                        }
+                                        $objEvent->{$value} = $objEvent->endDate + $res['hour'] * 60 * 60 + $res['minute'] * 60 + $res['second'];
                                     } else {
                                         if (preg_match('/(\\d+):(\\d+)/', (string) $data[$foundindex], $matches)) {
                                             $objEvent->{$value} = $objEvent->endDate + (int) $matches[1] * 60 * 60 + (int) $matches[2] * 60;
