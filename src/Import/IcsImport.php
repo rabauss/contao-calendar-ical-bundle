@@ -137,7 +137,7 @@ class IcsImport extends AbstractImport
                 $dtend = $vevent->getDtend(true);
 
                 $rrule = $vevent->getRrule();
-                $summary = $vevent->getSummary() ?? '';
+                $summary = $vevent->getSummary() ?: '---';
                 if (!empty($filterEventTitle) && !str_contains(mb_strtolower($summary), mb_strtolower($filterEventTitle))) {
                     continue;
                 }
