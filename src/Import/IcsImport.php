@@ -371,7 +371,7 @@ class IcsImport extends AbstractImport
         if (empty($content)) {
             System::getContainer()
                 ->get('monolog.logger.contao.general')
-                ->warn('The downloaded ics file from URL "'.$url.'" seems to be empty.')
+                ->warning('The downloaded ics file from URL "'.$url.'" seems to be empty.')
             ;
 
             return null;

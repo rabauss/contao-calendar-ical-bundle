@@ -37,12 +37,14 @@ class AbstractImport extends Backend
         $contents = ContentModel::findBy($columns, $values);
         $contentDictionary = [];
 
-        foreach ($contents as $content) {
-            $key = $content->sorting;
-            if (isset($contentDictionary[$key])) {
-                $key = uniqid('', true);
+        if (!empty($contents)) {
+            foreach ($contents as $content) {
+                $key = $content->sorting;
+                if (isset($contentDictionary[$key])) {
+                    $key = uniqid('', true);
+                }
+                $contentDictionary[$key] = $content;
             }
-            $contentDictionary[$key] = $content;
         }
 
         foreach ($eventcontent as $content) {
@@ -50,7 +52,7 @@ class AbstractImport extends Backend
                 $cm = $contentDictionary[$step];
                 unset($contentDictionary[$step]);
             }
-            $cm = $cm ?? new ContentModel();
+            $cm ??= new ContentModel();
             $cm->tstamp = time();
             $cm->pid = $objEvent->id;
             $cm->ptable = 'tl_calendar_events';
