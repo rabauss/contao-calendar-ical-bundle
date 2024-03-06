@@ -91,7 +91,7 @@ class IcsImport extends AbstractImport
 
         $foundevents = [];
 
-        $arrEvents = !empty($objCalendar->id) ? CalendarEventsModel::findByPid($objCalendar->id) : [];
+        $arrEvents = !empty($objCalendar->id) ? CalendarEventsModel::findByPid($objCalendar->id) ?? [] : [];
         $eventsDictionary = [];
 
         foreach ($arrEvents as $event) {
