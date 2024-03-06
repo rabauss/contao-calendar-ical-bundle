@@ -36,6 +36,7 @@ class AbstractImport extends Backend
         $values = ['tl_calendar_events', $objEvent->id];
         $contents = ContentModel::findBy($columns, $values);
         $contentDictionary = [];
+
         foreach ($contents as $content) {
             $key = $content->sorting;
             if (isset($contentDictionary[$key])) {
@@ -59,7 +60,7 @@ class AbstractImport extends Backend
             $cm->text = $content;
             $cm->save();
         }
-        
+
         foreach ($contentDictionary as $content) {
             $content->delete();
         }
