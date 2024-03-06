@@ -33,7 +33,9 @@ class AbstractImport extends Backend
         $step = 128;
 
         foreach ($eventcontent as $content) {
-            $cm = new ContentModel();
+            $columns = ['ptable=? AND pid=? AND sorting=?'];
+            $values = ['tl_calendar_events', $objEvent->id, $step];
+            $cm = ContentModel::findBy($columns, $values)?->first() ?? new ContentModel();
             $cm->tstamp = time();
             $cm->pid = $objEvent->id;
             $cm->ptable = 'tl_calendar_events';
