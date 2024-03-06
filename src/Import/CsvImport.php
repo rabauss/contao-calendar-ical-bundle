@@ -180,7 +180,7 @@ class CsvImport extends AbstractImport
                     $objEvent->{$field} = $varValue;
                 }
 
-                $objEvent->author = BackendUser::getInstance()->id;
+                $objEvent->author = BackendUser::getInstance()->id ?? 0;
 
                 foreach ($calvalues as $idx => $value) {
                     if (!empty($value)) {

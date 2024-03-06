@@ -91,7 +91,7 @@ class IcsImport extends AbstractImport
 
         $foundevents = [];
 
-        $arrEvents = !empty($objCalendar->id) ? CalendarEventsModel::findByPid($objCalendar->id) : [];
+        $arrEvents = !empty($objCalendar->id) ? CalendarEventsModel::findByPid($objCalendar->id) ?? [] : [];
         $eventsDictionary = [];
 
         foreach ($arrEvents as $event) {
@@ -129,7 +129,7 @@ class IcsImport extends AbstractImport
                     $objEvent->{$field} = $varValue;
                 }
 
-                $objEvent->author = BackendUser::getInstance()->id;
+                $objEvent->author = BackendUser::getInstance()->id ?? 0;
 
                 /** @var Pc|bool|null $dtstart */
                 $dtstart = $vevent->getDtstart(true);
@@ -137,7 +137,7 @@ class IcsImport extends AbstractImport
                 $dtend = $vevent->getDtend(true);
 
                 $rrule = $vevent->getRrule();
-                $summary = $vevent->getSummary() ?? '';
+                $summary = $vevent->getSummary() ?: '---';
                 if (!empty($filterEventTitle) && !str_contains(mb_strtolower($summary), mb_strtolower($filterEventTitle))) {
                     continue;
                 }
@@ -371,7 +371,7 @@ class IcsImport extends AbstractImport
         if (empty($content)) {
             System::getContainer()
                 ->get('monolog.logger.contao.general')
-                ->warn('The downloaded ics file from URL "'.$url.'" seems to be empty.')
+                ->warning('The downloaded ics file from URL "'.$url.'" seems to be empty.')
             ;
 
             return null;
