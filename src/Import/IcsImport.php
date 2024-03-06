@@ -129,7 +129,7 @@ class IcsImport extends AbstractImport
                     $objEvent->{$field} = $varValue;
                 }
 
-                $objEvent->author = BackendUser::getInstance()->id;
+                $objEvent->author = BackendUser::getInstance()->id ?? 0;
 
                 /** @var Pc|bool|null $dtstart */
                 $dtstart = $vevent->getDtstart(true);
