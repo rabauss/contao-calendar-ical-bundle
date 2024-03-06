@@ -32,23 +32,23 @@ class AbstractImport extends Backend
     {
         $step = 128;
 
-		$columns = ['ptable=? AND pid=?'];
-		$values = ['tl_calendar_events', $objEvent->id];
-		$contents = ContentModel::findBy($columns, $values);
-		$contentDictionary = [];
-		foreach ($contents as $content) {
-			$key = $content->sorting;
-			if (isset($contentDictionary[$key])) {				
-				$key = uniqid('', true);
-			}
-			$contentDictionary[$key] = $content;
-		}
+        $columns = ['ptable=? AND pid=?'];
+        $values = ['tl_calendar_events', $objEvent->id];
+        $contents = ContentModel::findBy($columns, $values);
+        $contentDictionary = [];
+        foreach ($contents as $content) {
+            $key = $content->sorting;
+            if (isset($contentDictionary[$key])) {
+                $key = uniqid('', true);
+            }
+            $contentDictionary[$key] = $content;
+        }
 
         foreach ($eventcontent as $content) {
-			if (isset($contentDictionary[$step])) {
-            	$cm = $contentDictionary[$step];
-				unset($contentDictionary[$step]);
-			}
+            if (isset($contentDictionary[$step])) {
+                $cm = $contentDictionary[$step];
+                unset($contentDictionary[$step]);
+            }
             $cm = $cm ?? new ContentModel();
             $cm->tstamp = time();
             $cm->pid = $objEvent->id;
@@ -59,10 +59,10 @@ class AbstractImport extends Backend
             $cm->text = $content;
             $cm->save();
         }
-		
+        
         foreach ($contentDictionary as $content) {
-        	$content->delete();		
-		}		
+            $content->delete();
+        }
     }
 
     /**
