@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.1.1](https://github.com/cgoIT/contao-calendar-ical-bundle/compare/v5.1.0...v5.1.1) (2024-03-06)
+
+
+### Bug Fixes
+
+* fix some minor issues ([a66e841](https://github.com/cgoIT/contao-calendar-ical-bundle/commit/a66e8414c198712dccb6f6f8026ec63c35aecb4f))
+
 ## [5.1.0](https://github.com/cgoIT/contao-calendar-ical-bundle/compare/v5.0.2...v5.1.0) (2024-03-05)
 
 
